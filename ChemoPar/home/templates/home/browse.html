@@ -1,0 +1,49 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block addon_css %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Partners</h2>
+    <div class="scrollable-container">
+        <table id="partners">
+            <thead>
+                <tr>
+                    <th>Chemokine Type</th>
+                    <th>Name</th>
+                    <th>Species</th>
+                    <th>UniProt</th>
+                </tr>
+            </thead>
+            <tbody>
+              {% for protein in data %}
+              <tr>
+                <td>{{ protein.family }}</td>
+                <td><a href="/protein/{{ protein.name }}">{{ protein.name|safe }}</a></td>
+                <td>{{ protein.species }}</td>
+                <td><a href="https://www.uniprot.org/uniprot/{{ protein.uniprot_id }}" target="_blank">{{ protein.uniprot_id }}</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+    </div>
+  </div>
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+
+    <!-- Include DataTables JS and CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+
+    <script>
+        $(document).ready( function () {
+            $('#partners').DataTable({
+                "pageLength": -1,  // Set the page length to -1 to show all entries
+                "lengthMenu": [[-1], ["All"]]  // Adjust the length menu to only have the "All" option
+            });
+        });
+    </script>
+{% endblock %}

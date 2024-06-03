@@ -1,0 +1,91 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block head %}
+<style>
+#partners {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 11px;
+}
+
+#partners td, #partners th {
+  border: 1px solid #ddd;
+  padding: 4px;
+}
+
+#partners tr:nth-child(even){background-color: #f2f2f2;}
+
+#partners tr:hover {background-color: #ddd;}
+
+#partners th {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  text-align: left;
+  background-color: #66A9D9;
+  color: white;
+}
+
+/* Style for the scrollable container */
+.scrollable-container {
+  overflow-x: auto; /* Enable horizontal scroll */
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Partners</h1>
+    <hr class="my-2">
+    <div class="scrollable-container">
+        <table id="partners">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Structure</th>
+                </tr>
+
+            </thead>
+            <tbody>
+            {% for partner in partners %}
+                    <!-- Partner -->
+                    <td>
+                        <a target='_blank' href="/partner/{{ partner.name }}">{{ partner.name }}</a>
+                    </td>
+                    <td>
+                        {{ partner.type|escape }}
+                    </td>
+                    <td>
+                        {% for structure in partner.structures.all %}
+                            <a target="_blank" href="/structure/{{ structure }}">{{ structure }}</a> 
+                        {% empty %}
+                            No structures
+                        {% endfor %}
+                    </td>
+                    <!-- Reference -->
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+
+    <!-- Include DataTables JS and CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+
+    <script>
+        $(document).ready( function () {
+            $('#partners').DataTable({
+                "pageLength": -1,  // Set the page length to -1 to show all entries
+                "lengthMenu": [[-1], ["All"]]  // Adjust the length menu to only have the "All" option
+            });
+        });
+    </script>
+
+</body>
+{% endblock %}

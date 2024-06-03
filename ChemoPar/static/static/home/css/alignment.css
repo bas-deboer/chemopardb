@@ -1,0 +1,125 @@
+.helix {
+  background-color: lightblue;
+}
+.turn {
+  background-color: #87CEFA;
+}
+.sheet {
+  background-color: #48D1CC;
+}
+.loop {
+  background-color: paleturquoise;
+}
+.terminal {
+  background-color: lightcyan;
+}
+.residue {
+  text-align: center;
+  padding: 3px;
+}
+.res-color-A, .res-color-M, .res-color-V, .res-color-L, .res-color-I {
+  background-color: yellow;
+}
+.res-color-R, .res-color-K {
+  background-color: blue;
+  color: white;
+}
+.res-color-D, .res-color-E {
+  background-color: red;
+  color: white;
+}
+.res-color-N, .res-color-Q, .res-color-S, .res-color-T {
+  background-color: darkviolet;
+  color: white;
+}
+.res-color-W {
+  background-color: green;
+}
+.res-color-Y, .res-color-F {
+  background-color: springgreen;
+}
+.res-color-P {
+  background-color: lightcoral;
+  color: white;
+}
+.res-color-G {
+  background-color: plum;
+}
+.res-color-H {
+  background-color: dodgerblue;
+}
+.res-color-C {
+  background-color: goldenrod;
+}
+.mutation {
+  color: red;
+  text-align: center;
+  font-size: 150%;
+  font-weight: bold;
+}
+
+.escape-container {
+width: 100vw;
+position: relative;
+left: 50%;
+right: 50%;
+margin-left: calc(-50vw + 16px);
+margin-right: calc(-50vw + 16px);
+}
+
+.hidden {
+display: none;
+}
+
+.white-bg {
+background-color: white;
+}
+
+.fixed_column1 {
+
+}
+
+.fixed_column2 {
+
+}
+
+.fixed_column3 {
+
+}
+
+.sheinerman {
+font-weight: bold;
+color: red;
+}
+
+.red {
+color: red;
+}
+
+.blue {
+color: blue;
+}
+
+.green {
+color: green;
+}
+
+#overlay {
+/*top: 0;*/
+position: absolute;
+background: white;
+-webkit-box-shadow: 5px 5px 2px -2px #888;
+box-shadow: 5px 5px 2px -2px #888;
+}
+
+#overlay tbody tr {
+background-color: white;
+}
+
+#table_header {
+-webkit-transform: translate3d(0, 0, 0);
+transform: translate3d(0, 0, 0);
+position: relative;
+z-index: 1000;
+opacity: 0.99;
+}

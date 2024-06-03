@@ -1,0 +1,49 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block addon_css %}
+    <link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
+    <link href="{% static 'home/css/color_picker.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'home/css/jquery.dataTables.min.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'home/css/construct_browser.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'home/css/yadcf_bootstrap_version.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css" />
+    <link href="{% static 'home/css/construct_alignment.css' %}" rel="stylesheet">
+    <link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
+    <link href="{% static 'home/css/modal.css' %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'home/css/jquery.powertip.css' %}" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24
+        }
+    
+    #Viewer {
+        width: 600px;
+        height: 500px;
+        position: relative;
+        overflow: hidden;
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Please select a structure for alignment:</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
+    
+{% endblock %}
+
+
+{% block addon_js %}
+
+{% endblock %}

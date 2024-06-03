@@ -1,0 +1,397 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container flex-grow-1">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>{{ protein.name }}</h1>
+                <hr class="my-2">
+            </div>
+            <div class="col-md-12">
+                <ul class="list-unstyled">
+                    <li><b>Alternate name:</b> <i>{{ fullname }}</i></li>
+                    <li><b>Organism:</b> <i>{{ protein.species }}</i></li>
+                    <li><b>UniProt ID:</b> <a href="https://www.uniprot.org/uniprot/{{ protein.uniprot_id }}" target="_blank">{{ protein.uniprot_id }}</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <br>
+
+    <br>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h3>Sequence</h3>        
+                <hr class="my-2">
+                <div class="scrollable-table">
+                    <div class="scrollable-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    {% for segment, residues in residues_by_segment.items %}
+                                        <th class="segment-header" colspan="{{ residues|length }}">{{ segment }}</th>
+                                        <th class="segment-header">&nbsp;</th> <!-- Adds white space column between segments -->
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    {% for segment, residues in residues_by_segment.items %}
+                                        {% for residue in residues %}
+                                            <th>{{ residue.generic_number }}</th>
+                                        {% endfor %}
+                                        <th>&nbsp;</th> <!-- Adds white space column between segments -->
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    {% for segment, residues in residues_by_segment.items %}
+                                        {% for residue in residues %}
+                                            <td class="residue res-color-{{ residue.amino_acid }}" title="{{ residue.amino_acid }}{{ residue.sequence_number }}">
+                                                {{ residue.amino_acid }}
+                                            </td>
+                                        {% endfor %}
+                                        <td>&nbsp;</td> <!-- Adds white space column between segments -->
+                                    {% endfor %}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <!-- Snake plot -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h3 id="snake_plot">Snake Plot</h3>
+                <hr class="my-2">
+                {{ protein.get_snake_plot|safe }}
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-download"></span> Download <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                        <li>
+                            <a href="javascript:saveSvgAsPng(document.getElementById('snakeplot'), 'snake_{{ p.entry_name }}.png',
+                            {scale: 3});">PNG</a>
+                        </li>
+                        <li>
+                            <a href="javascript:saveSvgAsJpg(document.getElementById('snakeplot'), 'snake_{{ p.entry_name }}.jpg',
+                            {scale: 3});">JPG</a>
+                        </li>
+                        <li>
+                            <a href="javascript:saveSvgAsTiff(document.getElementById('snakeplot'), 'snake_{{ p.entry_name }}.tiff',
+                            {scale: 3});">TIFF</a>
+                            </a>
+                        </li>
+                        <li>
+                        <a id=snake_svg_link href-lang="image/svg+xml" href="" download="snake_{{ p.entry_name }}">SVG</a>
+                        </li>
+                        </ul>
+                    </div>
+            </div>
+        </div>            
+    </div>
+
+    <br>
+    <br>
+
+    <!-- Table of all structures -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h3>List of structures</h3>
+                <hr class="my-2">
+                <div class="col-md-12" style='padding-top: 0px; font-size: 12px; white-space: nowrap; width:100%; overflow-y:hidden; display:inline-block; width:100%;'>
+                    <!-- {% if structures|length > 0 %} -->
+                    <table class="table" id="example" class="table table-hover" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                            <tr>
+                                <th>PDB</th>
+                                <th>Method</th>
+                                <th>Resolution</th>
+                                <th>State</th>
+                                <th>Publication date</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for structure in structures %}
+                            <tr>
+                                {% if structure.pdb_code %}
+                                <td><a href="/structure/{{ structure.pdb_code }}">{{ structure.pdb_code }}</a></td>
+                                {% else %}
+                                <td><a>-</a></td>
+                                {% endif %}
+                                <td>{{ structure.structure_type.name }}</a></td>
+                                {% if structure.pdb_code %}
+                                <td>{{ structure.resolution }}</td>
+                                {% else %}
+                                <td>-</td>
+                                {% endif %}
+                                <td>{{ structure.state}}</td>
+                                <td>{{ structure.date}}</td>
+                                <td>
+                                    {% if structure.doi %}
+                                        <a href="{{ structure.doi }}" target="_blank">{{ structure.doi }}</a>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <!-- {% else %}
+                    No structures available
+                    {% endif %} -->
+                <br>
+                </div>
+                </div>
+        </div>
+    </div>
+
+</body>
+
+ <script>
+    $( document ).ready(function() {
+        // var elements = document.getElementsByClassName('long')
+
+        // for (var i = 0; i < elements.length; i++){
+        //     elements[i].style.display = 'none';
+        // }
+        y_min = 0;
+        y_max = 0;
+        // maxmin();
+        //$(".long").hide();
+
+
+        $('rect').each(function(){
+
+            rectclass = $(this).attr('class');
+            if (rectclass) {
+                if (rectclass.indexOf("CL") >= 0 && rectclass.indexOf("long") >= 0) {
+
+                    numResidues = ($('.'+rectclass.replace(/ /g,".")).length-3)/2
+
+                    // console.log('class:'+rectclass+' count'+numResidues);
+
+                    if (numResidues<10) {
+                        toggleLoop('.'+rectclass.split(' ')[0],'',1);
+                    }
+                }
+            }
+        });
+
+        maxmin();
+
+        $("text").tooltip({
+            'container': 'body',
+            'placement': 'top',
+            'animation': false,
+            'html' : true
+        });
+
+
+        $("circle").tooltip({
+            'container': 'body',
+            'placement': 'top',
+            'animation': false,
+            'html' : true
+        });
+
+        $("circle").hover(function(){
+            $('.tooltip').css('top',parseInt($('.tooltip').css('top')) + 2.8 + 'px')
+        });
+ 
+        $(".rtext").click(function() {
+            parentid = $(this).closest('svg').attr('id');
+            newcolor = $(".pick-color."+parentid+".selected").attr('id');
+            if (newcolor) {
+              newcolor = newcolor.split('-');
+            } else {
+              custom =  $("#custom_color_"+parentid).val();
+              custom_text = getContrast50(custom);
+              newcolor = ["pick",custom,custom_text];
+            }
+          console.log(newcolor);
+        
+          $(this).css("fill", newcolor[2]);
+          $(this).prev().css("fill", newcolor[1]);
+        });
+
+        $(".rcircle").click(function() {
+            parentid = $(this).closest('svg').attr('id');
+            newcolor = $(".pick-color."+parentid+".selected").attr('id');
+
+            if (newcolor) {
+              newcolor = newcolor.split('-');
+            } else {
+              custom =  $("#custom_color_"+parentid).val();
+              custom_text = getContrast50(custom);
+              newcolor = ["pick",custom,custom_text];
+            }
+          console.log(newcolor);
+          $(this).css("fill", newcolor[1]);
+          $(this).next().css("fill", newcolor[2]);
+        });
+
+        $("#snake_svg_link").click(function() {
+            svgAsDataUri(document.getElementById("snakeplot"),{}, function(uri) {
+                $("#snake_svg_link").attr('href',uri);
+            });
+        });
+        $("#helix_svg_link").click(function() {
+            svgAsDataUri(document.getElementById("helixbox"),{}, function(uri) {
+                $("#helix_svg_link").attr('href',uri);
+            });
+        });
+
+    });
+
+    $(".pick-color").click(function() {
+        plottype = $(this).attr('class').split(' ')[1];
+    
+        console.log($(this).attr('id'));
+        $(".pick-color."+plottype).css('borderWidth','2px');
+        $(".pick-color."+plottype).css('height','20px');
+        $(".pick-color."+plottype).removeClass('selected');
+        $(this).css('borderWidth','3px');
+        $(this).css('height','22px');
+        $(this).addClass('selected');
+    
+    });
+</script>
+{% endblock %}
+
+{% block addon_css %}
+    <link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
+    <link href="{% static 'home/css/color_picker.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'home/css/jquery.dataTables.min.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'home/css/construct_browser.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'home/css/yadcf_bootstrap_version.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css" />
+    <link href="{% static 'home/css/construct_alignment.css' %}" rel="stylesheet">
+    <link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
+    <link href="{% static 'home/css/modal.css' %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'home/css/jquery.powertip.css' %}" />
+
+    <style>
+        .scrollable-table {
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            table-layout: auto; /* Allow columns to adjust based on content */
+        }
+        th, td {
+
+            padding: 10px; /* Increased padding for better readability */
+            text-align: center;
+        }
+        th {
+            background-color: white;
+        }
+        .segment-header {
+            background-color: white;
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+        }
+        .helix { background-color: lightblue; }
+        .turn { background-color: #87CEFA; }
+        .sheet { background-color: #48D1CC; }
+        .loop { background-color: paleturquoise; }
+        .terminal { background-color: lightcyan; }
+        .residue { text-align: center; padding: 10px; }
+        .res-color-A, .res-color-M, .res-color-V, .res-color-L, .res-color-I { background-color: yellow; }
+        .res-color-R, .res-color-K { background-color: blue; color: white; }
+        .res-color-D, .res-color-E { background-color: red; color: white; }
+        .res-color-N, .res-color-Q, .res-color-S, .res-color-T { background-color: darkviolet; color: white; }
+        .res-color-W { background-color: green; }
+        .res-color-Y, .res-color-F { background-color: springgreen; }
+        .res-color-P { background-color: lightcoral; color: white; }
+        .res-color-G { background-color: plum; }
+        .res-color-H { background-color: dodgerblue; }
+        .res-color-C { background-color: goldenrod; }
+        .mutation { color: red; text-align: center; font-size: 150%; font-weight: bold; }
+        .escape-container { width: 100vw; position: relative; left: 50%; right: 50%; margin-left: calc(-50vw + 16px); margin-right: calc(-50vw + 16px); }
+        .hidden { display: none; }
+        .white-bg { background-color: white; }
+        .fixed_column1 { }
+        .fixed_column2 { }
+        .fixed_column3 { }
+        .red { color: red; }
+        .blue { color: blue; }
+        .green { color: green; }
+        #overlay { position: absolute; background: white; -webkit-box-shadow: 5px 5px 2px -2px #888; box-shadow: 5px 5px 2px -2px #888; }
+        #overlay tbody tr { background-color: white; }
+        #table_header { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); position: relative; z-index: 1000; opacity: 0.99; }
+    </style>
+
+{% endblock %}
+
+{% block addon_js %}
+    <script src="{% static 'home/js/sequenceviewer.js' %}"></script>
+    <script src="{% static 'home/js/saveSvgAsPng.js' %}"></script>
+    <script src="{% static 'home/js/diagrams.js' %}"></script>
+    <script src="{% static 'home/js/color_picker.js' %}"></script>
+    <script src="{% static 'home/js/jquery.dataTables.min.js' %}"> </script>
+    <script src="{% static 'home/js/jquery.dataTables.yadcf.js' %}"> </script>
+    <script src="{% static 'home/js/select2.js' %}"> </script>
+    <script src="{% static 'home/js/alignment.js' %}"> </script>
+    <script src="{% static 'home/js/jquery.powertip.js' %}"></script>
+
+    <script>
+        $(document).ready(function() {
+            var table = $('#example').DataTable({
+                scrollX: true,
+                scrollY: 700,
+                bScrollCollapse: true,
+                paging: false,
+                autoWidth: true,
+                dom: 'lfrtip',
+                initComplete: function () {
+                    var api = this.api();
+                    // Create a row for the filters
+                    var tr = $('<tr>').appendTo($(api.table().header()));
+        
+                    api.columns().indexes().flatten().each(function (i) {
+                        var column = api.column(i);
+                        var select = $('<select><option value=""></option></select>')
+                            .appendTo($('<th>').appendTo(tr))
+                            .on('change', function () {
+                                var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                                column.search(val ? '^' + val + '$' : '', true, false).draw();
+                            });
+        
+                        column.data().unique().sort().each(function (d, j) {
+                            select.append('<option value="' + d + '">' + d + '</option>');
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

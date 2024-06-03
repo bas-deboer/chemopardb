@@ -1,0 +1,85 @@
+{% extends "home/navbar.html" %}
+{% load static %}
+
+{% block title %}ChemoPardb{% endblock %}
+
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+
+{% block content %}
+<div class="row">
+    <img src="{% static 'home/images/ChemoPar_logo.png' %}" height="100" alt="img" style="display:inline; vertical-align: middle;">
+    <h2 style="display: inline; font-size: 40px;">ChemoPardb</h2>
+</div>
+
+<div class="row">
+	<div class="col-sm-12 col-md-6" style="padding-top:10px;">
+        <p style='text-align:justify;'>
+            Chemokines are a family of small signaling proteins (chemotactic cytokines) that indeed play crucial roles in cellular signaling processes, particularly in the immune system. 
+            They are involved in guiding and regulating the movement of immune cells within the body, helping to orchestrate the immune response to various pathogens and inflammatory signals.
+        </p>
+        <br>
+        <p style='text-align:justify;'>
+            ChemoPardb contains all available chemokine PDB structures which are organized, annotated, and aligned. You can <a href="/browse">Browse</a> 
+            the UniProt reviewed chemokine protein entries or you can <a href="/search">Search</a> the database for all structures.
+        </p>
+        <br>
+        <p>
+            Read more about the general structural features of chemokines and how this database was constructed on the <a href="/about">About</a> page.
+        </p>
+        <br>
+        <p>
+            If you use ChemoPardb in your work, please cite our primary paper: <a><i>To be published</i></a>
+        </p>
+    </div>
+
+    <div class="col-sm-12 col-md-6">
+        <img src="{% static 'home/images/chemopar_example.png' %}" alt="img" style="max-width: 50%"></img>
+    </div>
+</div>
+
+<div class="container my-4">
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">News</div>
+                <div class="panel-body">Development ongoing
+                    <br>
+                                        Latest release
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4"> 
+            <div class="panel panel-default">
+                <div class="panel-heading">About</div>
+                <div class="panel-body">Methods
+                                        
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">Links</div>
+                <div class="panel-body">"Chemokine common numbering"
+                    <br>
+                    <a href="https://vu.nl/en/about-vu/more-about/medicinal-chemistry-and-pharmaceutical-sciences" target="_blank">
+                        <img src="{% static 'home/images/VU_logo.png' %}" height="50" alt="img" style="max-width: 100%"></img>
+                    </a>
+                    <br>
+                    <a href="https://aimms.nl/" target="_blank">
+                        <img src="{% static 'home/images/AIMMS_logo.png' %}" height="50" alt="img" style="display:inline;"></img>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+	document.getElementById("navbar").classList.add('active');
+</script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container flex-grow-1">
+    <div class="jumbotron mt-5 mb-5">
+        <h1 class="alert-heading mb-0">Example case of ChemoPar-db usage</h1>
+        <p class="mt-4 mb-0">
+        Here we provide an example of the human CXCL12 chemokine. See the original page <a style="text-decoration:none;" href="/protein/CXCL12_HUMAN/" target="_blank" class="">here</a>.
+        </p>
+    </div>
+
+    <h2 class="mt-3 mb-3 search-title">Protein information</h2>
+    <p>
+        The top section of the CXCL12 protein page gives an overview of general information including alternate names, organims and links to external databases (UniProt, Guide to Pharmacology) 
+        as well as information in the corresponding UniProt record (ID, Organism, protein length).
+    </p>
+    <p>
+        Then there is a representation of the canonical protein sequence of the specific entry. Ths horizontal scrollable table shows all amino acids, their generic numbers and is divided into
+        the different structural segments (N-term, CXC, N-loop, B-sheet 1, 30s-loop, B-sheet 2, 40s-loop, B-sheet 3, 50s-loop, a-helix, and C-term)
+    </p>
+
+    <img class="rounded shadow-twcss mx-auto my-4 d-block" src="{% static 'home/images/example_proteinpage.png' %}" alt="Protein page general information" style="border-radius=0.3rem; border:1px solid rgba(0,0,0,.1)" width="80%">
+
+    <p>
+        Below that there is a chemokine diagram that contains a 2D depiction of the canonical residues with different sections named.
+        This diagram is interactive and can be customized by the user. The code to generate this diagram is adapted from the GPCRdb snake plot and customized for chemokine representation.
+    </p>
+
+    <img class="rounded shadow-twcss mx-auto my-4 d-block" src="{% static 'home/images/example_diagram.png' %}" alt="" style="border-radius=0.3rem; border:1px solid rgba(0,0,0,.1)" width="50%">
+</div>
+
+
+{% endblock %}

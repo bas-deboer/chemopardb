@@ -1,0 +1,231 @@
+PDB,Chemokine_UniProt,Method,Resolution,State,ChainID
+7sct,O15467,X-ray diffraction,1.84,Dimer,['B']
+8u1u,P22362,Electron Microscopy,3.1,Monomer,['A']
+7sk8,P48061,Electron Microscopy,3.3,Monomer,['B']
+8u4o,P48061,Electron Microscopy,3.29,Monomer,['J']
+7sk6,P48061,Electron Microscopy,4.0,Monomer,['B']
+7t1e,P78556,X-ray diffraction,1.459,Monomer,"['B', 'C', 'E', 'A', 'D']"
+7so0,P13500,X-ray diffraction,1.74,Dimer,['B']
+7s4n,Q92583,X-ray diffraction,1.65,Dimer,"['B', 'D']"
+7sta,Q99731,X-ray diffraction,2.5,Monomer,"['B', 'C', 'A', 'D']"
+7sk5,P48061,Electron Microscopy,4.0,Monomer,['B']
+7s5a,P80075,X-ray diffraction,1.37,Dimer,"['B', 'A']"
+8k2x,P02778,Electron Microscopy,3.2,Monomer,['L']
+8fk8,P80098,X-ray diffraction,1.96,Dimer,['B']
+8fj3,P80098,X-ray diffraction,2.07,Dimer,['B']
+7sk3,P48061,Electron Microscopy,3.8,Monomer,['B']
+7s58,P80098,X-ray diffraction,1.82,Dimer,"['E', 'F', 'H', 'J']"
+7s59,P80098,X-ray diffraction,2.39,Dimer,"['2', '4']"
+7scv,Q92583,X-ray diffraction,2.01,Dimer,['B']
+7scu,P80098,X-ray diffraction,1.86,Dimer,['B']
+7sk7,P48061,Electron Microscopy,3.3,Monomer,['B']
+7sk4,P48061,Electron Microscopy,3.3,Monomer,['B']
+8fj0,P13500,X-ray diffraction,2.91,Monomer,"['E', 'F', 'D']"
+8fj2,Q92583,X-ray diffraction,2.07,Dimer,['B']
+8fk6,P80098,X-ray diffraction,1.74,Dimer,['B']
+8fk9,O15467,X-ray diffraction,2.7,Monomer,"['C', 'D']"
+7o7f,P13501,Electron Microscopy,3.15,Monomer,['I']
+7scs,P51671,X-ray diffraction,1.51,Dimer,['B']
+4xdx,P10145,X-ray diffraction,0.95,Monomer,['A']
+4r8i,P13500,X-ray diffraction,2.05,Dimer,['A']
+4zkb,P10147,X-ray diffraction,2.9,Dimer,['B']
+3tn2,P13236,X-ray diffraction,1.6,Monomer,['A']
+4hsv,P10720,X-ray diffraction,2.083,Monomer,"['C', 'B', 'A', 'D']"
+4xt3,P78423,X-ray diffraction,3.801,Dimer,['B']
+4zkc,P80098,X-ray diffraction,3.15,Dimer,['B']
+4hcs,F1Q6N2,X-ray diffraction,1.28,Monomer,['A']
+3ifd,P13500,X-ray diffraction,1.9,Dimer,['A']
+2sdf,P48061,Solution NMR,0.0,Monomer,['A']
+2q8t,Q16627,X-ray diffraction,2.23,Dimer,"['B', 'C', 'A', 'D']"
+2q8r,Q16627,X-ray diffraction,1.82,Dimer,"['E', 'F', 'H', 'G']"
+2n54,P47992,Solution NMR,0.0,Dimer,"['B', 'A']"
+2mgs,P42830,Solution NMR,0.0,Dimer,"['B', 'A']"
+2nz1,P13500,X-ray diffraction,2.5,Monomer,"['E', 'Y', 'D']"
+2nwg,P48061,X-ray diffraction,2.07,Dimer,"['B', 'A']"
+2mp1,Q99731,Solution NMR,0.0,Monomer,['A']
+3fpu,P10147,X-ray diffraction,1.76,Dimer,['B']
+3h44,P10147,X-ray diffraction,3.0,Dimer,"['C', 'D']"
+2n55,P48061,Solution NMR,0.0,Dimer,['A']
+2nyz,P47992,X-ray diffraction,2.6,Monomer,"['E', 'D']"
+3kbx,P10147,X-ray diffraction,2.652,Dimer,"['B', 'C', 'E', 'A', 'D']"
+2x69,P10147,X-ray diffraction,2.65,Dimer,"['B', 'C', 'E', 'A', 'D']"
+3hp3,P48061,X-ray diffraction,2.2,Dimer,"['B', 'C', 'E', 'F', 'H', 'I', 'A', 'G', 'J', 'D']"
+2x6g,P10147,X-ray diffraction,2.18,Dimer,"['M', 'B', 'C', 'E', 'F', 'H', 'I', 'L', 'O', 'A', 'N', 'P', 'R', 'G', 'J', 'K', 'Q', 'D']"
+2x6l,P13236,X-ray diffraction,2.602,Dimer,"['B', 'C', 'E', 'A', 'D']"
+3il8,P10145,X-ray diffraction,2.0,Dimer,['A']
+2r3z,P17515,X-ray diffraction,2.5,Monomer,"['B', 'C', 'A', 'D']"
+3gv3,P48061,X-ray diffraction,1.6,Dimer,['A']
+2ra4,Q99616,X-ray diffraction,1.7,Dimer,"['B', 'A']"
+4zlt,P10855,X-ray diffraction,3.0,Dimer,"['F', 'L']"
+4lmq,P48061,X-ray diffraction,2.773,Monomer,"['F', 'D']"
+4oik,P22362,X-ray diffraction,2.1,Dimer,"['B', 'A']"
+4ral,P13236,X-ray diffraction,3.148,Dimer,"['E', 'D']"
+4mhe,P55774,X-ray diffraction,2.1,Dimer,"['B', 'C', 'A', 'D']"
+4oij,P22362,X-ray diffraction,2.0,Dimer,"['B', 'A']"
+4r9w,P02776,X-ray diffraction,2.5,Monomer,"['B', 'A']"
+3n52,P10889,X-ray diffraction,1.9,Dimer,"['B', 'C', 'A', 'D']"
+4hed,F1Q6N2,X-ray diffraction,1.62,Monomer,['A']
+4zk9,P13500,X-ray diffraction,2.6,Dimer,['B']
+4xt1,P78423,X-ray diffraction,2.886,Monomer,['B']
+3ona,P78423,X-ray diffraction,2.6,Dimer,['B']
+2hdl,O95715,Solution NMR,0.0,Monomer,['A']
+2fj2,Q98157,X-ray diffraction,2.3,Dimer,"['B', 'C', 'A', 'D']"
+1rod,P10145,Solution NMR,0.0,Dimer,"['B', 'A']"
+1rhp,P02776,X-ray diffraction,2.4,Monomer,"['B', 'C', 'A', 'D']"
+6wwz,P78556,Electron Microscopy,3.34,Monomer,['C']
+6wzm,P10145,X-ray diffraction,2.28,Monomer,"['E', 'F']"
+6wzl,G7P5K7,X-ray diffraction,2.29,Monomer,"['E', 'F']"
+6wzj,Q0EAC2,X-ray diffraction,2.37,Monomer,"['E', 'F']"
+6lfm,P10145,Electron Microscopy,3.5,Monomer,"['E', 'D']"
+6wzk,Q0EAC1,X-ray diffraction,1.8,Monomer,"['E', 'F']"
+6xmn,P10145,Solution NMR,0.0,Dimer,['A']
+6lfo,P10145,Electron Microscopy,3.4,Monomer,['D']
+6log,P13501,X-ray diffraction,2.55,Dimer,['A']
+6fgp,P13501,Solution NMR,0.0,Dimer,['B']
+6shr,P48061,X-ray diffraction,1.745,Monomer,['A']
+6stk,P13501,X-ray diffraction,1.52,Dimer,"['B', 'A']"
+8skk,Q92583,X-ray diffraction,2.1,Dimer,['B']
+8hnk,O14625,Electron Microscopy,3.01,Monomer,['L']
+6n2u,P10145,X-ray diffraction,1.254,Dimer,['A']
+8ic0,P10145,Electron Microscopy,3.41,Monomer,['F']
+6vgj,O43927,X-ray diffraction,2.52,Monomer,"['B', 'C', 'E', 'F', 'A', 'G', 'D']"
+7jny,O43927,X-ray diffraction,1.88,Monomer,['A']
+7f1q,P10147,Electron Microscopy,2.9,Monomer,['R']
+5wk3,Q92583,X-ray diffraction,1.9,Monomer,"['B', 'C', 'A', 'D']"
+5wb2,P78423,X-ray diffraction,3.5,Monomer,['B']
+5izb,O55038,Solution NMR,0.0,Monomer,['A']
+5yam,P30882,Solution NMR,0.0,Dimer,"['B', 'A']"
+5ur7,P78556,X-ray diffraction,2.0004,Dimer,"['B', 'A']"
+4rws,Q98157,X-ray diffraction,3.1,Dimer,['C']
+5l2u,P13501,X-ray diffraction,2.28,Monomer,"['B', 'C', 'E', 'F', 'H', 'I', 'A', 'G', 'D']"
+6aez,P13501,X-ray diffraction,1.63,Monomer,"['C', 'A']"
+6aez,P13501,X-ray diffraction,1.63,Monomer,['B']
+5uiw,P13501,X-ray diffraction,2.204,Dimer,['B']
+5cba,O43927,X-ray diffraction,2.5,Monomer,"['E', 'F']"
+5cmd,P13501,X-ray diffraction,3.086,Monomer,"['B', 'C', 'E', 'F', 'A', 'D']"
+5d14,P10145,X-ray diffraction,1.0,Monomer,['A']
+5dnf,P13501,X-ray diffraction,2.549,Monomer,"['B', 'C', 'E', 'F', 'H', 'I', 'A', 'G', 'D']"
+5d65,P10147,X-ray diffraction,3.1,Monomer,"['B', 'C', 'E', 'A', 'D']"
+5cor,P10147,X-ray diffraction,2.548,Monomer,"['B', 'C', 'E', 'F', 'H', 'I', 'A', 'G', 'J', 'D']"
+5cbe,O43927,X-ray diffraction,2.4,Monomer,"['E', 'F']"
+5coy,P13501,X-ray diffraction,1.443,Dimer,"['B', 'A']"
+5ob5,P19875,X-ray diffraction,1.65,Monomer,['A']
+5ltl,O15467,X-ray diffraction,1.45,Dimer,"['B', 'A']"
+6cws,Q9NRJ3,Solution NMR,0.0,Monomer,['A']
+6c6d,P13501,X-ray diffraction,5.5,Monomer,"['M', 'B', 'C', 'E', 'F', 'H', 'I', 'L', 'O', 'A', 'N', 'P', 'R', 'G', 'J', 'S', 'K', 'Q', 'D', 'T']"
+7f1r,P51681,Electron Microscopy,3.0,Monomer,['R']
+7f1t,P10147,X-ray diffraction,2.6,Monomer,['A']
+6ehz,H7BX38,Solution NMR,0.0,Monomer,['A']
+5wdz,P10145,Solution NMR,0.0,Monomer,['A']
+5eki,O00585,X-ray diffraction,1.9,Monomer,"['B', 'C', 'E', 'F', 'A', 'D']"
+4dn4,P13500,X-ray diffraction,2.8,Monomer,['M']
+4ra8,P10147,X-ray diffraction,2.6,Dimer,"['B', 'C', 'E', 'A', 'D']"
+4r9y,P02776,X-ray diffraction,4.11,Monomer,"['C', 'B', 'A', 'D']"
+5l7m,O55038,Solution NMR,0.0,Monomer,['A']
+4rau,P02776,X-ray diffraction,3.74,Monomer,"['C', 'F', 'I', 'L', 'O', 'R', 'X', 'U']"
+4uai,P48061,X-ray diffraction,1.9,Dimer,"['B', 'A']"
+1msg,P09341,Solution NMR,0.0,Dimer,"['B', 'A']"
+2hdm,P47992,Solution NMR,0.0,Monomer,['A']
+1o7z,P02778,X-ray diffraction,1.92,Dimer,"['B', 'A']"
+1icw,P10145,X-ray diffraction,2.01,Dimer,"['B', 'A']"
+1il8,P10145,Solution NMR,0.0,Dimer,"['B', 'A']"
+2l9h,P13501,Solution NMR,0.0,Monomer,"['B', 'C', 'A', 'D']"
+2kum,Q9Y4X3,Solution NMR,0.0,Monomer,['A']
+1tvx,P02775,X-ray diffraction,1.75,Monomer,"['B', 'C', 'A', 'D']"
+1ikl,P10145,Solution NMR,0.0,Monomer,['A']
+2k03,P48061,Solution NMR,0.0,Monomer,"['C', 'A']"
+1mgs,P09341,Solution NMR,0.0,Dimer,"['B', 'A']"
+2bdn,P13500,X-ray diffraction,2.53,Monomer,['A']
+1ml0,P13500,X-ray diffraction,2.8,Monomer,['D']
+1j8i,P47992,Solution NMR,0.0,Monomer,['A']
+1j9o,P47992,Solution NMR,0.0,Monomer,['A']
+1pfm,P02776,Solution NMR,0.0,Monomer,"['B', 'C', 'A', 'D']"
+1qnk,P19875,Solution NMR,0.0,Dimer,"['B', 'A']"
+2eot,P51671,Solution NMR,0.0,Monomer,['A']
+2fin,P13236,Solution NMR,0.0,Dimer,['B']
+2fht,Q98157,X-ray diffraction,1.7,Monomer,['A']
+1ilp,P10145,Solution NMR,0.0,Monomer,"['B', 'A']"
+1u4l,P13501,X-ray diffraction,2.0,Dimer,"['B', 'A']"
+2l4n,O00585,Solution NMR,0.0,Monomer,['A']
+2il8,P10145,Solution NMR,0.0,Dimer,"['B', 'A']"
+2k01,P48061,Solution NMR,0.0,Dimer,"['C', 'A']"
+1u4r,P13501,X-ray diffraction,2.2,Dimer,"['B', 'C', 'A', 'D']"
+2kee,P48061,Solution NMR,0.0,Monomer,['A']
+1o80,P02778,X-ray diffraction,2.0,Dimer,"['B', 'A']"
+1plf,P02777,X-ray diffraction,2.2,Monomer,"['B', 'C', 'A', 'D']"
+1nr2,Q92583,X-ray diffraction,2.18,Monomer,"['B', 'A']"
+1zxt,Q76RJ0,X-ray diffraction,1.7,Monomer,"['B', 'C', 'A', 'D']"
+1lv9,P02778,Solution NMR,0.0,Monomer,['A']
+1mi2,P10889,Solution NMR,0.0,Dimer,"['B', 'A']"
+1nap,P02775,X-ray diffraction,1.9,Monomer,"['B', 'C', 'A', 'D']"
+2kec,P48061,Solution NMR,0.0,Monomer,['A']
+2ked,P48061,Solution NMR,0.0,Monomer,['A']
+2j7z,P48061,X-ray diffraction,1.95,Dimer,"['B', 'A']"
+1dol,P13500,X-ray diffraction,2.4,Monomer,['A']
+2jp1,P47992,Solution NMR,0.0,Dimer,"['B', 'A']"
+1hun,P13236,Solution NMR,0.0,Dimer,"['B', 'A']"
+1f9q,P02776,X-ray diffraction,2.0,Monomer,"['B', 'C', 'A', 'D']"
+1eig,O00175,Solution NMR,0.0,Monomer,['A']
+7rkn,P78423,Electron Microscopy,3.6,Monomer,['L']
+2k05,P48061,Solution NMR,0.0,Monomer,"['C', 'A']"
+1don,P13500,Solution NMR,0.0,Dimer,"['B', 'A']"
+1sdf,P48061,Solution NMR,0.0,Monomer,['A']
+1el0,P22362,Solution NMR,0.0,Monomer,['A']
+1hhv,Q98157,Solution NMR,0.0,Monomer,['A']
+7vl9,Q16663,Electron Microscopy,2.6,Monomer,['L']
+7rkm,P78423,Electron Microscopy,3.5,Monomer,['L']
+7rkf,P78423,Electron Microscopy,4.0,Monomer,['L']
+1cm9,Q98157,X-ray diffraction,2.1,Dimer,"['B', 'A']"
+1f2l,P78423,X-ray diffraction,2.0,Monomer,"['B', 'C', 'A', 'D']"
+1b53,P10147,Solution NMR,0.0,Dimer,"['B', 'A']"
+1esr,P80075,X-ray diffraction,2.0,Dimer,['A']
+1eih,O00175,Solution NMR,0.0,Monomer,['A']
+1dok,P13500,X-ray diffraction,1.85,Dimer,"['B', 'A']"
+1bo0,P80098,Solution NMR,0.0,Monomer,['A']
+7xbx,P49238,Electron Microscopy,3.4,Monomer,['R']
+1g2t,Q9Y258,Solution NMR,0.0,Monomer,['A']
+1hum,P13236,Solution NMR,0.0,Dimer,"['B', 'A']"
+1hrj,P13501,Solution NMR,0.0,Dimer,"['B', 'A']"
+1f9r,P02776,X-ray diffraction,2.0,Monomer,"['B', 'C', 'A', 'D']"
+1eqt,P13501,X-ray diffraction,1.6,Dimer,"['B', 'A']"
+1f9p,P02775,X-ray diffraction,1.93,Monomer,['A']
+1dom,P13500,Solution NMR,0.0,Dimer,"['B', 'A']"
+1hfg,Q98157,Solution NMR,0.0,Monomer,['A']
+7xa3,P13500,Electron Microscopy,2.9,Monomer,['L']
+1g91,P55773,Solution NMR,0.0,Monomer,['A']
+1hfn,Q98157,Solution NMR,0.0,Monomer,['A']
+1ha6,O89093,Solution NMR,0.0,Monomer,['A']
+2kol,P48061,Solution NMR,0.0,Monomer,['A']
+1vmc,P48061,Solution NMR,0.0,Monomer,['A']
+1ilq,P10145,Solution NMR,0.0,Monomer,"['B', 'A']"
+1u4m,P13501,X-ray diffraction,2.0,Dimer,"['B', 'A']"
+1ikm,P10145,Solution NMR,0.0,Monomer,['A']
+1b3a,P13501,X-ray diffraction,1.6,Monomer,"['B', 'A']"
+1b2t,P78423,Solution NMR,0.0,Monomer,['A']
+1f9s,P02776,X-ray diffraction,2.38,Monomer,"['B', 'C', 'A', 'D']"
+1b50,P10147,Solution NMR,0.0,Dimer,"['B', 'A']"
+1g2s,Q9Y258,Solution NMR,0.0,Monomer,['A']
+1eot,P51671,Solution NMR,0.0,Monomer,['A']
+2hci,P78556,X-ray diffraction,1.81,Dimer,"['B', 'A']"
+1qg7,P48061,X-ray diffraction,2.0,Dimer,"['B', 'A']"
+2hcc,Q16663,Solution NMR,0.0,Monomer,['A']
+1o7y,P02778,X-ray diffraction,3.0,Monomer,"['B', 'C', 'A', 'D']"
+1rtn,P13501,Solution NMR,0.0,Dimer,"['B', 'A']"
+1qe6,P10145,X-ray diffraction,2.35,Dimer,"['B', 'C', 'A', 'D']"
+1rjt,O14625,Solution NMR,0.0,Monomer,['A']
+1pfn,P02776,Solution NMR,0.0,Monomer,"['B', 'C', 'A', 'D']"
+1msh,P09341,Solution NMR,0.0,Dimer,"['B', 'A']"
+1ncv,P80098,Solution NMR,0.0,Dimer,"['B', 'A']"
+1m8a,P78556,X-ray diffraction,1.7,Monomer,"['B', 'A']"
+1nr4,Q92583,X-ray diffraction,1.72,Dimer,"['B', 'C', 'E', 'F', 'H', 'A', 'G', 'D']"
+2vxw,P13501,X-ray diffraction,1.7,Monomer,"['B', 'C', 'A', 'D']"
+2mpm,P51671,Solution NMR,0.0,Dimer,['A']
+2ffk,P13236,Solution NMR,0.0,Dimer,['B']
+1rto,P13501,Solution NMR,0.0,Dimer,"['B', 'A']"
+7vla,Q16663,Electron Microscopy,2.7,Monomer,['L']
+2k04,P48061,Solution NMR,0.0,Monomer,"['C', 'A']"
+1u4p,P13501,X-ray diffraction,1.7,Dimer,"['B', 'A']"
+1je4,P13236,Solution NMR,0.0,Monomer,['A']
+1vmp,Q98157,Solution NMR,0.0,Monomer,['A']
+2jyo,P78556,Solution NMR,0.0,Monomer,['A']
+1a15,P48061,X-ray diffraction,2.2,Dimer,"['B', 'A']"

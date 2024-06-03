@@ -1,0 +1,90 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% csrf_token %}
+
+{% block addon_css %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>IFP Search Results</h1>
+    <hr class="my-2"> 
+    {% if similar_ifps %}
+    <div class="scrollable-container">
+        <table id="partners">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Structure</th>
+                    <th>Chemokine Chain</th>
+                    <th>Partner Chain</th>
+                    <th>Similarity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ifp, similarity in similar_ifps %}
+                <tr>
+                    <td>
+                        <input type="checkbox" class="ifp-select" data-id="{{ ifp.id }}">
+                    </td>
+                    <td>
+                        <a target="_blank" href="/structure/{{ ifp.chemokine_partner_pair.structure.pdb_code.index }}"
+                        >{{ ifp.chemokine_partner_pair.structure.pdb_code.index}}</a>
+                    </td>
+                    <td>{{ ifp.chemokine_partner_pair.chemokine_chain }}</td>
+                    <td>{{ ifp.chemokine_partner_pair.partner_chain }}</td>
+                    <td>{{ similarity|floatformat:2 }}</td> <!-- Display similarity with 2 decimal places -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <button id="view-selected" class="btn btn-primary mt-3">View Selected</button>
+    {% else %}
+    <p>No similar interaction fingerprints found.</p>
+    {% endif %}
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+
+    <!-- Include DataTables JS and CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+    <script>
+        $(document).ready( function () {
+            $('#partners').DataTable({
+                "pageLength": -1,  // Set the page length to -1 to show all entries
+                "lengthMenu": [[-1], ["All"]]  // Adjust the length menu to only have the "All" option
+            });
+            
+            $('#view-selected').click(function() {
+                var selectedIndices = [];
+                $('.ifp-select:checked').each(function() {
+                    selectedIndices.push($(this).data('pdb-code-index'));
+                });
+            
+                if (selectedIndices.length > 0) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/view_alignment/",
+                        data: {
+                            pdb_indices: selectedIndices.join(","),
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function(response) {
+                            // Update the page with the returned HTML
+                            $('body').html(response);
+                        },
+                        error: function(xhr, status, error) {
+                            alert("An error occurred: " + error);
+                        }
+                    });
+                } else {
+                    alert("Please select at least one entry to view.");
+                }
+            });
+            
+        });
+    </script>
+
+{% endblock %}

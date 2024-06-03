@@ -1,0 +1,84 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="text-center text-md-start">
+                    <h1 class="display-2">About ChemoPar-db</h1>
+                    <p class="lead">ChemoPar-db: a database of chemokines and their binding partners.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="mb-4 mt-4">
+
+    <h2 class="mt-5 mb-3">Data overview of ChemoPar-db</h2>
+    <span>
+        ChemoPar-db consists of three main datasets:
+        <ul>
+            <li>Sequence data on all chemokines from the PFam family (PF00048)</li>
+            <li>Structural data of chemokines obtained from the PDB</li>
+            <li>Chemokine-Partner interaction fingerprints</li>
+        </ul>
+    </span>
+
+    <h5 class="mt-4">Sequence dataset</h5>
+    <span>
+        ...
+    </span>
+
+    <h5 class="mt-4">Structural dataset</h5>
+    <span>
+        ...
+    </span>
+    <div class="row">
+        <div class="col-md-12">
+            {{ chart|safe }}
+        </div>
+    </div>
+
+    <h5 class="mt-4">Interaction fingerprints dataset</h5>
+    <span>
+        ...
+    </span>
+
+    <hr class="mb-4 mt-4">
+    <br>
+
+    <h2 class="mt-4 mb-3 search-title">Detailed data collection and processing method</h2>
+    <span>
+        ChemoPardb contains all available chemokine PDB structures which are organized, annotated, and aligned. You can <a href="/browse"><strong>Browse</strong></a> the UniProt reviewed chemokine protein entries or you can <a href="/search"><strong>Search</strong></a> the database for all structures.
+    </span>
+    <p style="text-align:justify;">
+        Chemokines are a family of small signaling proteins (chemotactic cytokines) that indeed play crucial roles in cellular signaling processes, particularly in the immune system. They are involved in guiding and regulating the movement of immune cells within the body, helping to orchestrate the immune response to various pathogens and inflammatory signals.
+    </p>
+    <p style="text-align:justify;">
+        ChemoPardb contains all available chemokine PDB structures which are organized, annotated, and aligned. You can <a href="/browse"><strong>Browse</strong></a> the UniProt reviewed chemokine protein entries or you can <a href="/search"><strong>Search</strong></a> the database for all structures.
+    </p>
+   
+
+    <h5 id="data-collection">Data collection</h5>
+    <p style="text-align:justify;">
+        Chemokine protein entries were collected using the PFAM interleukin-8 family (PF00048) where we focused only on the reviewed UniProt IDs. This resulted in a total of 195 chemokine proteins from different species. These proteins were used to obtain the 227 PDB structures. The selected PDB structures are first split into all available models (specifically for NMR structures).
+    </p>
+    <div class="col-md-6 d-flex justify-content-center align-items-center">
+        <figure class="home-figure align-items-center">
+            <img src="{% static 'home/images/collection.png' %}" alt="img" style="max-width: 200%;">
+        </figure>
+    </div>
+    <br>
+    <h5 id="structure-processing">Structure processing</h5>
+    <p style="text-align:justify;">
+        The structures are protonated with the use of ProteinPlus ProToss webserver<sup><a href="https://proteins.plus/" target="_blank" data-bs-toggle="tooltip" style="text-decoration:none;" data-bs-placement="top">1</a></sup> using an API request.Subsequently, the structures are split into protein, solvent, cofactors, ions, small molecules, and others. The protein elements are further divided into chemokines and partners.
+    </p>
+    <div class="col-md-6 d-flex justify-content-center align-items-center">
+        <figure class="home-figure">
+            <img src="{% static 'home/images/processing_workflow.png' %}" alt="img" style="max-width: 200%;">
+        </figure>
+    </div>
+</div>
+{% endblock %}

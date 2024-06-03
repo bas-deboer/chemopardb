@@ -1,0 +1,866 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block addon_css %}
+    <link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
+    <link href="{% static 'home/css/color_picker.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'home/css/jquery.dataTables.min.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'home/css/construct_browser.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'home/css/yadcf_bootstrap_version.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css" />
+    <link href="{% static 'home/css/construct_alignment.css' %}" rel="stylesheet">
+    <link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
+    <link href="{% static 'home/css/modal.css' %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'home/css/jquery.powertip.css' %}" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link href="{% static 'home/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+    <script src="{% static 'home/js/jquery.dataTables.min.js' %}"></script>
+
+    
+    <style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24
+        }
+    
+    #Viewer {
+        width: 600px;
+        height: 500px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .scrollable-table {
+            width: 100%;
+            max-height: 600px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Page Heading -->
+    <h1 class="detail_title text-center">                
+        {% if not structure.pdb_code %}
+        AlphaFold model {{ structure.protein.accession }}-AF
+        {% else %}
+	    PDB structure <a href="https://www.rcsb.org/structure/{{ structure.pdb_code.index }}" target="_blank">{{ structure.pdb_code.index }}</a>
+        {% endif %}
+        {% if chain %}
+        - chain {{ chain.chain_ID }}
+        {% endif %}
+    </h1>
+    <br>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Structure details -->
+        <div class="col-md-6">
+            <h3 id="structure_details">Structure details</h3>
+            <hr class="my-2">
+            <div class="row">
+                <div class="col-12">
+                    <ul class="list-unstyled">
+                        <li><b>Protein:</b>
+                            {{protein}} <a href="/protein/{{protein}}"><span class="material-symbols-outlined">open_in_new</span></a>
+                        </li>
+                        <li><b>Organism:</b> 
+                            <i>{{ protein.species }}</i>
+                        </li>
+                        <li><b>UniProt ID:</b> 
+                            {{ protein.accession }} <a href="https://www.uniprot.org/uniprot/{{ protein.accession }}" target="_blank" title="www.uniprot.org">
+                            <span class="material-symbols-outlined">open_in_new</span></a>
+                        </li>
+                    </ul>
+
+                    <ul class="list-unstyled">
+                        <li><b>Method:</b> <a>{{ structure.structure_type.name }}</a></li>
+                        <li><b>Resolution:</b> {% if structure.resolution != None %}<a>{{ structure.resolution }} Å</a>{% endif %}</li>
+                        <li><b>Date:</b> <a>{{ structure.publication_date }}</a></li>
+                        <li><b>Reference:</b> {{ structure.publication.web_link.index }}
+                            <a href="https://doi.org/{{ structure.publication.web_link.index }}" target="_blank"><span class="material-symbols-outlined">open_in_new</span></a></li>
+                        <li><b>State:</b> <a>{{ structure.state }}</a></li>
+                        </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D view -->
+        <div class="col-md-6">
+            <h3 id="3d_view">3D view</h3>
+            <hr class="my-2">
+            <div class="row justify-content-center">
+                <div>
+                    <div id="viewport" style="width:500px; height:400px;"></div>
+                    <div style="width:500px; background-color:#eaeaea; border-radius: 0px 0px 5px 5px;">
+                        <p style="padding: 2px 0px 2px 5px; font-size: 10px;"><button id="fullscreen">Full Screen</button><a href="https://github.com/arose/ngl" target='_blank'> NGL</a> is a WebGL based 3D viewer powered by <a href="https://mmtf.rcsb.org" target='_blank'>MMTF</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <br>
+
+        <!-- Snake plot -->
+        <div class="row">
+            <div class="col-md-12">
+                <h3 id="snake_plot">Snake Plot</h3>
+                <hr class="my-2">
+                {{ protein.get_snake_plot|safe }}
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-download"></span> Download <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                        <li>
+                            <a href="javascript:saveSvgAsPng(document.getElementById('snakeplot'), 'snake_{{ p.entry_name }}.png',
+                            {scale: 3});">PNG</a>
+                        </li>
+                        <li>
+                            <a href="javascript:saveSvgAsJpg(document.getElementById('snakeplot'), 'snake_{{ p.entry_name }}.jpg',
+                            {scale: 3});">JPG</a>
+                        </li>
+                        <li>
+                            <a href="javascript:saveSvgAsTiff(document.getElementById('snakeplot'), 'snake_{{ p.entry_name }}.tiff',
+                            {scale: 3});">TIFF</a>
+                            </a>
+                        </li>
+                        <li>
+                        <a id=snake_svg_link href-lang="image/svg+xml" href="" download="snake_{{ p.entry_name }}">SVG</a>
+                        </li>
+                        </ul>
+                    </div>
+            </div>
+        </div>
+
+
+        {% for pair_key, ifp_data in ifp_data_by_pair.items %}
+        <button id="colorinteractions_{{ pair_key }}" style="width:220px;" onclick="loadInteractions('{{ pair_key }}')">Show Interactions for {{ pair_key }}</button>
+        <div id="interactions_container_{{ pair_key }}" style="display: none;">
+            <!-- Container to dynamically load interaction data -->
+            <div id="plotid_{{ pair_key }}">
+                <!-- Assuming rectangles and titles with IDs based on generic numbers will be placed here -->
+            </div>
+        </div>
+    {% endfor %}
+
+    <script>
+        function loadInteractions(pairKey) {
+            // Split the pairKey to get chemokine_chain and partner_chain
+            const pairParts = pairKey.split('-');
+            const chemokine_chain = pairParts[0];
+            const partner_chain = pairParts[1];
+        
+            $.ajax({
+                url: "/interaction/ajax/",
+                data: {
+                    structure: '{{ structure.pdb_code.index }}',
+                    chemokine_chain: chemokine_chain,
+                    partner_chain: partner_chain,
+                    pair_key: pairKey,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                method: "POST",
+                success: function(data) {
+                    var container = $("#interactions_container_" + pairKey);
+                    container.html(''); // Clear the container before updating
+                    container.show();
+                    ColorInteractions(pairKey, data.interactions);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading interactions:", status, error);
+                }
+            });
+        }
+        
+        function ColorInteractions(pairKey, interactions) {
+            const svgElement = document.getElementById('snakeplot');
+            if (!svgElement) {
+                console.error(`SVG element with ID 'snakeplot' not found.`);
+                return;
+            }
+        
+            interactions.forEach(function(interaction) {
+                const genericNumber = interaction.generic_number;
+        
+                // Apply red color to all interacting residues
+                const color = "#E60A0A"; // Red color
+        
+                // Apply color to the visualization
+                const circleElem = svgElement.querySelector(`circle[id='${genericNumber}']`);
+                if (circleElem) {
+                    circleElem.style.fill = color;
+                    circleElem.style.fillOpacity = 1;
+                    const textElem = svgElement.querySelector(`text[id='${genericNumber}t']`);
+                    if (textElem) {
+                        textElem.style.fill = "#FDFF7B"; // Adjust based on requirements
+                    }
+                } else {
+                    console.warn(`Circle element with ID ${genericNumber} not found in SVG.`);
+                }
+        
+                const titleElem = svgElement.querySelector(`circle[id='${genericNumber}']`);
+                if (titleElem) {
+                    const originalTitle = titleElem.getAttribute('original_title');
+                    const extra = `\n1 interaction | Type: ${interaction.interaction_type}`;
+                    titleElem.setAttribute('title', originalTitle + extra);
+                } else {
+                    console.warn(`Title element with ID ${genericNumber} not found in SVG.`);
+                }
+            });
+        
+            // Update tooltips
+            $("circle, text").tooltip('fixTitle');
+        }
+        </script>
+        
+    
+
+    
+    
+    
+            
+
+    <br>
+    <br>
+    <br>
+    <br>
+
+    
+    <h3>Chemokine-Partner Interactions</h3>
+    <hr class="my-2">
+    <div id="IFP-coding" class="ifp-coding">
+        <span class="ifp hyd">•</span> <span class="hyd"> Hydrophobic  </span>
+        <span class="ifp aff">•</span> <span class="aff"> Aromatic face-to-face  </span>
+        <span class="ifp afe">•</span> <span class="afe"> Aromatic face-to-edge  </span>
+        <span class="ifp don">•</span> <span class="don"> H-bond donor  </span>
+        <span class="ifp acc">•</span> <span class="acc"> H-bond acceptor  </span>
+        <span class="ifp ionpos">•</span> <span class="ionpos"> Ionic positive  </span>
+        <span class="ifp ionneg">•</span> <span class="ionneg"> Ionic negative  </span>
+      </div>
+<div>
+<table class="residueSearch">
+    <tbody>
+        <!-- Static header row -->
+        <tr>
+            <td class="residueSearchHeader green" colspan="20">N-term</td>
+        </tr>
+        <!-- Dynamic sequence data rows for the first 20 residues -->
+        {% for item in sequence_data|slice:":20" %}
+            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Check might not be necessary here since it's always up to 20 items -->
+                <td class="residueSearch">
+                    {% if item.residue != '_' %}
+                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
+                    {% else %}
+                        <span class="res">_</span><br><span class="xray">_</span>
+                    {% endif %}
+                </td>
+            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}
+        {% endfor %}
+        
+    </tr><tr>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+    </tr><tr>
+
+        <tr>
+            <td class="residueSearchHeader green" colspan="20">N-term</td>
+        </tr>
+        <!-- Dynamic sequence data rows for the first 20 residues -->
+        {% for item in sequence_data|slice:"20:40" %}
+            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Check might not be necessary here since it's always up to 20 items -->
+                <td class="residueSearch">
+                    {% if item.residue != '_' %}
+                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
+                    {% else %}
+                        <span class="res">_</span><br><span class="xray">_</span>
+                    {% endif %}
+                </td>
+            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}
+        {% endfor %}
+        
+    </tr><tr>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+    </tr><tr>
+        
+        <tr>
+            <td class="residueSearchHeader green" colspan="20">N-term</td>
+        </tr>
+        <!-- Dynamic sequence data rows for the first 20 residues -->
+        {% for item in sequence_data|slice:"40:60" %}
+            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Check might not be necessary here since it's always up to 20 items -->
+                <td class="residueSearch">
+                    {% if item.residue != '_' %}
+                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
+                    {% else %}
+                        <span class="res">_</span><br><span class="xray">_</span>
+                    {% endif %}
+                </td>
+            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}
+        {% endfor %}
+        
+    </tr><tr>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+    </tr><tr>
+        <tr>
+            <td class="residueSearchHeader green" colspan="2">N-term</td>
+            <td class="residueSearchHeader magenta" colspan="5">CXC</td>
+            <td class="residueSearchHeader yellow" colspan="13">N-loop</td>
+        </tr>
+
+        <!-- Dynamic sequence data rows for residues 21-40 -->
+        {% for item in sequence_data|slice:"60:80" %}
+            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Starting a new row; adjust as necessary -->
+                <td class="residueSearch">
+                    {% if item.residue != '_' %}
+                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
+                    {% else %}
+                        <span class="res">_</span><br><span class="xray">_</span>
+                    {% endif %}
+                </td>
+            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}  <!-- Ending the row -->
+        {% endfor %}
+
+    </tr><tr>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+    </tr><tr>
+
+        <tr>
+            <td class="residueSearchHeader yellow" colspan="2">N-loop</td>
+            <td class="residueSearchHeader blue" colspan="7">B1-strand</td>
+            <td class="residueSearchHeader yellow" colspan="10">30sloop</td>
+            <td class="residueSearchHeader blue" colspan="1"> B2-strand</td>  
+        </tr>
+        <!-- Dynamic sequence data rows for residues 21-40 -->
+        {% for item in sequence_data|slice:"80:100" %}
+            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Starting a new row; adjust as necessary -->
+                <td class="residueSearch">
+                    {% if item.residue != '_' %}
+                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
+                    {% else %}
+                        <span class="res">_</span><br><span class="xray">_</span>
+                    {% endif %}
+                </td>
+            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}  <!-- Ending the row -->
+        {% endfor %}
+
+    </tr><tr>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+    </tr><tr>
+
+        <tr>
+            <td class="residueSearchHeader blue" colspan="5"> B2-strand</td>
+            <td class="residueSearchHeader yellow" colspan="9"> 40sloop</td>
+            <td class="residueSearchHeader blue" colspan="4"> B3-strand</td>
+            <td class="residueSearchHeader yellow" colspan="2"> 50sloop</td>
+        </tr>
+        <!-- Dynamic sequence data rows for residues 21-40 -->
+        {% for item in sequence_data|slice:"100:120" %}
+            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Starting a new row; adjust as necessary -->
+                <td class="residueSearch">
+                    {% if item.residue != '_' %}
+                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
+                    {% else %}
+                        <span class="res">_</span><br><span class="xray">_</span>
+                    {% endif %}
+                </td>
+            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}  <!-- Ending the row -->
+        {% endfor %}
+
+    </tr><tr>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+    </tr><tr>
+
+
+        <tr>
+            <td class="residueSearchHeader yellow" colspan="2"> 50sloop</td>
+            <td class="residueSearchHeader red" colspan="12"> a-Helix</td>
+            <td class="residueSearchHeader green" colspan="6"> C-Terminus</td>
+        </tr>
+        <!-- Dynamic sequence data rows for residues 21-40 -->
+        {% for item in sequence_data|slice:"120:140" %}
+            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Starting a new row; adjust as necessary -->
+                <td class="residueSearch">
+                    {% if item.residue != '_' %}
+                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
+                    {% else %}
+                        <span class="res">_</span><br><span class="xray">_</span>
+                    {% endif %}
+                </td>
+            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}  <!-- Ending the row -->
+        {% endfor %}
+
+    </tr><tr>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+    </tr><tr>
+
+        <tr>
+            <td class="residueSearchHeader green" colspan="20"> C-Terminus</td>
+        </tr>
+        <!-- Dynamic sequence data rows for residues 140-160 -->
+        {% for item in sequence_data|slice:"140:160" %}
+            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Starting a new row; adjust as necessary -->
+                <td class="residueSearch">
+                    {% if item.residue != '_' %}
+                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
+                    {% else %}
+                        <span class="res">_</span><br><span class="xray">_</span>
+                    {% endif %}
+                </td>
+            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}  <!-- Ending the row -->
+        {% endfor %}
+
+    </tr><tr>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+        <td class="residueSearchBottom"></td>
+    </tr><tr>
+
+    </tbody>
+</table>
+
+<br>
+
+</div>    
+<!-- Table of Interactions -->
+    <div>
+        <h3>Interactions found in structure</h3>
+        <hr class="my-2">
+        <a href="{% url 'interaction:download_excel' slug=structure.pdb_code.index %}">Download list in excel</a>
+        <div>
+            <table id="example" class="table table-hover" style="width: 100%">
+                <thead>
+                    <tr>
+                        <th>Partner</th>
+                        <th>Chemokine Residue</th>
+                        <th>Generic number</th>
+                        <th>Segment</th>
+                        <th>Partner Residue</th>
+                        <th>Partner Chain</th>
+                        <th>Interaction Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interaction in interactions %}
+                    <tr data-residue="{{ interaction.chemokine_residue.pdbseq_number }}">
+                        <td> - </td>
+                        <td>{{ interaction.chemokine_residue.residue.amino_acid_three_letter }} {{ interaction.chemokine_residue.pdbseq_number }}</td>
+                        <td>{{ interaction.chemokine_residue.residue.generic_number }}</td>
+                        <td>{{ interaction.chemokine_residue.residue.segment }}</td>
+                        <td>{{ interaction.partner_residue }}</td>
+                        <td>{{ interaction.partner_chain }}</td>
+                        <td>{{ interaction.interaction_type }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3">No interactions found for this structure.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    {% for pair, ifp_data in ifp_data_by_pair.items %}
+    <h3>Interactions for Pair: {{ pair }}</h3>
+
+    
+    <!-- Interaction pattern search form -->
+    <div class="row">
+        <div class="card">
+            <div class="content">
+                <h6>Interaction pattern search</h6>
+                <span>Search complexes with similar interaction patterns:</span>
+                <form enctype="multipart/form-data" action="/interaction/ifp_search/" method="POST">
+                    {% csrf_token %}
+                    <input type="number" step="0.01" name="tanimoto" value="0.1" min="0.0" max="1.0"> Specify the minimum similarity (0.00 no similarity, 1.00 identical)<br>
+                    <input type="hidden" name="ifp_id" value="{{ ifp_data.0.chemokine_partner_pair.id }}">
+                    <input type="hidden" name="full_ifp" value="{% for ifp in ifp_data %}{{ ifp.ifp_string }}{% endfor %}">
+                    <input type="hidden" name="flag_IFP_search" value="TRUE">
+                    <input type="submit" class="btn btn-primary" value="IFP search!">
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    {% endfor %}
+    
+
+    <script>
+        $( document ).ready(function() {
+            // var elements = document.getElementsByClassName('long')
+
+            // for (var i = 0; i < elements.length; i++){
+            //     elements[i].style.display = 'none';
+            // }
+            y_min = 0;
+            y_max = 0;
+            // maxmin();
+            //$(".long").hide();
+
+
+            $('rect').each(function(){
+
+                rectclass = $(this).attr('class');
+                if (rectclass) {
+                    if (rectclass.indexOf("CL") >= 0 && rectclass.indexOf("long") >= 0) {
+
+                        numResidues = ($('.'+rectclass.replace(/ /g,".")).length-3)/2
+
+                        // console.log('class:'+rectclass+' count'+numResidues);
+
+                        if (numResidues<10) {
+                            toggleLoop('.'+rectclass.split(' ')[0],'',1);
+                        }
+                    }
+                }
+            });
+
+            maxmin();
+
+            $("text").tooltip({
+                'container': 'body',
+                'placement': 'top',
+                'animation': false,
+                'html' : true
+            });
+
+
+            $("circle").tooltip({
+                'container': 'body',
+                'placement': 'top',
+                'animation': false,
+                'html' : true
+            });
+
+            $("circle").hover(function(){
+                $('.tooltip').css('top',parseInt($('.tooltip').css('top')) + 2.8 + 'px')
+            });
+        
+            $(".rtext").click(function() {
+                parentid = $(this).closest('svg').attr('id');
+                newcolor = $(".pick-color."+parentid+".selected").attr('id');
+                if (newcolor) {
+                  newcolor = newcolor.split('-');
+                } else {
+                  custom =  $("#custom_color_"+parentid).val();
+                  custom_text = getContrast50(custom);
+                  newcolor = ["pick",custom,custom_text];
+                }
+              console.log(newcolor);
+            
+              $(this).css("fill", newcolor[2]);
+              $(this).prev().css("fill", newcolor[1]);
+            });
+
+            $(".rcircle").click(function() {
+                parentid = $(this).closest('svg').attr('id');
+                newcolor = $(".pick-color."+parentid+".selected").attr('id');
+
+                if (newcolor) {
+                  newcolor = newcolor.split('-');
+                } else {
+                  custom =  $("#custom_color_"+parentid).val();
+                  custom_text = getContrast50(custom);
+                  newcolor = ["pick",custom,custom_text];
+                }
+              console.log(newcolor);
+              $(this).css("fill", newcolor[1]);
+              $(this).next().css("fill", newcolor[2]);
+            });
+
+            $("#snake_svg_link").click(function() {
+                svgAsDataUri(document.getElementById("snakeplot"),{}, function(uri) {
+                    $("#snake_svg_link").attr('href',uri);
+                });
+            });
+            $("#helix_svg_link").click(function() {
+                svgAsDataUri(document.getElementById("helixbox"),{}, function(uri) {
+                    $("#helix_svg_link").attr('href',uri);
+                });
+            });
+
+        });
+
+        $(".pick-color").click(function() {
+            plottype = $(this).attr('class').split(' ')[1];
+        
+            console.log($(this).attr('id'));
+            $(".pick-color."+plottype).css('borderWidth','2px');
+            $(".pick-color."+plottype).css('height','20px');
+            $(".pick-color."+plottype).removeClass('selected');
+            $(this).css('borderWidth','3px');
+            $(this).css('height','22px');
+            $(this).addClass('selected');
+        
+        });
+    </script>
+
+{% endblock %}
+
+{% block addon_js %}
+<script>
+$(document).ready(function() {
+    var table = $('#example').DataTable({
+        scrollX: true,
+        scrollY: 700,
+        bScrollCollapse: true,
+        paging: false,
+        autoWidth: true,
+        dom: 'lfrtip',
+        initComplete: function () {
+            var api = this.api();
+            // Create a row for the filters
+            var tr = $('<tr>').appendTo($(api.table().header()));
+
+            api.columns().indexes().flatten().each(function (i) {
+                var column = api.column(i);
+                var select = $('<select><option value=""></option></select>')
+                    .appendTo($('<th>').appendTo(tr))
+                    .on('change', function () {
+                        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                        column.search(val ? '^' + val + '$' : '', true, false).draw();
+                    });
+
+                column.data().unique().sort().each(function (d, j) {
+                    select.append('<option value="' + d + '">' + d + '</option>');
+                });
+            });
+        }
+    });
+});
+</script>
+
+
+<script src="{% static 'home/js/ngl.js' %}"></script>
+<script src="{% static 'home/js/table_functions.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var stage_full = new NGL.Stage("viewport", { backgroundColor: "white" });
+
+    var stringBlob = new Blob([`'{{ structure.pdb_data.pdb }}'`], { type: 'text/plain' });
+    var file = new File([stringBlob], "something.pdb");
+
+    stage_full.loadFile(file, { ext: "pdb" }).then(function(o) {
+        o.addRepresentation("cartoon", {
+            color: "residueindex",
+            aspectRatio: 4,
+            scale: 0.5
+        });
+
+        //setTimeout(() => {
+        //    o.autoView();
+        //}, 1000); // Delay of 1000 milliseconds (1 second)
+
+        // Check if display_res is available
+        {% if display_res %}
+        var residueSelection = "{{ display_res|join:', ' }}"; // Join array elements into a comma-separated string
+        o.addRepresentation("licorice", {
+            sele: "(" + residueSelection + ") and sidechainAttached and not hydrogen",
+            scale: 1.5,
+            aspectRatio: 1
+        });
+        o.addRepresentation("label", {
+            sele: "(" + residueSelection + ") and .CB", // Change CB to a common atom name in your residues if needed
+            color: "#113",
+            scale: 2.0
+        });
+        {% endif %}
+
+        // If there is a ligand or additional representations to add
+        {% if main_ligand %}
+        var pdbLigs = {{ main_ligand|safe }};
+        pdbLigs.forEach(function(lig) {
+            o.addRepresentation("ball+stick", {
+                sele: lig,
+                scale: 1,
+                aspectRatio: 1
+            });
+            o.addRepresentation("surface", {
+                sele: lig,
+                opacity: 0.4,
+                useWorker: false
+            });
+        });
+        {% endif %}
+    });
+    // Adding fullscreen toggle on button click
+    document.getElementById("fullscreen").addEventListener("click", function() {
+        stage_full.toggleFullscreen(); // Toggle fullscreen mode for the NGL stage
+    });
+});
+</script>
+
+
+<script src="{% static 'home/js/sequenceviewer.js' %}"></script>
+<script src="{% static 'home/js/saveSvgAsPng.js' %}"></script>
+<script src="{% static 'home/js/diagrams.js' %}"></script>
+<script src="{% static 'home/js/color_picker.js' %}"></script>
+<script src="{% static 'home/js/jquery.dataTables.min.js' %}"> </script>
+<script src="{% static 'home/js/jquery.dataTables.yadcf.js' %}"> </script>
+<script src="{% static 'home/js/select2.js' %}"> </script>
+<script src="{% static 'home/js/alignment.js' %}"> </script>
+<script src="{% static 'home/js/jquery.powertip.js' %}"></script>
+
+{% endblock %}

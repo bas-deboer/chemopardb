@@ -1,0 +1,139 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block addon_css %}
+<style>
+  .alert {
+    padding: 20px;
+    background-color: #f44336;
+    color: white;
+    opacity: 1;
+    transition: opacity 0.6s;
+    margin-bottom: 15px;
+    margin-left: 5rem;
+    margin-right: 5rem;
+  }
+  
+  .alert.success {background-color: #04AA6D;}
+  .alert.info {background-color: #2196F3;}
+  .alert.warning {background-color: #ff9800;}
+  
+  .closebtn {
+    margin-left: 15px;
+    color: white;
+    font-weight: bold;
+    float: right;
+    font-size: 22px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  
+  .closebtn:hover {
+    color: black;
+  }
+  </style>
+{% endblock %}
+
+{% block content %}
+
+<div class="alert warning">
+  <span class="closebtn">&times;</span>  
+  <strong>Notice:</strong> This version of ChemoPar-db is currently under development. If you encounter any issues, please don't hesitate to contact us. Your feedback is valuable and helps us improve.
+</div>
+
+    <div class="container py-4">
+  
+        <div class="p-5 mb-4 bg-light rounded-3">
+            <div class="container-fluid py-5">
+              <div class="row">
+                <!-- Text Column -->
+                <div class="col-md-7">
+                  <h1 class="display-5 fw-bold">Welcome to ChemoPar-db</h1>
+                  <hr class="my-2">
+                  <p class="fs-4">ChemoPar-db contains all available chemokine PDB structures which are organized, annotated, and aligned. You can browse the UniProt reviewed chemokine protein entries or you can search the database for all structures.</p>
+                    <div class="input-group">
+                        <input id="searchstructure" class="form-control mr-sm-2 custom-input" type="text" placeholder="Search structures" aria-label="Search">
+                        <button id="searchButton" type="button" class="btn" data-mdb-ripple-init>Search</button>
+                    </div>
+                </div>  
+                <!-- Image Column -->
+                <div class="col-md-5">
+                  <figure>
+                    <img src="{% static 'home/images/chemopar_example.png' %}" alt="img" style="max-width: 100%; height: auto;"></img>
+                  </figure>
+                </div>
+              </div>
+            </div>    
+          </div>
+     
+
+          <div class="container-fluid py-5">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="h-100 p-5 text-white bg-dark rounded-3 d-flex align-items-center">
+                  <div class="text-content me-3">
+                    <h2>Chemokine-Partner interaction analysis</h2>
+                    <p>Dive into our analysis of chemokine-partner complexes, where we unlock the secrets of their interactions through detailed structural examination. By annotating binding regions on chemokines, our research illuminates the different binding regions on chemokines. This concise exploration not only advances our understanding of chemokine mechanisms but also opens new avenues for therapeutic innovation.</p>
+                    <div class="btn-box">
+                        <a href="/partner" class="btn">Browse Partners</a>
+                    </div>
+                  </div>
+                  <div class="image-content ms-auto">
+                    <figure>
+                      <img src="{% static 'media/7SK6_interaction_matrix.png' %}" alt="Chemokine-Partner Interaction Matrix" style="max-width: 100%; height: auto;"></img>
+                    </figure>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          
+    <div class="container-fluid py-5">
+        <div class="col-md-6 offset-md-6">
+          <div class="h-100 p-5 bg-light border rounded-3">
+            <h2>About</h2>
+            <p style='text-align:justify;'>Chemokines are a family of small signaling proteins (chemotactic cytokines) that play crucial roles in cellular signaling processes, particularly in the immune system. 
+                They are involved in guiding and regulating the movement of immune cells within the body, helping to orchestrate the immune response to various pathogens and inflammatory signals.
+            </p>
+            <p style='text-align:justify;'>
+                Read more about the general structural features of chemokines and how this database was constructed on the about page.
+            </p>
+            <div class="btn-box">
+                <a href="/about" class="btn">Read more</a>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+</div>
+    <script>
+        document.getElementById('searchButton').addEventListener('click', function() {
+            let txt1 = document.getElementById('searchstructure').value;
+            var newPageUrl = '/structure/?filter=' + txt1; 
+            window.location.href = newPageUrl;
+        });
+
+        document.getElementById('searchstructure').addEventListener('keyup', function(event) {
+            if (event.key === "Enter" || event.keyCode === 13) {
+                document.getElementById('searchButton').click();
+            }
+        });
+    </script>
+
+    <script>
+      var close = document.getElementsByClassName("closebtn");
+      var i;
+      
+      for (i = 0; i < close.length; i++) {
+        close[i].onclick = function(){
+          var div = this.parentElement;
+          div.style.opacity = "0";
+          setTimeout(function(){ div.style.display = "none"; }, 600);
+        }
+      }
+      </script>
+{% endblock %}

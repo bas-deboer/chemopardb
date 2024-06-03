@@ -1,0 +1,117 @@
+{% extends "home/base.html" %} {% load static %} {% block head %}{% endblock %}
+{% block addon_css %}{% endblock %} {% block content %}
+<body>
+  <div class="container py-4">
+    <h1>Browse Chemokine Structures</h1>
+    <hr class="my-2">
+    <table id="example" class="table table-hover" style="width: 100%">
+      <thead>
+        <tr>
+          <th>PDB</th>
+          <th>UniProt</th>
+          <th>Chemokine</th>
+          <th>Class</th>
+          <th>Method</th>
+          <th>Resolution</th>
+          <th>State</th>
+          <th>Partner</th>
+          <th>Partner Type</th>
+          <th>Organism</th>
+          <th>Reference</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for structure in structures %}
+        <tr>
+          <td class="pdb text-left">
+            <a target="_blank" href="/structure/{{ structure.pdb_code.index }}"
+              >{{ structure.pdb_code.index}}</a
+            >
+          </td>          
+          <td>
+            <span>
+              <a target="_blank"
+                 href="http://www.uniprot.org/uniprot/{{ structure.protein.accession }}"
+                 >{{ structure.protein.accession|safe }}</a
+              ></span
+            >
+          </td>
+          <td>
+            <a target="_blank" href="/protein/{{ structure.protein.name }}"
+              >{{ structure.protein.name|safe }}</a
+            >
+          </td>
+          <td class="expand">
+            <span>{{ structure.protein.family|safe }}</span>
+          </td>
+
+          <td>{{ structure.structure_type.slug|escape }}</td>
+          <td>
+            {% if structure.resolution %}
+            <span class="text-center"
+              >{{ structure.resolution|floatformat:"1" }}</span
+            >
+            {% else %} - {% endif %}
+          </td>
+          <td>
+            {% if structure.state %}
+            <span class="text-center">{{ structure.state }}</span>
+            {% else %} - {% endif %}
+          </td>
+          <!-- Partner -->
+          <td class="pdb text-left">
+            {% for partner in structure.partners.all %}
+            <a target="_blank" href="/partner/{{ partner.name }}"
+              >{{ partner.name }}</a
+            >
+            {% if not forloop.last %}, - {% endif %} {% endfor %}
+          </td>
+          <td>
+            {% for partner in structure.partners.all %} {{ partner.type }} 
+            {%if not forloop.last %}, - {% endif %} {% endfor %}
+          </td>
+          <td class="expand">{{ structure.protein.species }}</td>
+          <td>
+            {% if structure.publication.web_link.index %}
+            <a target="_blank" href="http://doi.org/{{ structure.publication.web_link.index }}"
+              >{{ structure.publication.web_link.index }}</a
+            >
+            {% else %} - {% endif %}
+          </td>
+          <td>{{ structure.publication_date}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Initialize the DataTable
+      var table = new DataTable("#example", {
+        scrollX: true,
+      });
+    
+      // Function to get query parameters by name
+      function getQueryParam(name) {
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(window.location.href);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+      }
+    
+      // Capture the 'filter' query parameter
+      var filter = getQueryParam('filter');
+      
+      // If there is a filter, apply it to the DataTable search
+      if(filter) {
+        table.search(filter).draw();
+      }
+    });
+    </script>
+    
+{% endblock %}

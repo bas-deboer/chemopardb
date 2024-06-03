@@ -1,0 +1,43 @@
+{% extends "home/navbar.html" %}
+{% load static %}
+
+{% block title %}ChemoPardb - Partners{% endblock %}
+
+{% block content %}
+
+<div class="row">
+	<div class="col-sm-12 col-md-6">
+	
+    <p>
+        Chemokines display interactions with a rang of different partners, the most important of which we have highlighted in 
+        Figure 1:
+    <ul>
+        <li>G Protein-Coupled Receptors (GPCRs) are the best known binding partner of chemokines. By inserting the chemokine N-terminus in the orthosteric
+            binding pocket, downstream signaling is activated.
+        </li>
+        <li>Glycosaminoglycans (GAGs) present a series of negatively charged polysaccharides. GAGs are mostly present at the cellular surface. There, they bind
+            chemokines and localize them.
+        </li>
+        <li>Peptides are also known to bind chemokines. Some are even used in clinial studies.
+        </li>
+        <li>Small molecules have also been shown to bind chemokines and sometimes even reduce chemokine-mediated signaling.
+        </li>
+    </ul>
+    </p>
+    </div>
+    
+    <div class="col-sm-12 col-md-6">
+        <img src="{% static 'home/images/Chemokine_partners.png' %}" alt="img" style="max-width: 100%"></img>
+    </div>
+
+</div>
+
+<br><br><br>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+	document.getElementById("navbar.partners").classList.add('active');
+</script>
+{% endblock %}

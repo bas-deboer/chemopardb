@@ -1,0 +1,123 @@
+
+{% load static %}
+
+{% block addon_css %}
+<link href="{% static 'home/css/alignment.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<!-- Your content here -->
+
+<div style="overflow-x: auto; white-space: nowrap;">
+    <!-- Labels and Residues in a table structure -->
+    <table>
+        <tr>
+            <!-- Labels -->
+            <td style="padding-right: 20px;"><strong>N-term:</strong></td>
+            <td style="padding-right: 20px;"><strong>CX:</strong></td>
+            <td style="padding-right: 20px;"><strong>cxb1:</strong></td>
+            <td style="padding-right: 20px;"><strong>B1:</strong></td>
+            <td style="padding-right: 20px;"><strong>b1b2:</strong></td>
+            <td style="padding-right: 20px;"><strong>B2:</strong></td>
+            <td style="padding-right: 20px;"><strong>b2b3:</strong></td>
+            <td style="padding-right: 20px;"><strong>B3:</strong></td>
+            <td style="padding-right: 20px;"><strong>b3h:</strong></td>
+            <td style="padding-right: 20px;"><strong>H:</strong></td>
+            <td style="padding-right: 20px;"><strong>C-term:</strong></td>
+        </tr>
+        <tr>
+            <!-- Residues -->
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "N-term" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "CX" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "cxb1" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "B1" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "b1b2" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "B2" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "b2b3" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "B3" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "b3h" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "Helix" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td style="padding-right: 20px;">
+                {% for residue in residues %}
+                    {% if residue.protein_segment.slug == "C-term" %}
+                        {{ residue.amino_acid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- More content can be added here -->
+
+{% endblock %}
+
+{% block addon_js %}
+<script src="{% static 'home/js/alignment.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        // Add any JavaScript enhancements here
+    });
+</script>
+{% endblock %}
+

@@ -1,0 +1,24 @@
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            {% for gn in generic_numbers %}
+                <th>{{ gn.label }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for residue in residues %}
+            <tr>
+                {% for gn in generic_numbers %}
+                    {% if residue.generic_number == gn.id %}
+                        <td title="{{ residue.amino_acid }}{{ residue.sequence_number }}">
+                            {{ residue.amino_acid }}
+                        </td>
+                    {% else %}
+                        <td>&nbsp;</td>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
