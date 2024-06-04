@@ -34,8 +34,3 @@ urlpatterns = [
     path('documentation/', include('home.urls')),
     path('interaction/', include('interaction.urls')),
 ]
-
-if not settings.PRODUCTION:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    
