@@ -11,7 +11,7 @@ GridDataFormats==1.0.2
 gunicorn==21.2.0
 joblib==1.4.2
 kiwisolver==1.4.5
-matplotlib==3.9.0
+#matplotlib==3.9.0
 mda-xdrlib==0.2.0
 MDAnalysis==2.6.0
 mmtf-python==1.1.3
