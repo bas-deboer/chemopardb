@@ -29,7 +29,6 @@ APPS = [
     'protein',
     'structure',
     'home',
-    'static',
     'common',
     'build',
     'model',
