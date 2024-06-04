@@ -25,8 +25,8 @@ DATABASES = {
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATIC_ROOT = os.path.join(BASE_DIR, 'mediafiles')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DATA_DIR = 'data'
 DATA_ROOT = os.path.join(BASE_DIR, 'data')
