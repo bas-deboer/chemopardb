@@ -1,22 +1,18 @@
 {% extends "home/base.html" %}
 {% load static %}
+{% load snake_plot_tags %}
 
 {% block addon_css %}
     <link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
     <link href="{% static 'home/css/color_picker.css' %}" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'home/css/jquery.dataTables.min.css' %}" type="text/css" />
     <link rel="stylesheet" href="{% static 'home/css/construct_browser.css' %}" type="text/css" />
-    <link rel="stylesheet" href="{% static 'home/css/yadcf_bootstrap_version.css' %}" type="text/css" />
     <link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css" />
     <link href="{% static 'home/css/construct_alignment.css' %}" rel="stylesheet">
     <link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
     <link href="{% static 'home/css/modal.css' %}" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static 'home/css/jquery.powertip.css' %}" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link href="{% static 'home/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-    <script src="{% static 'home/js/jquery.dataTables.min.js' %}"></script>
 
-    
     <style>
         .material-symbols-outlined {
           font-variation-settings:
@@ -25,13 +21,13 @@
           'GRAD' 0,
           'opsz' 24
         }
-    
-    #Viewer {
-        width: 600px;
-        height: 500px;
-        position: relative;
-        overflow: hidden;
-    }
+
+        #Viewer {
+            width: 100%;
+            height: auto;
+            position: relative;
+            overflow: hidden;
+        }
 
         .scrollable-table {
             width: 100%;
@@ -40,6 +36,47 @@
             margin-top: 20px;
         }
 
+        #hover-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+            }
+
+            .col-md-6 {
+                width: 100%;
+            }
+
+            .container {
+                width: 100%;
+                padding: 0;
+            }
+
+            #viewport {
+                width: 100%;
+                height: 300px;
+            }
+
+            .dropdown-menu {
+                width: 100%;
+            }
+
+            .btn-group {
+                width: 100%;
+            }
+
+            .table-responsive {
+                overflow-x: auto;
+            }
+        }
     </style>
 {% endblock %}
 
@@ -48,14 +85,7 @@
 
     <!-- Page Heading -->
     <h1 class="detail_title text-center">                
-        {% if not structure.pdb_code %}
-        AlphaFold model {{ structure.protein.accession }}-AF
-        {% else %}
-	    PDB structure <a href="https://www.rcsb.org/structure/{{ structure.pdb_code.index }}" target="_blank">{{ structure.pdb_code.index }}</a>
-        {% endif %}
-        {% if chain %}
-        - chain {{ chain.chain_ID }}
-        {% endif %}
+        Interactions for {{ structure.pdb_code.index }} (chain {{ chain }})
     </h1>
     <br>
 
@@ -68,14 +98,18 @@
             <div class="row">
                 <div class="col-12">
                     <ul class="list-unstyled">
+                        <li><b>PDB ID:</b>
+                            {{ structure.pdb_code.index }} <a href="https://www.rcsb.org/structure/{{ structure.pdb_code.index }}" target="_blank" title="Go to PDB">
+                                <span class="material-symbols-outlined">open_in_new</span></a>
+                        </li>
                         <li><b>Protein:</b>
-                            {{protein}} <a href="/protein/{{protein}}"><span class="material-symbols-outlined">open_in_new</span></a>
+                            <a href="/protein/{{ structure.protein.gene_name }}">{{ structure.protein.gene_name }}</a>
                         </li>
                         <li><b>Organism:</b> 
                             <i>{{ protein.species }}</i>
                         </li>
                         <li><b>UniProt ID:</b> 
-                            {{ protein.accession }} <a href="https://www.uniprot.org/uniprot/{{ protein.accession }}" target="_blank" title="www.uniprot.org">
+                            {{ structure.protein.uniprot_id }} <a href="https://www.uniprot.org/uniprot/{{ structure.protein.uniprot_id }}" target="_blank" title="Go to UniProt">
                             <span class="material-symbols-outlined">open_in_new</span></a>
                         </li>
                     </ul>
@@ -85,7 +119,7 @@
                         <li><b>Resolution:</b> {% if structure.resolution != None %}<a>{{ structure.resolution }} Å</a>{% endif %}</li>
                         <li><b>Date:</b> <a>{{ structure.publication_date }}</a></li>
                         <li><b>Reference:</b> {{ structure.publication.web_link.index }}
-                            <a href="https://doi.org/{{ structure.publication.web_link.index }}" target="_blank"><span class="material-symbols-outlined">open_in_new</span></a></li>
+                            <a href="https://doi.org/{{ structure.publication.web_link.index }}" target="_blank" title="Go to Publication"><span class="material-symbols-outlined">open_in_new</span></a></li>
                         <li><b>State:</b> <a>{{ structure.state }}</a></li>
                         </ul>
                 </div>
@@ -96,518 +130,122 @@
         <div class="col-md-6">
             <h3 id="3d_view">3D view</h3>
             <hr class="my-2">
-            <div class="row justify-content-center">
-                <div>
-                    <div id="viewport" style="width:500px; height:400px;"></div>
-                    <div style="width:500px; background-color:#eaeaea; border-radius: 0px 0px 5px 5px;">
-                        <p style="padding: 2px 0px 2px 5px; font-size: 10px;"><button id="fullscreen">Full Screen</button><a href="https://github.com/arose/ngl" target='_blank'> NGL</a> is a WebGL based 3D viewer powered by <a href="https://mmtf.rcsb.org" target='_blank'>MMTF</a>.</p>
+            <div class="container">
+                <div class="row">
+                    <div id="viewport" style="width:500px; height:400px; background-color: white;"></div>
+                        <div style="width:500px; background-color:#eaeaea; border-radius: 0px 0px 5px 5px;">
+                            <p style="padding: 2px 0px 2px 5px; font-size: 10px;">
+                                <a href="https://github.com/arose/ngl">NGL</a> is a WebGL based 3D viewer powered by 
+                                <a href="https://mmtf.rcsb.org">MMTF</a>.
+                            <button id="fullscreen">Full Screen</button>                            
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <br>
-    <br>
+        <br><br>
 
         <!-- Snake plot -->
         <div class="row">
             <div class="col-md-12">
-                <h3 id="snake_plot">Snake Plot</h3>
+                <h3 id="snake_plot">Chemokine diagram</h3>
                 <hr class="my-2">
-                {{ protein.get_snake_plot|safe }}
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">
+                {% render_snake_plot structure binding_partner.chemokine_chain as snake_plot %}
+                {{ snake_plot|safe }}
+    
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="glyphicon glyphicon-download"></span> Download <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="javascript:saveSvgAsPng(document.getElementById('snakeplot'), 'snake_.png', {scale: 3});">PNG</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="javascript:saveSvgAsJpg(document.getElementById('snakeplot'), 'snake_.jpg', {scale: 3});">JPG</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="javascript:saveSvgAsTiff(document.getElementById('snakeplot'), 'snake_.tiff', {scale: 3});">TIFF</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" id="snake_svg_link" href-lang="image/svg+xml" href="" download="snake_">SVG</a>
+                        </li>
+                    </ul>
+                    <!-- New button to apply interactions -->
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-primary" id="apply-all-interactions">
+                            Color all Interactions
                         </button>
-                        <ul class="dropdown-menu">
-                        <li>
-                            <a href="javascript:saveSvgAsPng(document.getElementById('snakeplot'), 'snake_{{ p.entry_name }}.png',
-                            {scale: 3});">PNG</a>
-                        </li>
-                        <li>
-                            <a href="javascript:saveSvgAsJpg(document.getElementById('snakeplot'), 'snake_{{ p.entry_name }}.jpg',
-                            {scale: 3});">JPG</a>
-                        </li>
-                        <li>
-                            <a href="javascript:saveSvgAsTiff(document.getElementById('snakeplot'), 'snake_{{ p.entry_name }}.tiff',
-                            {scale: 3});">TIFF</a>
-                            </a>
-                        </li>
-                        <li>
-                        <a id=snake_svg_link href-lang="image/svg+xml" href="" download="snake_{{ p.entry_name }}">SVG</a>
-                        </li>
-                        </ul>
                     </div>
+                </div>
             </div>
         </div>
-
-
-        {% for pair_key, ifp_data in ifp_data_by_pair.items %}
-        <button id="colorinteractions_{{ pair_key }}" style="width:220px;" onclick="loadInteractions('{{ pair_key }}')">Show Interactions for {{ pair_key }}</button>
-        <div id="interactions_container_{{ pair_key }}" style="display: none;">
-            <!-- Container to dynamically load interaction data -->
-            <div id="plotid_{{ pair_key }}">
-                <!-- Assuming rectangles and titles with IDs based on generic numbers will be placed here -->
-            </div>
-        </div>
-    {% endfor %}
-
-    <script>
-        function loadInteractions(pairKey) {
-            // Split the pairKey to get chemokine_chain and partner_chain
-            const pairParts = pairKey.split('-');
-            const chemokine_chain = pairParts[0];
-            const partner_chain = pairParts[1];
-        
-            $.ajax({
-                url: "/interaction/ajax/",
-                data: {
-                    structure: '{{ structure.pdb_code.index }}',
-                    chemokine_chain: chemokine_chain,
-                    partner_chain: partner_chain,
-                    pair_key: pairKey,
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
-                },
-                method: "POST",
-                success: function(data) {
-                    var container = $("#interactions_container_" + pairKey);
-                    container.html(''); // Clear the container before updating
-                    container.show();
-                    ColorInteractions(pairKey, data.interactions);
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error loading interactions:", status, error);
-                }
-            });
-        }
-        
-        function ColorInteractions(pairKey, interactions) {
-            const svgElement = document.getElementById('snakeplot');
-            if (!svgElement) {
-                console.error(`SVG element with ID 'snakeplot' not found.`);
-                return;
-            }
-        
-            interactions.forEach(function(interaction) {
-                const genericNumber = interaction.generic_number;
-        
-                // Apply red color to all interacting residues
-                const color = "#E60A0A"; // Red color
-        
-                // Apply color to the visualization
-                const circleElem = svgElement.querySelector(`circle[id='${genericNumber}']`);
-                if (circleElem) {
-                    circleElem.style.fill = color;
-                    circleElem.style.fillOpacity = 1;
-                    const textElem = svgElement.querySelector(`text[id='${genericNumber}t']`);
-                    if (textElem) {
-                        textElem.style.fill = "#FDFF7B"; // Adjust based on requirements
-                    }
-                } else {
-                    console.warn(`Circle element with ID ${genericNumber} not found in SVG.`);
-                }
-        
-                const titleElem = svgElement.querySelector(`circle[id='${genericNumber}']`);
-                if (titleElem) {
-                    const originalTitle = titleElem.getAttribute('original_title');
-                    const extra = `\n1 interaction | Type: ${interaction.interaction_type}`;
-                    titleElem.setAttribute('title', originalTitle + extra);
-                } else {
-                    console.warn(`Title element with ID ${genericNumber} not found in SVG.`);
-                }
-            });
-        
-            // Update tooltips
-            $("circle, text").tooltip('fixTitle');
-        }
-        </script>
-        
     
+        <br>
 
-    
-    
-    
-            
-
-    <br>
-    <br>
-    <br>
-    <br>
-
-    
-    <h3>Chemokine-Partner Interactions</h3>
-    <hr class="my-2">
-    <div id="IFP-coding" class="ifp-coding">
-        <span class="ifp hyd">•</span> <span class="hyd"> Hydrophobic  </span>
-        <span class="ifp aff">•</span> <span class="aff"> Aromatic face-to-face  </span>
-        <span class="ifp afe">•</span> <span class="afe"> Aromatic face-to-edge  </span>
-        <span class="ifp don">•</span> <span class="don"> H-bond donor  </span>
-        <span class="ifp acc">•</span> <span class="acc"> H-bond acceptor  </span>
-        <span class="ifp ionpos">•</span> <span class="ionpos"> Ionic positive  </span>
-        <span class="ifp ionneg">•</span> <span class="ionneg"> Ionic negative  </span>
-      </div>
-<div>
-<table class="residueSearch">
-    <tbody>
-        <!-- Static header row -->
-        <tr>
-            <td class="residueSearchHeader green" colspan="20">N-term</td>
-        </tr>
-        <!-- Dynamic sequence data rows for the first 20 residues -->
-        {% for item in sequence_data|slice:":20" %}
-            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Check might not be necessary here since it's always up to 20 items -->
-                <td class="residueSearch">
-                    {% if item.residue != '_' %}
-                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
-                    {% else %}
-                        <span class="res">_</span><br><span class="xray">_</span>
-                    {% endif %}
-                </td>
-            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}
-        {% endfor %}
-        
-    </tr><tr>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-    </tr><tr>
-
-        <tr>
-            <td class="residueSearchHeader green" colspan="20">N-term</td>
-        </tr>
-        <!-- Dynamic sequence data rows for the first 20 residues -->
-        {% for item in sequence_data|slice:"20:40" %}
-            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Check might not be necessary here since it's always up to 20 items -->
-                <td class="residueSearch">
-                    {% if item.residue != '_' %}
-                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
-                    {% else %}
-                        <span class="res">_</span><br><span class="xray">_</span>
-                    {% endif %}
-                </td>
-            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}
-        {% endfor %}
-        
-    </tr><tr>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-    </tr><tr>
-        
-        <tr>
-            <td class="residueSearchHeader green" colspan="20">N-term</td>
-        </tr>
-        <!-- Dynamic sequence data rows for the first 20 residues -->
-        {% for item in sequence_data|slice:"40:60" %}
-            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Check might not be necessary here since it's always up to 20 items -->
-                <td class="residueSearch">
-                    {% if item.residue != '_' %}
-                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
-                    {% else %}
-                        <span class="res">_</span><br><span class="xray">_</span>
-                    {% endif %}
-                </td>
-            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}
-        {% endfor %}
-        
-    </tr><tr>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-    </tr><tr>
-        <tr>
-            <td class="residueSearchHeader green" colspan="2">N-term</td>
-            <td class="residueSearchHeader magenta" colspan="5">CXC</td>
-            <td class="residueSearchHeader yellow" colspan="13">N-loop</td>
-        </tr>
-
-        <!-- Dynamic sequence data rows for residues 21-40 -->
-        {% for item in sequence_data|slice:"60:80" %}
-            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Starting a new row; adjust as necessary -->
-                <td class="residueSearch">
-                    {% if item.residue != '_' %}
-                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
-                    {% else %}
-                        <span class="res">_</span><br><span class="xray">_</span>
-                    {% endif %}
-                </td>
-            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}  <!-- Ending the row -->
-        {% endfor %}
-
-    </tr><tr>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-    </tr><tr>
-
-        <tr>
-            <td class="residueSearchHeader yellow" colspan="2">N-loop</td>
-            <td class="residueSearchHeader blue" colspan="7">B1-strand</td>
-            <td class="residueSearchHeader yellow" colspan="10">30sloop</td>
-            <td class="residueSearchHeader blue" colspan="1"> B2-strand</td>  
-        </tr>
-        <!-- Dynamic sequence data rows for residues 21-40 -->
-        {% for item in sequence_data|slice:"80:100" %}
-            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Starting a new row; adjust as necessary -->
-                <td class="residueSearch">
-                    {% if item.residue != '_' %}
-                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
-                    {% else %}
-                        <span class="res">_</span><br><span class="xray">_</span>
-                    {% endif %}
-                </td>
-            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}  <!-- Ending the row -->
-        {% endfor %}
-
-    </tr><tr>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-    </tr><tr>
-
-        <tr>
-            <td class="residueSearchHeader blue" colspan="5"> B2-strand</td>
-            <td class="residueSearchHeader yellow" colspan="9"> 40sloop</td>
-            <td class="residueSearchHeader blue" colspan="4"> B3-strand</td>
-            <td class="residueSearchHeader yellow" colspan="2"> 50sloop</td>
-        </tr>
-        <!-- Dynamic sequence data rows for residues 21-40 -->
-        {% for item in sequence_data|slice:"100:120" %}
-            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Starting a new row; adjust as necessary -->
-                <td class="residueSearch">
-                    {% if item.residue != '_' %}
-                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
-                    {% else %}
-                        <span class="res">_</span><br><span class="xray">_</span>
-                    {% endif %}
-                </td>
-            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}  <!-- Ending the row -->
-        {% endfor %}
-
-    </tr><tr>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-    </tr><tr>
+    <!-- Table of Chemokine Binding Partner Pairs -->
+    <div class="table-responsive">
+        <h3>Chemokine Binding Partner Pairs</h3>
+        <hr class="my-2">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Chemokine</th>
+                    <th>Chemokine Chain</th>
+                    <th>Partner</th>
+                    <th>Partner Chain</th>
+                    <th>Created At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pair in binding_partner_pairs %}
+                <tr>
+                    <td>{{ pair.chemokine_entity.name }}</td>
+                    <td>{{ pair.chemokine_chain }}</td>
+                    <td>{{ pair.partner_entity.name }}</td>
+                    <td>{{ pair.partner_chain }}</td>
+                    <td>{{ pair.created_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">No binding partner pairs found for this structure.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
 
-        <tr>
-            <td class="residueSearchHeader yellow" colspan="2"> 50sloop</td>
-            <td class="residueSearchHeader red" colspan="12"> a-Helix</td>
-            <td class="residueSearchHeader green" colspan="6"> C-Terminus</td>
-        </tr>
-        <!-- Dynamic sequence data rows for residues 21-40 -->
-        {% for item in sequence_data|slice:"120:140" %}
-            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Starting a new row; adjust as necessary -->
-                <td class="residueSearch">
-                    {% if item.residue != '_' %}
-                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
-                    {% else %}
-                        <span class="res">_</span><br><span class="xray">_</span>
-                    {% endif %}
-                </td>
-            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}  <!-- Ending the row -->
-        {% endfor %}
 
-    </tr><tr>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp don" title="H-bond donor">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span><span class="ifp aff" title="Aromatic face-to-face">•</span><span class="ifp afe" title="Aromatic face-to-edge">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"><span class="ifp hyd" title="Hydrophobic">•</span></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-    </tr><tr>
 
-        <tr>
-            <td class="residueSearchHeader green" colspan="20"> C-Terminus</td>
-        </tr>
-        <!-- Dynamic sequence data rows for residues 140-160 -->
-        {% for item in sequence_data|slice:"140:160" %}
-            {% if forloop.counter0|divisibleby:20 %}<tr>{% endif %}  <!-- Starting a new row; adjust as necessary -->
-                <td class="residueSearch">
-                    {% if item.residue != '_' %}
-                        {{ item.position }} <span class="res">{{ item.residue }}</span><br><span class="xray">{{ item.xray }}</span>
-                    {% else %}
-                        <span class="res">_</span><br><span class="xray">_</span>
-                    {% endif %}
-                </td>
-            {% if forloop.counter|divisibleby:20 or forloop.last %}</tr>{% endif %}  <!-- Ending the row -->
-        {% endfor %}
 
-    </tr><tr>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-        <td class="residueSearchBottom"></td>
-    </tr><tr>
-
-    </tbody>
-</table>
-
-<br>
-
-</div>    
 <!-- Table of Interactions -->
-    <div>
+    <div class="table-responsive">
         <h3>Interactions found in structure</h3>
         <hr class="my-2">
-        <a href="{% url 'interaction:download_excel' slug=structure.pdb_code.index %}">Download list in excel</a>
+        <a href="{% url 'interaction:excel' pdb_id=structure.pdb_code.index chain_id=chain_id %}">Download list in excel</a>
         <div>
             <table id="example" class="table table-hover" style="width: 100%">
                 <thead>
                     <tr>
-                        <th>Partner</th>
                         <th>Chemokine Residue</th>
                         <th>Generic number</th>
                         <th>Segment</th>
                         <th>Partner Residue</th>
-                        <th>Partner Chain</th>
+                        <th>Partner</th>
                         <th>Interaction Type</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for interaction in interactions %}
-                    <tr data-residue="{{ interaction.chemokine_residue.pdbseq_number }}">
-                        <td> - </td>
+                    <tr data-residue="{{ interaction.chemokine_residue.pdbseq_number }}" data-bs-toggle="tooltip" title="Highlight in 3D viewer">
                         <td>{{ interaction.chemokine_residue.residue.amino_acid_three_letter }} {{ interaction.chemokine_residue.pdbseq_number }}</td>
                         <td>{{ interaction.chemokine_residue.residue.generic_number }}</td>
                         <td>{{ interaction.chemokine_residue.residue.segment }}</td>
                         <td>{{ interaction.partner_residue }}</td>
-                        <td>{{ interaction.partner_chain }}</td>
+                        <td>{{ interaction.chemokine_partner_pair.partner_entity.name }} ({{ interaction.partner_chain }})</td>
                         <td>{{ interaction.interaction_type }}</td>
                     </tr>
                     {% empty %}
@@ -620,247 +258,419 @@
         </div>
     </div>
 
+    <br>
 
-    {% for pair, ifp_data in ifp_data_by_pair.items %}
-    <h3>Interactions for Pair: {{ pair }}</h3>
+    <!-- Display HTML content from the LigandNetworkHTML model if it exists -->
+    {% if ligand_network_html_entries %}
+    <div>
+        <h3>Ligand interaction network</h3>
+        <hr class="my-2">
+        {% for entry in ligand_network_html_entries %}
+            <h4>{{ entry.ligand_name }}</h4>
+            <div class="ligand-network-html">
+                {{ entry.html_content|safe }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
-    
-    <!-- Interaction pattern search form -->
+
     <div class="row">
         <div class="card">
             <div class="content">
                 <h6>Interaction pattern search</h6>
                 <span>Search complexes with similar interaction patterns:</span>
-                <form enctype="multipart/form-data" action="/interaction/ifp_search/" method="POST">
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="patternDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Select Structure for Interaction Pattern Search
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="patternDropdown">
+                        {% for structure_id, data in ifp_data_by_structure.items %}
+                        <li>
+                            <a class="dropdown-item load-pattern-search-btn" 
+                               data-structureid="{{ structure_id }}" 
+                               data-ifpstring="{% for ifp in data.ifp_data %}{{ ifp.ifp_string }}{% endfor %}" 
+                               data-entitynames="{{ data.entity_names }}">{{ data.entity_names }}</a>
+                        </li>
+                        {% empty %}
+                        <li>No structures available</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <br>
+                <div id="selected-structure" style="display:none;">
+                    <strong>Selected Structure:</strong> <span id="structure-name"></span>
+                </div>
+                <form id="ifp-search-form" enctype="multipart/form-data" action="/interaction/ifp_search/" method="POST">
                     {% csrf_token %}
-                    <input type="number" step="0.01" name="tanimoto" value="0.1" min="0.0" max="1.0"> Specify the minimum similarity (0.00 no similarity, 1.00 identical)<br>
-                    <input type="hidden" name="ifp_id" value="{{ ifp_data.0.chemokine_partner_pair.id }}">
-                    <input type="hidden" name="full_ifp" value="{% for ifp in ifp_data %}{{ ifp.ifp_string }}{% endfor %}">
+                    <input type="number" step="0.01" name="tanimoto" value="0.25" min="0.0" max="1.0"> 
+                    Specify the minimum similarity (0.00 no similarity, 1.00 identical)<br>
+                    <input type="hidden" name="structure_id" id="structure_id">
+                    <input type="hidden" name="full_ifp" id="full_ifp">
                     <input type="hidden" name="flag_IFP_search" value="TRUE">
                     <input type="submit" class="btn btn-primary" value="IFP search!">
                 </form>
+                <div id="error-message" style="color: red; display: none;">
+                    Please select a structure before submitting.
+                </div>
             </div>
         </div>
     </div>
     
-    {% endfor %}
+    
+    
+    <script>
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    let partnerSelected = false;
+                
+                    // Event listener for pattern search dropdown
+                    document.querySelectorAll('.load-pattern-search-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const structureId = this.getAttribute('data-structureid');
+                            const ifpString = this.getAttribute('data-ifpstring');
+                            const entityNames = this.getAttribute('data-entitynames');
+                            
+                            // Set hidden input fields and display selected structure
+                            document.getElementById('structure_id').value = structureId;
+                            document.getElementById('full_ifp').value = ifpString;
+                            document.getElementById('structure-name').textContent = entityNames;
+                            document.getElementById('selected-structure').style.display = 'block';
+                            document.getElementById('error-message').style.display = 'none';
+                            partnerSelected = true;
+                        });
+                    });
+                
+                    // Add event listener for form submission
+                    document.getElementById('ifp-search-form').addEventListener('submit', function(event) {
+                        if (!partnerSelected) {
+                            event.preventDefault();
+                            document.getElementById('error-message').style.display = 'block';
+                        }
+                    });
+                });
+                
+    </script>
+    
     
 
+
+    <br>
+    
+    <script type="text/javascript" src="https://cdn.rawgit.com/arose/ngl/v2.0.0-dev.39/dist/ngl.js"></script>
     <script>
-        $( document ).ready(function() {
-            // var elements = document.getElementsByClassName('long')
-
-            // for (var i = 0; i < elements.length; i++){
-            //     elements[i].style.display = 'none';
-            // }
-            y_min = 0;
-            y_max = 0;
-            // maxmin();
-            //$(".long").hide();
-
-
-            $('rect').each(function(){
-
-                rectclass = $(this).attr('class');
-                if (rectclass) {
-                    if (rectclass.indexOf("CL") >= 0 && rectclass.indexOf("long") >= 0) {
-
-                        numResidues = ($('.'+rectclass.replace(/ /g,".")).length-3)/2
-
-                        // console.log('class:'+rectclass+' count'+numResidues);
-
-                        if (numResidues<10) {
-                            toggleLoop('.'+rectclass.split(' ')[0],'',1);
-                        }
+        var stage_full;
+        var file;
+    
+        document.addEventListener("DOMContentLoaded", function() {
+            // Initialize NGL Stage
+            stage_full = new NGL.Stage("viewport", { backgroundColor: "white" });
+    
+            var stringBlob = new Blob([`'{{ structure.pdb_data.pdb }}'`], { type: 'text/plain' });
+            file = new File([stringBlob], "structure.pdb");
+    
+            var residues_lookup = {{ residues_lookup|safe }};
+    
+            function getPickingMessage(d, prefix) {
+                var msg;
+                if (d.atom) {
+                    msg = "atom: " +
+                        d.atom.qualifiedName() +
+                        " (" + d.atom.structure.name + ")";
+                    var re = /](\d+):/i;
+                    var found = d.atom.qualifiedName().match(re);
+                    if (found) {
+                        pos = found[1];
+                        if (residues_lookup[pos]) msg = residues_lookup[pos];
                     }
-                }
-            });
-
-            maxmin();
-
-            $("text").tooltip({
-                'container': 'body',
-                'placement': 'top',
-                'animation': false,
-                'html' : true
-            });
-
-
-            $("circle").tooltip({
-                'container': 'body',
-                'placement': 'top',
-                'animation': false,
-                'html' : true
-            });
-
-            $("circle").hover(function(){
-                $('.tooltip').css('top',parseInt($('.tooltip').css('top')) + 2.8 + 'px')
-            });
-        
-            $(".rtext").click(function() {
-                parentid = $(this).closest('svg').attr('id');
-                newcolor = $(".pick-color."+parentid+".selected").attr('id');
-                if (newcolor) {
-                  newcolor = newcolor.split('-');
+                } else if (d.bond) {
+                    msg = "bond: " +
+                        d.bond.atom1.qualifiedName() + " - " + d.bond.atom2.qualifiedName() +
+                        " (" + d.bond.structure.name + ")";
+                    var re = /](\d+):/i;
+                    var found = d.bond.atom1.qualifiedName().match(re);
+                    if (found) {
+                        pos = found[1];
+                        if (residues_lookup[pos]) msg = residues_lookup[pos];
+                    }
+                } else if (d.volume) {
+                    msg = "volume: " +
+                        d.volume.value.toPrecision(3) +
+                        " (" + d.volume.volume.name + ")";
                 } else {
-                  custom =  $("#custom_color_"+parentid).val();
-                  custom_text = getContrast50(custom);
-                  newcolor = ["pick",custom,custom_text];
+                    msg = "nothing";
                 }
-              console.log(newcolor);
-            
-              $(this).css("fill", newcolor[2]);
-              $(this).prev().css("fill", newcolor[1]);
+                return prefix + " " + msg;
+            }
+    
+            stage_full.loadFile(file, { ext: "pdb" }).then(function(o) {
+                // Color the primary chemokine chain grey
+                o.addRepresentation("cartoon", {
+                    color: "grey",
+                    sele: ":{{ chain }}"
+                });
+    
+                // Color the partner chains blue
+                {% for partner_chain in partner_chains %}
+                o.addRepresentation("cartoon", {
+                    color: "blue",
+                    sele: ":{{ partner_chain }}"
+                });
+                {% endfor %}
+    
+                // Add sticks representation for the interacting residues only
+                {% if display_res %}
+                var residueSelection = "{{ display_res|join:' or ' }}"; // Join array elements into a comma-separated string
+                var selectionString = "(" + residueSelection + ") and sidechainAttached and not hydrogen";
+    
+                // For primary chemokine chain
+                o.addRepresentation("ball+stick", {
+                    color: "grey",
+                    sele: selectionString,
+                    colorScheme: "element"
+                });
+    
+                // For partner chains
+                {% for partner_chain, residues in interacting_residues_by_chain.items %}
+                var partnerResidueSelection = "{{ residues|join:' or ' }}";
+                var partnerSelectionString = "(" + partnerResidueSelection + ") and sidechainAttached and not hydrogen";
+                o.addRepresentation("ball+stick", {
+                    color: "blue",
+                    sele: partnerSelectionString,
+                    colorScheme: "element"
+                });
+                {% endfor %}
+    
+                o.addRepresentation("label", {
+                    sele: selectionString + " and .CB",
+                    color: "#113",
+                    scale: 5.0
+                });
+    
+                // Center the view on the specified residues
+                o.autoView();
+                {% endif %}
+    
+                // If there is a ligand or additional representations to add
+                {% if main_ligand %}
+                var pdbLigs = {{ main_ligand|safe }};
+                pdbLigs.forEach(function(lig) {
+                    o.addRepresentation("ball+stick", {
+                        sele: lig,
+                        scale: 1,
+                        aspectRatio: 1,
+                        colorScheme: "element"
+                    });
+                    o.addRepresentation("surface", {
+                        sele: lig,
+                        opacity: 0.4,
+                        useWorker: false
+                    });
+                });
+                {% endif %}
             });
-
-            $(".rcircle").click(function() {
-                parentid = $(this).closest('svg').attr('id');
-                newcolor = $(".pick-color."+parentid+".selected").attr('id');
-
-                if (newcolor) {
-                  newcolor = newcolor.split('-');
+    
+            // Adding fullscreen toggle on button click
+            document.getElementById("fullscreen").addEventListener("click", function() {
+                stage_full.toggleFullscreen(); // Toggle fullscreen mode for the NGL stage
+            });
+    
+            stage_full.signals.clicked.add(function(d) {
+                $('#clicked').html(getPickingMessage(d, "Clicked"));
+            });
+            stage_full.signals.hovered.add(function(d) {
+                var hoverInfo = document.getElementById("hover-info");
+                var msg = getPickingMessage(d, "Hovered");
+    
+                if (msg !== "Hovered nothing") {
+                    hoverInfo.style.display = "block";
+                    hoverInfo.textContent = msg;
                 } else {
-                  custom =  $("#custom_color_"+parentid).val();
-                  custom_text = getContrast50(custom);
-                  newcolor = ["pick",custom,custom_text];
+                    hoverInfo.style.display = "none";
                 }
-              console.log(newcolor);
-              $(this).css("fill", newcolor[1]);
-              $(this).next().css("fill", newcolor[2]);
             });
-
-            $("#snake_svg_link").click(function() {
-                svgAsDataUri(document.getElementById("snakeplot"),{}, function(uri) {
-                    $("#snake_svg_link").attr('href',uri);
-                });
-            });
-            $("#helix_svg_link").click(function() {
-                svgAsDataUri(document.getElementById("helixbox"),{}, function(uri) {
-                    $("#helix_svg_link").attr('href',uri);
-                });
-            });
-
+    
+            $('#viewport_full').find("canvas").after("<div class='overlay'><span id='clicked'></span> | <span id='hovered'></span></div>");
         });
+    
+        $(document).ready(function() {
+            if (!$.fn.dataTable.isDataTable('#example')) {
+                var table = $('#example').DataTable({
+                    scrollX: true,
+                    scrollY: 700,
+                    bScrollCollapse: true,
+                    paging: false,
+                    autoWidth: true,
+                    dom: 'lfrtip',
+                    initComplete: function() {
+                        var api = this.api();
+                        // Create a row for the filters
+                        var tr = $('<tr>').appendTo($(api.table().header()));
+    
+                        api.columns().indexes().flatten().each(function(i) {
+                            var column = api.column(i);
+                            var select = $('<select><option value=""></option></select>')
+                                .appendTo($('<th>').appendTo(tr))
+                                .on('change', function() {
+                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                                    column.search(val ? '^' + val + '$' : '', true, false).draw();
+                                });
+    
+                            column.data().unique().sort().each(function(d, j) {
+                                select.append('<option value="' + d + '">' + d + '</option>');
+                            });
+                        });
+                    }
+                });
+    
+                // Add click event listener to table rows
+                $('#example tbody').on('click', 'tr', function() {
+                    var data = table.row(this).data();
+                    var residueNumber = data[0].split(' ')[1]; // Assuming the residue number is in the first column
+    
+                    // Center the NGL view on the clicked residue
+                    centerViewOnResidue(residueNumber);
+                });
+    
+                function centerViewOnResidue(residueNumber) {
+                    var selectionString = ":" + "{{ chain }}" + " and " + residueNumber;
+                    stage_full.loadFile(file, { ext: "pdb" }).then(function(o) {
+                        o.addRepresentation("ball+stick", {
+                            sele: selectionString,
+                            color: "red",
+                            colorScheme: "element"
+                        });
+                        o.addRepresentation("surface", {
+                            sele: selectionString,
+                            opacity: 0.2,
+                            color: "red"
+                        });
+                        var center = o.getCenter(selectionString)
+                        var zoom = o.getZoom(selectionString)
+                        stage_full.animationControls.zoomMove(center, zoom, 0)
+                    });
+                }
+            }
+    
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
 
-        $(".pick-color").click(function() {
-            plottype = $(this).attr('class').split(' ')[1];
-        
-            console.log($(this).attr('id'));
-            $(".pick-color."+plottype).css('borderWidth','2px');
-            $(".pick-color."+plottype).css('height','20px');
-            $(".pick-color."+plottype).removeClass('selected');
-            $(this).css('borderWidth','3px');
-            $(this).css('height','22px');
-            $(this).addClass('selected');
-        
+            // Event listener for pattern search dropdown
+            $('.load-pattern-search-btn').on('click', function () {
+                const pairKey = $(this).data('pairkey');
+                const ifpString = $(this).data('ifpstring');
+
+                $('#ifp_id').val(pairKey);
+                $('#full_ifp').val(ifpString);
+                $('#ifp-search-form').show();
+            });
         });
     </script>
 
 {% endblock %}
 
 {% block addon_js %}
-<script>
-$(document).ready(function() {
-    var table = $('#example').DataTable({
-        scrollX: true,
-        scrollY: 700,
-        bScrollCollapse: true,
-        paging: false,
-        autoWidth: true,
-        dom: 'lfrtip',
-        initComplete: function () {
-            var api = this.api();
-            // Create a row for the filters
-            var tr = $('<tr>').appendTo($(api.table().header()));
-
-            api.columns().indexes().flatten().each(function (i) {
-                var column = api.column(i);
-                var select = $('<select><option value=""></option></select>')
-                    .appendTo($('<th>').appendTo(tr))
-                    .on('change', function () {
-                        var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                        column.search(val ? '^' + val + '$' : '', true, false).draw();
-                    });
-
-                column.data().unique().sort().each(function (d, j) {
-                    select.append('<option value="' + d + '">' + d + '</option>');
-                });
-            });
-        }
-    });
-});
-</script>
-
-
-<script src="{% static 'home/js/ngl.js' %}"></script>
 <script src="{% static 'home/js/table_functions.js' %}"></script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    var stage_full = new NGL.Stage("viewport", { backgroundColor: "white" });
-
-    var stringBlob = new Blob([`'{{ structure.pdb_data.pdb }}'`], { type: 'text/plain' });
-    var file = new File([stringBlob], "something.pdb");
-
-    stage_full.loadFile(file, { ext: "pdb" }).then(function(o) {
-        o.addRepresentation("cartoon", {
-            color: "residueindex",
-            aspectRatio: 4,
-            scale: 0.5
-        });
-
-        //setTimeout(() => {
-        //    o.autoView();
-        //}, 1000); // Delay of 1000 milliseconds (1 second)
-
-        // Check if display_res is available
-        {% if display_res %}
-        var residueSelection = "{{ display_res|join:', ' }}"; // Join array elements into a comma-separated string
-        o.addRepresentation("licorice", {
-            sele: "(" + residueSelection + ") and sidechainAttached and not hydrogen",
-            scale: 1.5,
-            aspectRatio: 1
-        });
-        o.addRepresentation("label", {
-            sele: "(" + residueSelection + ") and .CB", // Change CB to a common atom name in your residues if needed
-            color: "#113",
-            scale: 2.0
-        });
-        {% endif %}
-
-        // If there is a ligand or additional representations to add
-        {% if main_ligand %}
-        var pdbLigs = {{ main_ligand|safe }};
-        pdbLigs.forEach(function(lig) {
-            o.addRepresentation("ball+stick", {
-                sele: lig,
-                scale: 1,
-                aspectRatio: 1
-            });
-            o.addRepresentation("surface", {
-                sele: lig,
-                opacity: 0.4,
-                useWorker: false
-            });
-        });
-        {% endif %}
-    });
-    // Adding fullscreen toggle on button click
-    document.getElementById("fullscreen").addEventListener("click", function() {
-        stage_full.toggleFullscreen(); // Toggle fullscreen mode for the NGL stage
-    });
-});
-</script>
-
-
 <script src="{% static 'home/js/sequenceviewer.js' %}"></script>
 <script src="{% static 'home/js/saveSvgAsPng.js' %}"></script>
 <script src="{% static 'home/js/diagrams.js' %}"></script>
 <script src="{% static 'home/js/color_picker.js' %}"></script>
-<script src="{% static 'home/js/jquery.dataTables.min.js' %}"> </script>
-<script src="{% static 'home/js/jquery.dataTables.yadcf.js' %}"> </script>
-<script src="{% static 'home/js/select2.js' %}"> </script>
-<script src="{% static 'home/js/alignment.js' %}"> </script>
+<script src="{% static 'home/js/select2.js' %}"></script>
 <script src="{% static 'home/js/jquery.powertip.js' %}"></script>
 
+<script>
+    var interactionsData = [];
+
+    {% for structure_id, structure_data in ifp_data_by_structure.items %}
+        interactionsData = {{ structure_data.interactions|default:"[]"|safe }};
+    {% endfor %}
+
+    console.log("Loaded Interactions Data (Using Generic Numbers):", interactionsData); // Debugging
+</script>
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log("Preparing to apply interactions to Snake Plot...");
+
+        // Function to reset the colors on the snake plot
+        function resetColors(plotid) {
+            const elements = $(`#${plotid}`).find("circle, rect, text");
+            elements.each(function () {
+                const elem = $(this);
+                elem.css("fill", ""); // Reset fill color
+                const originalTitle = elem.attr('original_title') || '';
+                elem.attr('title', originalTitle);
+                elem.attr('data-bs-original-title', originalTitle);
+                elem.tooltip('dispose'); // Destroy any existing tooltip
+            });
+            elements.tooltip(); // Reinitialize tooltips
+        }
+
+        // Function to update the snake plot colors using the interactions data
+        function updateSnakePlot(plotid, interactions) {
+            resetColors(plotid); // Clear existing colors first
+
+            interactions.forEach(interaction => {
+                const genericNumber = String(interaction.generic_number || '').trim();
+                if (!genericNumber) {
+                    console.warn('Invalid generic number:', interaction.generic_number);
+                    return;
+                }
+                const extra = `${interaction.interaction_type}`;
+
+                // Update circle and rect elements
+                const circleElem = $(`#${plotid}`).find(`circle[id='${genericNumber}']`);
+                const rectElem = $(`#${plotid}`).find(`rect[id='${genericNumber}']`);
+                if (circleElem.length) {
+                    circleElem.css("fill", "#E60A0A"); // Red for interaction
+                    const originalTitle = circleElem.attr('original_title') || '';
+                    circleElem.attr('title', `${originalTitle}\n${extra}`);
+                    circleElem.attr('data-bs-original-title', `${originalTitle}\n${extra}`);
+                } else if (rectElem.length) {
+                    rectElem.css("fill", "#E60A0A");
+                    const originalTitle = rectElem.attr('original_title') || '';
+                    rectElem.attr('title', `${originalTitle}\n${extra}`);
+                    rectElem.attr('data-bs-original-title', `${originalTitle}\n${extra}`);
+                } else {
+                    console.warn(`Element with Generic Number ${genericNumber} not found in SVG.`);
+                }
+
+                // Update text element next to the circle or rect
+                const textElem = $(`#${plotid}`).find(`text[id='${genericNumber}t']`);
+                if (textElem.length) {
+                    textElem.css("fill", "#FDFF7B"); // Yellow for interaction text
+                    const originalTitle = textElem.attr('original_title') || '';
+                    textElem.attr('title', `${originalTitle}\n${extra}`);
+                    textElem.attr('data-bs-original-title', `${originalTitle}\n${extra}`);
+                } else {
+                    console.warn(`Text element with Generic Number ${genericNumber}t not found in SVG.`);
+                }
+            });
+            // Reinitialize tooltips after updating
+            $(`#${plotid}`).find("circle, rect, text").tooltip();
+        }
+
+        // Remove or comment out any automatic invocation if you want to color only on button click:
+        // if (interactionsData.length > 0) {
+        //     updateSnakePlot('snakeplot', interactionsData);
+        // } else {
+        //     console.warn("No interactions found to apply.");
+        // }
+
+        // Attach click event to the new button
+        document.getElementById('apply-all-interactions').addEventListener('click', function() {
+            if (interactionsData && interactionsData.length > 0) {
+                console.log("Coloring Snake Plot with interactions data:", interactionsData);
+                updateSnakePlot('snakeplot', interactionsData);
+            } else {
+                console.warn("No interactions data available to apply.");
+            }
+        });
+    });
+</script>
+
 {% endblock %}
+

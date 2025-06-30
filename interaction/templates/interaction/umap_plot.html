@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>t-SNE IFP Plot</title>
+  <!-- Optionally, include any CSS libraries or custom styles here -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      margin-top: 40px;
+    }
+    .plot-container {
+      margin-bottom: 40px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Render the Tanimoto clustered heatmap (static image) -->
+  <h1>Tanimoto Similarity Heatmap</h1>
+  <div class="plot-container">
+    <img src="data:image/png;base64,{{ heatmap_png }}" alt="Tanimoto Clustered Heatmap" />
+  </div>
+
+  <h2>UMAP default IFP</h2>
+  <div>{{ umap_plot_html_default|safe }}</div>
+  
+  <h2>UMAP simplified IFPs</h2>
+  <div>{{ umap_plot_html_simplified|safe }}</div>
+  
+  <h2>UMAP excluding chemokine partners</h2>
+  <div>{{ umap_plot_html_no_chem|safe }}</div>
+  
+
+</body>
+</html>

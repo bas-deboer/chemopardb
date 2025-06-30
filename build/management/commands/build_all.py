@@ -38,14 +38,9 @@ class Command(BaseCommand):
         phase1 = [
             ['clear_cache'],
             ['build_common'],         
-            ['build_proteins'],
+            ['build_proteins'],            
             ['build_structures'],
-            ['build_models'],
-            ['build_sequence_alignment'],
-            ['build_structural_alignment'],
-            ['build_split_models'],
-            ['build_partners'],
-            ['build_interactions'],
+            ['build_proteins_gpcr'],
         ]
         phase2 = [
         ]

@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, FileResponse
 from django.template.loader import render_to_string
 from django.views.generic import View, TemplateView
@@ -6,50 +7,34 @@ from django.db.models import Count, Q, Prefetch, TextField
 
 from structure.models import Structure
 from protein.models import Protein
-from partner.models import Partner
-
-from io import StringIO, BytesIO
-from Bio.PDB import PDBIO, PDBParser
-import zipfile
-
-from datetime import datetime
-import requests
-
-import subprocess
-from random import randint
-import os
+from partner.models import Partner, PartnerEntity
 
 
-class PartnerBrowser(TemplateView):
-    """
-    Fetching Partner data for browser
-    """
-    template_name = "partner/partner_browser.html"
+def partner_list(request):
+    partners = Partner.objects.prefetch_related('structures__entity_set__entity_type')
+    partner_data = []
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        partners = Partner.objects.all()
-        context['partners'] = partners
-        return context
+    for partner in partners:
+        entity_types = set()
+        for structure in partner.structures.all():
+            for entity in structure.entity_set.all():
+                if entity.entity_type:
+                    entity_types.add(entity.entity_type.name)
+        partner_data.append({
+            'id': partner.id,
+            'name': partner.name,
+            'type': partner.type,
+        })
 
-def partner_page(request):
-    return HttpResponse("Hello, world. This is ChemoPar partner page.")
+    context = {'partners': partner_data}
+    return render(request, 'partner/partner_browser.html', context)
 
-def partner(request, partner):
-    try:
-        partner = Partner.objects.get(name=partner)
-
-        #chains = partner.chains
-        #protein = partner.protein
-        
-        # Assuming structure_pdb contains the ID linking to the PDBData model
-        #structure_pdb = Structure_PDB.objects.get(name=pdb_id)
-
-        # Retrieve the PDB text content from the related PDBData instance
-        #pdb_data = structure_pdb.pdbdata.pdb
-
-        
-    except Partner.DoesNotExist:
-        return render(request, 'error.html')
-
-    return render(request, 'partner/partner.html', {'partner' : partner,})
+def partner_detail(request, partner_id):
+    partner = get_object_or_404(Partner, pk=partner_id)
+    structures = partner.structures.all().select_related('protein')
+    
+    context = {
+        'partner': partner,
+        'structures': structures,
+    }
+    return render(request, 'partner/partner_detail.html', context)

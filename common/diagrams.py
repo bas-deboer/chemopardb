@@ -1,5 +1,34 @@
+"""
+Modified Script for SVG Diagram Generation with Chemokine Plotting
+
+Original Source:
+    Title: diagrams_gpcr.py
+    Author: University of Copenhagen
+    Date Accessed: September 2023
+    Original License: Apache License 2.0
+    Original Copyright: © 2015 University of Copenhagen
+    Original Source Location: https://github.com/protwis/protwis/blob/master/common/diagrams.py
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+    Unless required by applicable law or agreed to in writing, software distributed under the License
+    is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+    either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+Description of Modifications:
+    - Refactored core SVG creation methods adapted for chemokine plotting.
+    - Consolidated and enhanced `drawColorPanel`, `create`, `DrawResidue`, and `DrawBackbone`.
+    - Modified `DrawGproteinPlot` to separate G protein-specific functions like `drawSnakePlotHelix`, `drawSnakePlotLoop`, and `drawSnakePlotSheet`.
+
+NOTICE: This file includes derivative works of the original code licensed under the Apache License 2.0 by the University of Copenhagen. 
+Modifications made to the original code are marked by the description above. This modified version retains the same license.
+"""
+
+
 from math import cos, sin, tan, pi, sqrt, pow
 import string, time, math, random
+
 
 def uniqid(prefix='', more_entropy=False):
     m = time.time()
@@ -14,23 +43,29 @@ def uniqid(prefix='', more_entropy=False):
     return uniqid
 
 class Diagram:
-    def create(self, content,sizex,sizey,name, nobuttons):
+    def create(self, content, sizex, sizey, name, nobuttons):
         #diagram_js = self.diagramJS()
-        if nobuttons=='gprotein' or nobuttons=='arrestin':
-            return ("<svg id=\""+name+"\" " +
-            "xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\""+str(750)+"\" height=\""+str(400)+"\" " +
-            "style='stroke-width: 0px; background-color: white;'>\n"+content+"</svg>" +
-            self.drawColorPanel(nobuttons)) #width=\"595\" height=\"430\"
+        if nobuttons == 'chemokine':
+            return (
+                "<svg id=\"" + str(name) + "\" " +
+                "xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"" + str(sizex) + "\" height=\"" + str(sizey) + "\" " +
+                "style='stroke-width: 0px; background-color: white;'>\n" + content + "</svg>" +
+                self.drawColorPanel()
+            )
         elif nobuttons:
-            return ("<svg id=\""+name+"\" " +
-            "xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\""+50+"\" height=\""+str(sizey)+"\" " +
-            "style='stroke-width: 0px; background-color: white;'>\n"+content+"</svg>" +
-            self.drawColorPanel(nobuttons)) #width=\"595\" height=\"430\"
+            return (
+                "<svg id=\"" + str(name) + "\" " +
+                "xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"" + str(sizex) + "\" height=\"" + str(sizey) + "\" " +
+                "style='stroke-width: 0px; background-color: white;'>\n" + content + "</svg>" +
+                self.drawColorPanel(nobuttons)
+            )
         else:
-            return ("<svg id=\""+name+"\" " +
-            "xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\""+50+"\" height=\""+str(sizey)+"\" " +
-            "style='stroke-width: 0px; background-color: white;'>\n"+content+"</svg>" +
-            self.drawColorPanel()) #width=\"595\" height=\"430\"
+            return (
+                "<svg id=\"" + str(name) + "\" " +
+                "xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"" + str(sizex) + "\" height=\"" + str(sizey) + "\" " +
+                "style='stroke-width: 0px; background-color: white;'>\n" + content + "</svg>" +
+                self.drawColorPanel()
+            )
 
     def drawToolTip(self):
         output2 = """<g id='tool-tip-{}' transform='translate(0,0)' visibility='hidden'>
@@ -42,7 +77,7 @@ class Diagram:
         return output
 
     def drawColorPanel(self, nobuttons=None):
-
+    
         boxstyle = """<style>
         .pick-color  {
           display:inline-block;
@@ -52,18 +87,18 @@ class Diagram:
           border-radius: 5px;
           border: 2px solid #000;
         }
-
-        .long {
-          display: none
-        }
+    
         .tooltip-inner {
             white-space:pre-wrap;
             max-width:none;
         }
-
         </style>
         """
-
+        
+        # If nobuttons is True or truthy, just return style (or even an empty string if you want nothing)
+        if nobuttons:
+            return boxstyle
+    
         presetColors = {'D': ['#E60A0A', '#FDFF7B'],'E': ['#E60A0A', '#FDFF7B'],
                                     'K': ['#145AFF', '#FDFF7B'],'R': ['#145AFF', '#FDFF7B'],
                                     'S': ['#A70CC6', '#FDFF7B'],'T': ['#A70CC6', '#FDFF7B'],
@@ -77,104 +112,90 @@ class Diagram:
                                     '-': ['#FFFFFF', '#000000']
                                     }
         fillcolors = [['#CCCCCC', '#000000']]
-        for key,value in presetColors.items():
+        for key, value in presetColors.items():
             if value not in fillcolors:
                 fillcolors.append(value)
-
-        colors = "<div id=\"cp2_"+self.type+"\" class=\"\">"
+    
+        colors = "<div id=\"cp2_" + self.type + "\" class=\"\">"
         for color in fillcolors:
-            colors += "<div class='pick-color "+self.type+"' id='pick-"+color[0]+"-"+color[1]+"' style='background-color: "+color[0]+";'>&nbsp;</div>"
+            colors += "<div class='pick-color " + self.type + "' id='pick-" + color[0] + "-" + color[1] + "' style='background-color: " + color[0] + ";'>&nbsp;</div>"
+    
+        colors += "<div class=\"input-group-addon\" style='width:0;padding:0;border:0;background-color:0;display:inline;position:relative;top:-6px'><i class='pick-color " + self.type + " selected'></i></div>"
+        colors += "<input type=\"text\" id='custom_color_" + self.type + "' value=\"#00AABB\" class=\"\" size=8 />"
+        colors += "</div>"
+    
+        output = ("<br>Pick color:" + colors)
+    
+        # Append the Properties and Clear buttons plus our new Signal Sequence button.
+        output += ('<br><button style="width:120px;" onclick="applyPresentColors(\'' + self.type + '\')">Properties</button> ' +
+                   '<button style="width:120px;" onclick="resetColors(\'' + self.type + '\')">Clear</button> ' +
+                   '<button style="width:120px;" onclick="toggleSignalSequence(\'' + self.type + '\')">Signal Sequence</button>')
+    
+        return boxstyle + output
 
-        colors += ""
-        colors += "<div class=\"input-group-addon\" style='width:0;padding:0;border:0;background-color:0;display:inline;position:relative;top:-6px'><i class='pick-color "+self.type+" selected'></i></div>"
-        colors += "<input type=\"text\" id='custom_color_"+self.type+"' value=\"#00AABB\" class=\"\" size=8 />"
-        colors += ""
 
-        # colors += "<span id=\"cp2_"+self.type+"\" class=\"\">"
-        # colors += "<span class=\"pick-color\" "+self.type+" id='pick-"+fillcolors[0][0]+"-"+fillcolors[0][1]+"' style='background-color: "+fillcolors[0][0]+";'><i></i></span>"
-        # colors += "<input type=\"text\" value=\"#00AABB\" class=\"\" size=8 />"
-        # colors += "</span>"
+    def DrawResidue(self, x, y, aa, residue_number, label, radius, resclass='', cfill="white", precolor=False, signal=False):
+        """
+        Draws a circular SVG residue with the generic residue number as the id.
+        If `signal` is True, adds a data-signal attribute.
 
+        For residues in the N-terminal (as detected by 'N-term' in resclass) and if a signal_range is defined,
+        this method will automatically set the signal flag to True if the residue number is within the range.
+        """
+        generic_id = label.replace('.', '_').replace('x', '_')
+        
+        # Check if this residue is part of the N-terminal and if a signal_range is defined.
+        if "N-term" in resclass and self.signal_range:
+            try:
+                # Ensure residue_number and the range boundaries are compared as integers.
+                if  int(self.signal_range[0]) <= int(residue_number) <= int(self.signal_range[1]):
+                    signal = True
+            except ValueError:
+                # If residue_number cannot be converted to an int, ignore the check.
+                pass
 
-        output = ("<br>Pick color:" +
-            colors +
-            "</div>")
-
-        output += '<br><button style="width:120px;" onclick="applyPresentColors(\''+self.type+'\')">Properties</button> <button style="width:120px;" onclick="resetColors(\''+self.type+'\')">Clear</button>'
-        if str(self.receptorId)=='family_diagram_preloaded_data':
-            #output += '<br><button style="width:220px;" onclick="ajaxMutantsPos(\''+self.type+'\');">Show Invitro Mutants</button>'
-            output += ' <button style="width:220px;" onclick="ajaxInteractionsPos(\''+self.type+'\')">Show Interactions from structures</button>'
-            #output += '<br><button style="width:220px;" onclick="ajaxNaturalMutationPos(\''+self.type+'\')">Show Natural Genetic Variations</button>'
-            #output += ' <button style="width:120px;" onclick="ajaxPTMPos(\''+self.type+'\')">Show PTM sites</button>'
-            # output += ' <button style="width:220px;" onclick="ajaxCancerMutationPos(\''+self.type+'\')">Show Cancer Mutations</button>'
-            # output += ' <button style="width:220px;" onclick="ajaxDiseaseMutationPos(\''+self.type+'\')">Show Disease Mutations</button>'
-        else:
-            if nobuttons == 'gprotein':
-                output += ' <button style="width:220px;" onclick="ajaxInteractions(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Interactions Interface</button>'
-                #output += '<br><button style="width:220px;" onclick="ajaxNaturalMutation(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Natural Genetic Variations</button>'
-                #output += ' <button style="width:220px;" onclick="ajaxPTMs(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show PTM sites</button>'
-                # output += ' <button style="width:220px;" onclick="ajaxCancerMutation(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Cancer Mutations</button>'
-                # output += ' <button style="width:220px;" onclick="ajaxDiseaseMutation(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Disease Mutations</button>'
-                if 'human' in self.receptorId: # only show barcode button for human gproteins
-                    output += '<br><button style="width:120px;" onclick="ajaxBarcode(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Barcode</button>'
-            elif nobuttons == 'arrestin':
-                output += ' <button id="colorinteractions" style="width:220px;" onclick="ajaxInteractions(\''+self.type+'\', \''+str(self.receptorId)+'\')">Show Interactions Interface</button>'
-                #output += '<br><button style="width:220px;" onclick="ajaxNaturalMutation(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Natural Genetic Variations</button>'
-                #output += ' <button style="width:220px;" onclick="ajaxPTMs(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show PTM sites</button>'
-
-            else:
-                #output += '<br><button style="width:220px;" onclick="ajaxMutants(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Invitro Mutants</button>'
-                output += ' <button id="colorinteractions" style="width:220px;" onclick="ajaxInteractions(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Interactions from Structures</button>'
-                #output += '<br><button style="width:220px;" onclick="ajaxNaturalMutation(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Natural Genetic Variations</button>'
-                #output += ' <button style="width:120px;" onclick="ajaxPTMs(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show PTM sites</button>'
-                # output += ' <button style="width:220px;" onclick="ajaxCancerMutation(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Cancer Mutations</button>'
-                # output += ' <button style="width:220px;" onclick="ajaxDiseaseMutation(\''+self.type+'\',\''+str(self.receptorId)+'\')">Show Disease Mutations</button>'
-
-        if nobuttons != 'gprotein' and nobuttons != 'arrestin':
-            output += '<br><small>Invitro Mutant Data: Increased binding/potency: <font style="color: #000; background-color: #87E88F" color="#87E88F">>5-fold</font>, <font style="color: #000; background-color: #66B36C" color="#66B36C">>10-fold</font>; Reduced binding/potency: <font style="color: #FFF; background-color: #FF7373" color="#FF7373">>5-fold</font>, <font style="color: #FDFF7B; background-color: #FA1111" color="#FA1111">>10-fold</font>; <font style="color: #000; background-color: #F7DA00" color="#F7DA00">No/low effect (<5-fold)</font>; and <font style="color: #000; background-color: #D9D7CE" color="#D9D7CE">N/A</font> </small>'
-
-        return boxstyle+ output
-
-    #Draws a ring of a helical wheel
-    def DrawResidue(self, x,y,aa,residue_number,label,radius, resclass = '',cfill="white", precolor = False):
-        id = residue_number
-        idtext = str(id) + 't'
-        tfill = 'black'
+        idtext = f"{generic_id}t"
         x = round(x)
         y = round(y)
-        #if (isset(_GET['precolor']) && _GET['precolor'] == 'TRUE') precolor = TRUE
-        # if (precolor) {
-        #     iid = str_replace('.', '_', id)
-        #     iidtext = str_replace('.', '_', idtext)
-        #     cfill = isset(_SESSION['color_pattern'][iid]) ? _SESSION['color_pattern'][iid] : 'white'
-        #     tfill = isset(_SESSION['color_pattern'][iidtext]) ? _SESSION['color_pattern'][iidtext] : 'black'
-        # }
-        output =  """
-            <circle class='{} rcircle' cx='{}' cy='{}' r='{}' stroke='black' stroke-width='2' fill='{}'
-            fill-opacity='1' id='{}' title='{}' original_title='{}' original_cx='{}' original_cy='{}'/>
-            <text x='{}' y='{}' text-anchor='middle' dominant-baseline='middle' font-family='helvetica' font-size='16' fill=''
-            id='{}' class='rtext {}' title='{}' original_title='{}' original_x='{}' original_y='{}'> {} </text>
-            """.format(resclass,x,y,radius,cfill,id,label,label,x,y,x,y+2,idtext,resclass,label,label,x,y+2,aa) #aa
+        # If signal is True, include the custom attribute; otherwise leave it empty.
+        data_signal = 'data-signal="true"' if signal else ''
+        
+        # ---- TOOLTIP UPDATE ----
+        tooltip = f"Seq: {residue_number}\nCCN: {label}"
+        
+        output = f"""
+            <circle class='{resclass} rcircle' cx='{x}' cy='{y}' r='{radius}' stroke='black' stroke-width='2' fill='{cfill}'
+            fill-opacity='1' id='{generic_id}' title='{tooltip}' original_title='{label}' {data_signal} />
+            <text x='{x}' y='{y+6}' text-anchor='middle' font-family='helvetica' font-size='16' fill=''
+            id='{idtext}' class='rtext {resclass}' title='{tooltip}' original_title='{label}' {data_signal}> {aa} </text>
+        """
         return output
 
-    def DrawResidueSquare(self, x,y,aa,residue_number,label,radius, resclass = '',cfill="white", precolor = False):
-        id = residue_number
-        idtext = str(id) + 't'
-        tfill = 'black'
-        #if (isset(_GET['precolor']) && _GET['precolor'] == 'TRUE') precolor = TRUE
-        # if (precolor) {
-        #     iid = str_replace('.', '_', id)
-        #     iidtext = str_replace('.', '_', idtext)
-        #     cfill = isset(_SESSION['color_pattern'][iid]) ? _SESSION['color_pattern'][iid] : 'white'
-        #     tfill = isset(_SESSION['color_pattern'][iidtext]) ? _SESSION['color_pattern'][iidtext] : 'black'
-        # }
-        output =  """
-            <rect class='{} rcircle' x='{}' y='{}' height='{}' width='{}' stroke='black' stroke-width='1' fill='{}'
-            fill-opacity='1' id='{}' title='{}' original_title='{}'/>
-            <text x='{}' y='{}' text-anchor='middle' font-family='helvetica' font-size='16' fill=''
-            id='{}' class='rtext {}' title='{}' original_title='{}'> {} </text>
-            """.format(resclass,x-radius*(1.5/2),y-radius*(1.5/2),radius*1.5,radius*1.5,cfill,id,label,label,x,y+6,idtext,resclass,label,label,aa) #aa
+
+
+
+    def DrawResidueSquare(self, x, y, aa, residue_number, label, radius, resclass='', cfill="white", precolor=False):
+        """
+        Draws a square SVG residue with the generic residue number as the id.
+        """
+        generic_id = label.replace('.', '_').replace('x', '_')  # Replace special characters
+        idtext = f"{generic_id}t"
+
+        x = round(x)
+        y = round(y)
+        
+        # ---- TOOLTIP UPDATE ----
+        tooltip = f"Seq: {residue_number}\nCCN: {label}"
+
+        output = f"""
+            <rect class='{resclass} rcircle' x='{x-radius*(1.5/2)}' y='{y-radius*(1.5/2)}' height='{radius*1.5}' width='{radius*1.5}' 
+            stroke='black' stroke-width='1' fill='{cfill}' fill-opacity='1' id='{generic_id}' title='{tooltip}' original_title='{label}' />
+            <text x='{x}' y='{y+6}' text-anchor='middle' font-family='helvetica' font-size='16' fill=''
+            id='{idtext}' class='rtext {resclass}' title='{tooltip}' original_title='{label}'> {aa} </text>
+        """
         return output
+
+    
     def deg2rad(self,degrees):
         radians = pi * degrees / 180
         return radians

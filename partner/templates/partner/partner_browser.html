@@ -1,91 +1,162 @@
 {% extends "home/base.html" %}
 {% load static %}
 
-{% block head %}
+{% block addon_css %}
 <style>
-#partners {
-  font-family: Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 11px;
-}
-
-#partners td, #partners th {
-  border: 1px solid #ddd;
-  padding: 4px;
-}
-
-#partners tr:nth-child(even){background-color: #f2f2f2;}
-
-#partners tr:hover {background-color: #ddd;}
-
-#partners th {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  text-align: left;
-  background-color: #66A9D9;
-  color: white;
-}
-
-/* Style for the scrollable container */
-.scrollable-container {
-  overflow-x: auto; /* Enable horizontal scroll */
-}
+  /* Custom styles */
+  .dataTables_wrapper .dataTables_filter {
+      float: right;
+      text-align: right;
+  }
+  table.dataTable thead th, table.dataTable tfoot th {
+      white-space: nowrap;
+  }
+  table.dataTable th, table.dataTable td {
+      text-align: left;
+      white-space: nowrap;
+  }
+  table.dataTable td {
+      padding: 5px 10px;
+  }
+  .dataTables_filter, .dataTables_length {
+      margin-bottom: 20px;
+  }
+  .filter-select {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+      height: 40px; /* Match the height for uniformity */
+      vertical-align: middle; /* Center text vertically */
+  }
+  .filter-number {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+      font-size: 1em; /* Increase font size */
+      height: 40px; /* Set a larger height to match select boxes */
+      text-align: center; /* Center align text */
+      vertical-align: middle; /* Center text vertically */
+  }
+  .filter-container {
+      padding: 5px;
+      background: #f8f9fa;
+  }
+  /* Remove alternating row colors */
+  table.dataTable tbody tr {
+      background-color: white; /* Set a consistent background color */
+  }
+  /* Add hover effect for highlighting and clickable cursor */
+  table.dataTable tbody tr:hover {
+      background-color: #f2f2f2; /* Highlight color on hover */
+      cursor: pointer; /* Change cursor to pointer */
+  }
+  /* Fixed width for table columns */
+  table.dataTable th, table.dataTable td {
+      max-width: 200px; /* Change the width to fit your needs */
+      width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1>Partners</h1>
-    <hr class="my-2">
-    <div class="scrollable-container">
-        <table id="partners">
+<div class="container-fluid">
+    <div class="p-3 mb-2 bg-light rounded-3">
+        <div class="container-fluid">
+          <div class="row">
+            <!-- Text Column -->
+            <div class="col">
+              <h2 class="display-6 fw-bold">Browse Partners</h2>
+              <hr class="my-2">
+              <p>Explore the list of partners and their entities.</p>
+            </div>  
+          </div>
+        </div>    
+      </div>
+  
+      <br>
+
+    <div>
+        <table id="partners" class="table table-striped table-bordered" width="100%">
             <thead>
                 <tr>
-                    <th>Name</th>
+                    <th>Partner Name</th>
                     <th>Type</th>
-                    <th>Structure</th>
                 </tr>
-
+                <tr class="filter-row">
+                    <th><select class="form-control filter-select"><option value=""></option></select></th>
+                    <th><select class="form-control filter-select"><option value=""></option></select></th>
+                </tr>
             </thead>
             <tbody>
-            {% for partner in partners %}
-                    <!-- Partner -->
-                    <td>
-                        <a target='_blank' href="/partner/{{ partner.name }}">{{ partner.name }}</a>
-                    </td>
-                    <td>
-                        {{ partner.type|escape }}
-                    </td>
-                    <td>
-                        {% for structure in partner.structures.all %}
-                            <a target="_blank" href="/structure/{{ structure }}">{{ structure }}</a> 
-                        {% empty %}
-                            No structures
-                        {% endfor %}
-                    </td>
-                    <!-- Reference -->
-                </tr>
-            {% endfor %}
+              {% for partner in partners %}
+              {% if partner.id %}
+              <tr data-href="{% url 'partner_detail' partner.id %}">
+                <td><a href="{% url 'partner_detail' partner.id %}">{{ partner.name }}</a></td>
+                <td>{{ partner.type }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td>{{ partner.name }}</td>
+                <td>{{ partner.type }}</td>
+              </tr>
+              {% endif %}
+              {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
-    <!-- Include jQuery -->
-    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 
-    <!-- Include DataTables JS and CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+<script>
+    $(document).ready(function() {
+        var table = $('#partners').DataTable({
+            responsive: true,
+            paging: true,
+            scrollX: true,
+            autoWidth: true,
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ],
+            pageLength: -1, // Default number of rows to display
+            initComplete: function () {
+                var api = this.api();
 
-    <script>
-        $(document).ready( function () {
-            $('#partners').DataTable({
-                "pageLength": -1,  // Set the page length to -1 to show all entries
-                "lengthMenu": [[-1], ["All"]]  // Adjust the length menu to only have the "All" option
-            });
+                api.columns().every(function () {
+                    var column = this;
+                    var select = $(column.header()).find('select');
+                    
+                    // Populate the dropdown with unique values
+                    column.data().unique().sort().each(function (d, j) {
+                        var strippedText = $('<div/>').html(d).text().trim();
+                        if ($('option', select).filter(function () { return $(this).val() === strippedText; }).length === 0) {
+                            select.append('<option value="' + strippedText + '">' + strippedText + '</option>');
+                        }
+                    });
+
+                    select.on('change', function () {
+                        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                        column.search(val ? val : '', true, false).draw();
+                    });
+                });
+            }
         });
-    </script>
 
-</body>
+        // Clickable row functionality
+        $('#partners tbody').on('click', 'tr', function(event) {
+            if (!$(event.target).closest('a').length) {
+                var url = $(this).data('href');
+                if (url) {
+                    window.location.href = url;
+                }
+            }
+        });
+
+        // Prevent table sort when clicking on filter dropdown
+        $('.filter-select').on('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+</script>
 {% endblock %}

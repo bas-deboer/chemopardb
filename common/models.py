@@ -96,7 +96,7 @@ class Publication(models.Model):
         return False
 
 class PublicationJournal(models.Model):
-    slug = models.CharField(max_length=200, null=True)
+    slug = models.CharField(null=True, blank=True, max_length=255)
     name = models.TextField(unique=True)
 
     def __str__(self):
@@ -125,3 +125,10 @@ class WebResource(models.Model):
 
     class Meta:
         db_table = 'web_resource'
+
+class ResiduePosition(models.Model):
+    position = models.PositiveIntegerField(unique=True)
+    ccn_number = models.CharField(max_length=32, unique=True)
+    
+    def __str__(self):
+        return f"{self.number}: {self.ccn_number}"

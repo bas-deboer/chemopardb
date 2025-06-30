@@ -25,12 +25,20 @@ def handle_protoss_request(pdb_code, output_directory):
             get_response = requests.get(location_url)
             if get_response.status_code == 200:
                 get_result = get_response.json()
+
+                # Initialize content variables
+                protein_content = None
+                ligands_content = None
+
                 # Download files if URLs are provided in the results
                 if 'protein' in get_result:
-                    download_file(get_result['protein'], os.path.join(output_directory, f"{pdb_code}_protein.pdb"))
+                    protein_path = os.path.join(output_directory, f"{pdb_code}_protein.pdb")
+                    protein_content = download_file(get_result['protein'], protein_path)
                 if 'ligands' in get_result:
-                    download_file(get_result['ligands'], os.path.join(output_directory, f"{pdb_code}_ligands.sdf"))
-                return "Files downloaded successfully."
+                    ligands_path = os.path.join(output_directory, f"{pdb_code}_ligands.sdf")
+                    ligands_content = download_file(get_result['ligands'], ligands_path)
+
+                return protein_content, ligands_content
             elif get_response.status_code == 202:
                 get_result = get_response.json()
                 if 'message' in get_result:
@@ -38,9 +46,9 @@ def handle_protoss_request(pdb_code, output_directory):
                 # Wait before retrying
                 time.sleep(10)
             else:
-                return f"Failed to retrieve job results: Status code {get_response.status_code}"
+                raise RuntimeError(f"Failed to retrieve job results: Status code {get_response.status_code}")
     else:
-        return "Job location URL not found in the initial response."
+        raise RuntimeError("Job location URL not found in the initial response.")
 
 def download_file(url, file_path):
     # Function to download and save a file from a given URL
@@ -49,10 +57,6 @@ def download_file(url, file_path):
         with open(file_path, 'wb') as file:
             file.write(response.content)
         print(f"{file_path} saved successfully.")
+        return response.content.decode('utf-8')  # Return the content for further use
     else:
-        print(f"Failed to download {file_path}. Status code: {response.status_code}")
-
-# Example usage
-# pdb_code = "YOUR_PDB_CODE"
-# output_directory = "YOUR_OUTPUT_DIRECTORY"
-# handle_protoss_request(pdb_code, output_directory)
+        raise RuntimeError(f"Failed to download {file_path}. Status code: {response.status_code}")

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPCR Similarity Matrix</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>  <!-- Ensure Plotly is included -->
+</head>
+<body>
+    
+    <div id="heatmap">
+        {{ tsne_html|safe }}  <!-- Ensures Django renders this properly -->
+    </div>
+
+    <h2>Raw IFP-Based t-SNE</h2>
+    <div>{{ tsne_raw_plot_html|safe }}</div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(function() {  // Delay to ensure Plotly is fully rendered
+                var heatmapDiv = document.getElementById("heatmap");
+    
+                heatmapDiv.on('plotly_click', function(data) {
+                    if (data.points.length > 0) {
+                        var customData = data.points[0].customdata;
+                        if (customData) {
+                            var identifiers = customData.split("|");  // Extract IFP entry identifiers
+    
+                            // Construct the URL (modify this based on your routing logic)
+                            var targetURL = "/ifp_detail/?entry1=" + identifiers[0] + "&entry2=" + identifiers[1];
+    
+                            // Redirect to the new page
+                            window.location.href = targetURL;
+                        }
+                    }
+                });
+            }, 1000);  // 1-second delay to ensure Plotly is loaded
+        });
+    </script>
+    
+    
+
+</body>
+</html>

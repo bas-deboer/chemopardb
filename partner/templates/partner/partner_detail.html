@@ -1,0 +1,114 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block addon_css %}
+<style>
+  .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+      background-color: #f5f5f5;
+  }
+  .container-fluid {
+      margin-top: 20px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="p-3 mb-2 bg-light rounded-3">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col">
+              <h2 class="display-6 fw-bold">Partner: {{ partner.name }}</h2>
+              <hr class="my-2">
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <!--div>
+        <h3>Identifiers</h3>
+        <ul>
+            <li><b>UniProt ID:</b> 
+                {% if identifiers.unp_accession != 'N/A' %}
+                {{ identifiers.unp_accession }} <a href="https://www.uniprot.org/uniprot/{{ identifiers.unp_accession }}" target="_blank" title="Go to UniProt">
+                <span class="material-symbols-outlined">open_in_new</span></a>
+                {% else %}
+                None
+                {% endif %}
+            </li>
+            <li><b>Pfam Accession:</b> 
+                {% if identifiers.pfam_accession != 'N/A' %}
+                {{ identifiers.pfam_accession }} <a href="http://pfam.xfam.org/family/{{ identifiers.pfam_accession }}" target="_blank" title="Go to Pfam">
+                <span class="material-symbols-outlined">open_in_new</span></a>
+                {% else %}
+                None
+                {% endif %}
+            </li>
+            <li><b>Comp ID:</b> 
+                {% if identifiers.comp_id != 'N/A' %}
+                {{ identifiers.comp_id }} <a href="https://www.rcsb.org/ligand/{{ identifiers.comp_id }}" target="_blank" title="Go to PDB">
+                <span class="material-symbols-outlined">open_in_new</span></a>
+                {% else %}
+                None
+                {% endif %}
+            </li>
+            <li><b>ChEMBL ID:</b> 
+                {% if identifiers.chembl_id != 'N/A' %}
+                {{ identifiers.chembl_id }} <a href="https://www.ebi.ac.uk/chembl/compound_report_card/{{ identifiers.chembl_id }}/" target="_blank" title="Go to ChEMBL">
+                <span class="material-symbols-outlined">open_in_new</span></a>
+                {% else %}
+                None
+                {% endif %}
+            </li>
+        </ul>
+    </div-->
+    
+
+    <h3>Associated Structures</h3>
+    <div>
+        <table id="structures" class="table table-striped table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th>Structure ID</th>
+                    <th>Protein</th>
+                    <th>Organism</th>
+                    <th>Resolution</th>
+                    <th>Publication Date</th>
+                </tr>
+            </thead>
+            <tbody>
+              {% for structure in structures %}
+              <tr>
+                <td>
+                <a  target="_blank" href="/structure/{{ structure.id }}">{{ structure.pdb_code.index }}</a>
+                </td>
+                <td>
+                    <a target="_blank" href="/protein/{{ structure.protein.gene_name }}">{{ structure.protein.type|safe }}</a>
+                </td> 
+                <td>{{ structure.protein.species }}</td> 
+                <td>{{ structure.resolution }}</td>
+                <td>{{ structure.publication_date|date:"Y-m-d" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#structures').DataTable({
+            responsive: true,
+            paging: true,
+            scrollX: true,
+            autoWidth: true,
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ],
+            pageLength: -1 // Default number of rows to display
+        });
+    });
+</script>
+{% endblock %}

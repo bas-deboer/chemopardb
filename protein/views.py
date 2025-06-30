@@ -11,8 +11,9 @@ from django.urls import reverse
 import requests
 import xml.etree.ElementTree as ET
 
-from protein.models import Protein, ProteinSegment
-from structure.models import Structure
+from common.models import ResiduePosition
+from protein.models import Protein, ProteinSegment, ProteinAlias
+from structure.models import Structure, Rotamer
 from residue.models import Residue, ResidueGenericNumber
 
 
@@ -32,35 +33,80 @@ class ProteinBrowser(TemplateView):
         return context
 
 
-@cache_page(60 * 60 * 24 * 7)
+
 def protein(request, name):
     try:
-        protein = Protein.objects.get(name=name)
+        protein = Protein.objects.get(gene_name=name)
     except Protein.DoesNotExist:
         return render(request, 'error.html')
 
-    fullname = "CXCL12_HUMAN"
+    # Retrieve related data
     structures = Structure.objects.filter(protein=protein)
     residues = Residue.objects.filter(protein=protein).order_by('sequence_number')
-    generic_numbers = ResidueGenericNumber.objects.all()
+    alternate_names = ProteinAlias.objects.filter(protein=protein)
 
-    # Group residues by segment
+    # ResiduePosition map: ccn_number <-> position
+    position_map = {rp.ccn_number: rp.position for rp in ResiduePosition.objects.all()}
+    ccn_map = {rp.position: rp.ccn_number for rp in ResiduePosition.objects.all()}
+
+    # Prepare aligned sequences: protein_dict and rotamers_by_structure use ccn_number as key
+    protein_dict = {res.ccn_number: res for res in residues if res.ccn_number}
+    rotamers = Rotamer.objects.filter(structure__in=structures).order_by("sequence_number")
+    rotamers_by_structure = {}
+    for rotamer in rotamers:
+        structure = rotamer.structure
+        if structure not in rotamers_by_structure:
+            rotamers_by_structure[structure] = {}
+        rotamers_by_structure[structure][rotamer.ccn_number] = rotamer
+
+    # Get all unique alignment positions from both protein and rotamers
+    all_positions = set()
+    for ccn in protein_dict.keys():
+        pos = position_map.get(ccn)
+        if pos is not None:
+            all_positions.add(pos)
+    for structure in rotamers_by_structure:
+        for ccn in rotamers_by_structure[structure].keys():
+            pos = position_map.get(ccn)
+            if pos is not None:
+                all_positions.add(pos)
+    all_positions = sorted(all_positions)
+
+    # Build the aligned_sequences list: (position, ccn_number, protein_residue, structure_rotamers)
+    aligned_sequences = []
+    for pos in all_positions:
+        ccn = ccn_map.get(pos)
+        protein_residue = protein_dict.get(ccn)
+        structure_rotamers = {structure: rotamers_by_structure[structure].get(ccn) for structure in structures}
+        aligned_sequences.append((pos, ccn, protein_residue, structure_rotamers))
+
+    alternate_names_str = ', '.join([alias.name for alias in alternate_names])
+
+    # Group residues by segment and sort by position
     residues_by_segment = {}
     for residue in residues:
         segment = residue.segment
         if segment not in residues_by_segment:
             residues_by_segment[segment] = []
         residues_by_segment[segment].append(residue)
+    # Sort each segment's residues by position
+    for segment, seg_residues in residues_by_segment.items():
+        residues_by_segment[segment] = sorted(
+            seg_residues, key=lambda res: position_map.get(res.ccn_number, 0)
+        )
 
     context = {
         'protein': protein,
-        'fullname': fullname,
         'structures': structures,
+        'aligned_sequences': aligned_sequences,
         'residues_by_segment': residues_by_segment,
-        'generic_numbers': generic_numbers,
+        'alternate_names': alternate_names_str,
     }
-
     return render(request, 'proteindetail.html', context)
+
+
+
+
 
 def Autocomplete(request):
     if 'term' in request.GET:

@@ -1,0 +1,83 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="p-3 mb-2 bg-light rounded-3">
+        <div class="container-fluid py-3">
+            <div class="row">
+                <div class="col">
+                    <h2 class="display-6 fw-bold">Charts</h2>
+                    <hr class="my-2">
+                </div>  
+            </div>
+        </div>    
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="text-center">
+                <h3>Structure releases</h3>
+            </div>
+            <div class="p-3 mb-4 bg-white rounded shadow-sm border">
+                {{ structure_chart|safe }}
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="text-center">
+                <h3>Structure methods</h3>
+            </div>
+            <div class="p-3 mb-4 bg-white rounded shadow-sm border">
+                {{ type_pie_chart|safe }}
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="text-center">
+                <h3>Species</h3>
+            </div>
+            <div class="p-3 mb-4 bg-white rounded shadow-sm border">
+                {{ species_pie_chart|safe }}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <h3>Sub-family</h3>
+            </div>
+            <div class="p-3 mb-4 bg-white rounded shadow-sm border">
+                {{ subfamily_pie|safe }}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <h3>Chemokine types</h3>
+            </div>
+            <div class="p-3 mb-4 bg-white rounded shadow-sm border">
+                {{ chemokine_type_pie|safe }}
+            </div>
+        </div>
+        <div class="col-md-6">
+          <div class="text-center">
+              <h3>Structure states</h3>
+          </div>
+          <div class="p-3 mb-4 bg-white rounded shadow-sm border">
+              {{ structure_state_pie|safe }}
+          </div>
+      </div>
+    </div>
+
+<h3>CCN Position Occurrence</h3>
+<div>
+    {{ ccn_position_barplot|safe }}
+</div>
+
+
+
+</div>
+{% endblock %}

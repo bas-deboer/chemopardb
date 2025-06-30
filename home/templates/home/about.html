@@ -1,84 +1,132 @@
 {% extends "home/base.html" %}
 {% load static %}
 
+{% block addon_css %}
+<style>
+    .containerbox {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    .box {
+        flex: 1 1 calc(50% - 20px);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        box-sizing: border-box;
+        text-align: justify;
+    }
+    h2, h3 {
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-12">
-                <div class="text-center text-md-start">
-                    <h1 class="display-2">About ChemoPar-db</h1>
-                    <p class="lead">ChemoPar-db: a database of chemokines and their binding partners.</p>
-                </div>
-            </div>
-        </div>
+
+    <div class="p-3 mb-2 bg-light rounded-3">
+        <div class="container-fluid py-3">
+          <div class="row">
+            <!-- Text Column -->
+            <div class="col">
+              <h2 class="display-6 fw-bold">About ChemoPar-db</h2>
+              <hr class="my-2">
+                <p>
+                    The Chemokine Partner database
+                </p>
+            </div>  
+          </div>
+        </div>    
+      </div>
+
+
+    <h2 class="mt-5 mb-3">What Are Chemokines?</h2>
+    <p>
+        Chemokines are essential signalling proteins that play a pivotal role in the immune system by guiding the movement of immune cells to areas of inflammation, infection, or injury. 
+        They achieve this by creating chemokine gradients that immune cells follow to reach the affected sites. This process is crucial for orchestrating an effective immune response.
+        Chemokines are categorised into four primary subfamilies based on the arrangement of cysteine residues in their N-terminus: CXC, CC, XC, and CX3C. 
+        Each subfamily and subtype has a distinct sequence characteristics and functional roles in immune cell trafficking and activation.
+    </p>
+    <p>
+        In ChemoPar-db, we focus on chemokines as the central component of our database, providing detailed insights into their interactions with a wide range of binding partners. 
+        Our goal is to offer a comprehensive resource for researchers studying chemokines from a structural perspective.
+    </p>
+
+    <div class="d-flex justify-content-center">
+        <img src="{% static 'home/images/chemokines_and_partners.png' %}" alt="img" style="max-width: 75%;">
     </div>
-
-    <hr class="mb-4 mt-4">
-
-    <h2 class="mt-5 mb-3">Data overview of ChemoPar-db</h2>
-    <span>
-        ChemoPar-db consists of three main datasets:
-        <ul>
-            <li>Sequence data on all chemokines from the PFam family (PF00048)</li>
-            <li>Structural data of chemokines obtained from the PDB</li>
-            <li>Chemokine-Partner interaction fingerprints</li>
-        </ul>
-    </span>
-
-    <h5 class="mt-4">Sequence dataset</h5>
-    <span>
-        ...
-    </span>
-
-    <h5 class="mt-4">Structural dataset</h5>
-    <span>
-        ...
-    </span>
-    <div class="row">
-        <div class="col-md-12">
-            {{ chart|safe }}
-        </div>
-    </div>
-
-    <h5 class="mt-4">Interaction fingerprints dataset</h5>
-    <span>
-        ...
-    </span>
-
-    <hr class="mb-4 mt-4">
+     
     <br>
 
-    <h2 class="mt-4 mb-3 search-title">Detailed data collection and processing method</h2>
-    <span>
-        ChemoPardb contains all available chemokine PDB structures which are organized, annotated, and aligned. You can <a href="/browse"><strong>Browse</strong></a> the UniProt reviewed chemokine protein entries or you can <a href="/search"><strong>Search</strong></a> the database for all structures.
-    </span>
-    <p style="text-align:justify;">
-        Chemokines are a family of small signaling proteins (chemotactic cytokines) that indeed play crucial roles in cellular signaling processes, particularly in the immune system. They are involved in guiding and regulating the movement of immune cells within the body, helping to orchestrate the immune response to various pathogens and inflammatory signals.
-    </p>
-    <p style="text-align:justify;">
-        ChemoPardb contains all available chemokine PDB structures which are organized, annotated, and aligned. You can <a href="/browse"><strong>Browse</strong></a> the UniProt reviewed chemokine protein entries or you can <a href="/search"><strong>Search</strong></a> the database for all structures.
-    </p>
-   
+    <div class="containerbox">
+        <div class="box">
+            <h3 class="mt-5 mb-3">G Protein-Coupled Receptors (GPCRs)</h3>
+            <p>
+                The primary and most well-characterized binding partners of chemokines are their respective G protein-coupled receptors (GPCRs). 
+                These receptors are integral membrane proteins with a signature seven-transmembrane domain structure. 
+                Upon binding to chemokines, GPCRs initiate a cascade of intracellular signalling pathways that mediate immune cell migration and activation.
+            </p>
+        </div>
 
-    <h5 id="data-collection">Data collection</h5>
-    <p style="text-align:justify;">
-        Chemokine protein entries were collected using the PFAM interleukin-8 family (PF00048) where we focused only on the reviewed UniProt IDs. This resulted in a total of 195 chemokine proteins from different species. These proteins were used to obtain the 227 PDB structures. The selected PDB structures are first split into all available models (specifically for NMR structures).
-    </p>
-    <div class="col-md-6 d-flex justify-content-center align-items-center">
-        <figure class="home-figure align-items-center">
-            <img src="{% static 'home/images/collection.png' %}" alt="img" style="max-width: 200%;">
-        </figure>
+        <div class="box">
+            <h3 class="mt-5 mb-3">Chemokine Dimers</h3>
+            <p>
+                Chemokines can form oligomeric structures through, among others, homo- and heterodimerisation. 
+                These dimeric forms are crucial for their biological activity and can influence the affinity and specificity of chemokine-receptor interactions, thereby modulating immune responses.
+            </p>
+        </div>
+
+        <div class="box">
+            <h3 class="mt-5 mb-3">Chemokine Binding Proteins (CKBPs)</h3>
+            <p>
+                This diverse class includes a variety of proteins that bind chemokines. 
+                Chemokine Binding Proteins (CKBPs) encompass viral proteins, which can subvert normal chemokine function to evade immune detection and endogenous regulators that fine-tune chemokine activity and signalling.
+            </p>
+        </div>
+
+        <div class="box">
+            <h3 class="mt-5 mb-3">Peptides</h3>
+            <p>
+                Various peptides, including the N-terminal domains of GPCRs, have been shown to bind chemokines. 
+                These interactions can provide insights into the structural basis of chemokine-receptor recognition and the modulation of chemokine function.
+            </p>
+        </div>
+
+        <div class="box">
+            <h3 class="mt-5 mb-3">Antibodies</h3>
+            <p>
+                Monoclonal antibodies targeting chemokines have been developed for both research and therapeutic purposes. 
+                Structural data on these antibodies offer valuable information for designing inhibitors that block chemokine activity in disease contexts.
+            </p>
+        </div>
+
+        <div class="box">
+            <h3 class="mt-5 mb-3">Glycosaminoglycans</h3>
+            <p>
+                Glycosaminoglycans (GAGs) are complex, sugar-like molecules that can interact with chemokines. 
+                These interactions are critical for chemokine immobilisation and presentation on cell surfaces or within extracellular matrices, facilitating chemokine gradient formation and immune cell recruitment.
+            </p>
+        </div>
+
+        <div class="box">
+            <h3 class="mt-5 mb-3">Small molecules</h3>
+            <p>
+                Several small molecules that bind to chemokines and inhibit their signalling have been identified. 
+                These molecules represent potential therapeutic agents for modulating chemokine activity in various diseases. 
+                Although structural data on these small molecules are limited, ongoing research continues to expand our understanding of their interactions with chemokines.
+            </p>
+        </div>
     </div>
     <br>
-    <h5 id="structure-processing">Structure processing</h5>
-    <p style="text-align:justify;">
-        The structures are protonated with the use of ProteinPlus ProToss webserver<sup><a href="https://proteins.plus/" target="_blank" data-bs-toggle="tooltip" style="text-decoration:none;" data-bs-placement="top">1</a></sup> using an API request.Subsequently, the structures are split into protein, solvent, cofactors, ions, small molecules, and others. The protein elements are further divided into chemokines and partners.
+
+    <h2 class="mt-5 mb-3">Our Database</h2>
+    <p>
+        ChemoPar-db serves as a comprehensive repository for data on chemokines and their binding partners. 
+        We provide detailed information on the structural, functional, and interaction properties of chemokines, supporting the research community in uncovering the complex networks that govern immune responses. Our database includes experimental data, computational models, and curated references, offering a valuable tool for advancing our understanding of chemokine biology and its implications in health and disease.
     </p>
-    <div class="col-md-6 d-flex justify-content-center align-items-center">
-        <figure class="home-figure">
-            <img src="{% static 'home/images/processing_workflow.png' %}" alt="img" style="max-width: 200%;">
-        </figure>
-    </div>
+    <p>
+        By facilitating access to high-quality data on chemokine interactions, ChemoPar-db aims to accelerate discoveries in immunology, inflammation, and related fields, ultimately contributing to the development of novel therapeutic strategies targeting chemokine pathways.
+    </p>
+    
 </div>
 {% endblock %}

@@ -5,37 +5,38 @@ class Residue(models.Model):
     protein = models.ForeignKey('protein.Protein', null=True, on_delete=models.CASCADE)
     #protein_segment = models.ForeignKey('protein.ProteinSegment', null=True, on_delete=models.CASCADE)
     sequence_number = models.SmallIntegerField(null=True)
-    generic_number = models.SmallIntegerField(null=True)
+    ccn_number = models.CharField(max_length=10, null=True, blank=True)
     amino_acid = models.CharField(max_length=1)
     amino_acid_three_letter = models.CharField(max_length=3, null=True)
 
     def __str__(self):
         return self.amino_acid + str(self.sequence_number)
-
+    
     @property
     def segment(self):
-        if self.generic_number is not None:
-            if 1 <= self.generic_number <= 62:
+        if self.ccn_number:
+            ccn = self.ccn_number
+            if ccn.startswith('NTc.Cm'):
                 return 'N-term'
-            if 62 <= self.generic_number <= 67:
+            if ccn.startswith('CX.'):
                 return 'CX'
-            if 67 <= self.generic_number <= 82:
+            if ccn.startswith('cxb1.'):
                 return 'N-loop'
-            if 82 <= self.generic_number <= 89:
+            if ccn.startswith('B1.'):
                 return 'B1'
-            if 89 <= self.generic_number <= 100:
+            if ccn.startswith('b1b2.'):
                 return '30s-loop'
-            if 100 <= self.generic_number <= 105:
+            if ccn.startswith('B2.'):
                 return 'B2'
-            if 105 <= self.generic_number <= 114:
+            if ccn.startswith('b2b3.'):
                 return '40s-loop'
-            if 114 <= self.generic_number <= 118:
+            if ccn.startswith('B3.'):
                 return 'B3'
-            if 118 <= self.generic_number <= 122:
+            if ccn.startswith('b3h.'):
                 return '50s-loop'
-            if 122 <= self.generic_number <= 135:
+            if ccn.startswith('H.'):
                 return 'Helix'
-            elif 135 <= self.generic_number <= 500:
+            if ccn.startswith('CT.'):
                 return 'C-term'
         return None
 

@@ -3,6 +3,63 @@
 {% csrf_token %}
 
 {% block addon_css %}
+<style>
+  /* Custom styles */
+  .dataTables_wrapper .dataTables_filter {
+      float: right;
+      text-align: right;
+  }
+  table.dataTable thead th, table.dataTable tfoot th {
+      white-space: nowrap;
+  }
+  table.dataTable th, table.dataTable td {
+      text-align: left;
+      white-space: nowrap;
+  }
+  table.dataTable td {
+      padding: 5px 10px;
+  }
+  .dataTables_filter, .dataTables_length {
+      margin-bottom: 20px;
+  }
+  .filter-select {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+      height: 40px; /* Match the height for uniformity */
+      vertical-align: middle; /* Center text vertically */
+  }
+  .filter-number {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+      font-size: 1em; /* Increase font size */
+      height: 40px; /* Set a larger height to match select boxes */
+      text-align: center; /* Center align text */
+      vertical-align: middle; /* Center text vertically */
+  }
+  .filter-container {
+      padding: 5px;
+      background: #f8f9fa;
+  }
+  /* Remove alternating row colors */
+  table.dataTable tbody tr {
+      background-color: white; /* Set a consistent background color */
+  }
+  /* Add hover effect for highlighting and clickable cursor */
+  table.dataTable tbody tr:hover {
+      background-color: #f2f2f2; /* Highlight color on hover */
+      cursor: pointer; /* Change cursor to pointer */
+  }
+  .table-responsive {
+      overflow-x: auto;
+  }
+  .max-width-column {
+      max-width: 200px; /* Adjust the value as needed */
+      overflow: hidden;
+      text-overflow: ellipsis;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -10,51 +67,57 @@
     <h1>IFP Search Results</h1>
     <hr class="my-2"> 
     {% if similar_ifps %}
-    <div class="scrollable-container">
-        <table id="partners">
+    <div class="table-responsive">
+        <table id="partners" class="table table-striped table-bordered" width="100%">
             <thead>
                 <tr>
-                    <th>Select</th>
-                    <th>Structure</th>
-                    <th>Chemokine Chain</th>
-                    <th>Partner Chain</th>
-                    <th>Similarity</th>
+                    <th class="max-width-column">Similarity</th>
+                    <th class="max-width-column">Structure</th>
+                    <th class="max-width-column">Binding Pair</th>
+                    <th class="max-width-column">Partner Type</th>
                 </tr>
             </thead>
             <tbody>
-                {% for ifp, similarity in similar_ifps %}
+                {% for ifp_data in similar_ifps %}
                 <tr>
-                    <td>
-                        <input type="checkbox" class="ifp-select" data-id="{{ ifp.id }}">
+                    <td class="max-width-column">{{ ifp_data.similarity|floatformat:2 }}</td>
+                    <td class="max-width-column">
+                        <a target="_blank" href="/structure/{{ ifp_data.ifp_entry.structure.id }}">
+                            {{ ifp_data.ifp_entry.structure.pdb_code.index }}
+                        </a>
                     </td>
                     <td>
-                        <a target="_blank" href="/structure/{{ ifp.chemokine_partner_pair.structure.pdb_code.index }}"
-                        >{{ ifp.chemokine_partner_pair.structure.pdb_code.index}}</a>
+                        <a href="/interaction/binding-partner/{{ifp_data.ifp_entry.binding_pair.id}}/" class="interaction-btn">                
+                        {{ ifp_data.ifp_entry.binding_pair.chemokine_name }} 
+                        (chain {{ ifp_data.ifp_entry.binding_pair.chemokine_chain }})
+                        – {{ ifp_data.ifp_entry.binding_pair.partner_name }} 
+                        (chain {{ ifp_data.ifp_entry.binding_pair.partner_chain }})
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                        </a>
                     </td>
-                    <td>{{ ifp.chemokine_partner_pair.chemokine_chain }}</td>
-                    <td>{{ ifp.chemokine_partner_pair.partner_chain }}</td>
-                    <td>{{ similarity|floatformat:2 }}</td> <!-- Display similarity with 2 decimal places -->
+                    </td>
+                    <td class="max-width-column">
+                        {{ ifp_data.ifp_entry.binding_pair.partner_type}}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        
     </div>
-    <button id="view-selected" class="btn btn-primary mt-3">View Selected</button>
+    <!-- <button id="view-selected" class="btn btn-primary mt-3">View Selected</button> -->
     {% else %}
     <p>No similar interaction fingerprints found.</p>
     {% endif %}
+</div>
 
-    <!-- Include jQuery -->
-    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-
-    <!-- Include DataTables JS and CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
     <script>
         $(document).ready( function () {
             $('#partners').DataTable({
                 "pageLength": -1,  // Set the page length to -1 to show all entries
-                "lengthMenu": [[-1], ["All"]]  // Adjust the length menu to only have the "All" option
+                "lengthMenu": [[-1], ["All"]],  // Adjust the length menu to only have the "All" option
+                "order": [[0, "desc"]]  // Automatically sort by the second column (Similarity) in descending order
             });
             
             $('#view-selected').click(function() {
@@ -83,7 +146,6 @@
                     alert("Please select at least one entry to view.");
                 }
             });
-            
         });
     </script>
 

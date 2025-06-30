@@ -1,60 +1,38 @@
 from django.db import models
 
-
 class Partner(models.Model):
-    name = models.CharField(max_length=255, unique=True, null=True)
-    partner_type = models.CharField(max_length=255, null=True, blank=True)
-    
-    # structure definition
-    smiles = models.TextField(null=True)
-    inchikey = models.CharField(max_length=27, null=True, unique=True)
-    clean_inchikey = models.CharField(max_length=27, null=True)
-    sequence = models.CharField(max_length=1000, null=True)
-
-    # Ligand properties
-    mw = models.DecimalField(max_digits=15, decimal_places=3, null=True)
-    rotatable_bonds = models.SmallIntegerField(null=True)
-    hacc = models.SmallIntegerField(null=True)
-    hdon = models.SmallIntegerField(null=True)
-    logp = models.DecimalField(max_digits=10, decimal_places=3, null=True)    
-
-    def __str__(self):
-        if self.name:
-            return self.name
-
-    class Meta():
-        db_table = 'partner'
-        
-class PartnerType(models.Model):
-    slug = models.SlugField(max_length=20, unique=True)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(null=True, blank=True)
+    type = models.CharField(max_length=100, null=True, blank=True)
+    structures = models.ManyToManyField('structure.Structure', related_name="partners", blank=True)
 
     def __str__(self):
         return self.name
 
-    class Meta():
-        db_table = 'ligand_type'
-        
-        
-class PartnerProteinStructure(models.Model):
-    structure = models.ForeignKey(
-        'structure.Structure', on_delete=models.CASCADE, null=True)
-    partner = models.ForeignKey('partner.Partner', on_delete=models.CASCADE)
-    chain = models.CharField(max_length=20)
-    #model = models.ForeignKey(
-        #'structure.StructureModel', on_delete=models.CASCADE, null=True)
+    class Meta:
+        db_table = 'partner'
+        verbose_name = 'Partner'
+        verbose_name_plural = 'Partners'
+
+
+class PartnerEntity(models.Model):
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='entities')
+    entity = models.ForeignKey('structure.Entity', on_delete=models.CASCADE, related_name='partners')
+    unp_accession = models.CharField(max_length=50, null=True, blank=True)
+    pfam_accession = models.CharField(max_length=50, null=True, blank=True)
+    comp_id = models.CharField(max_length=50, null=True, blank=True)
+    chembl_id = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return '<ProteinPartner: {} {} {}>'.format(self.structure, self.ligand, self.chain)
+        return f"{self.partner.name} - {self.entity.name}"
 
-    class Meta():
-        db_table = "partner_protein_structure"    
-        
+    class Meta:
+        db_table = 'partner_entity'
+
         
 class Partner_PDB(models.Model):
     pdbdata = models.ForeignKey('PDBData', on_delete=models.CASCADE)
     name = models.SlugField(max_length=100, unique=True, null=True)
-    #sequence = models.ForeignKey('protein.Sequence', on_delete=models.CASCADE)
 
     def __str__(self):
         return '{} {}'.format(self.domain, self.chain)

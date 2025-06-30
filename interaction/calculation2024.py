@@ -1,72 +1,78 @@
 from django.conf import settings
 from django.utils.text import slugify
 from django.core.cache import cache
-
-import os
+import warnings
+from io import StringIO
 import prolif as plf
 from rdkit import Chem
 import MDAnalysis as mda
-from io import StringIO
+import os
 
 
-def prolif_calculation(structure, chain_ids):
-    pdbdata = StringIO(structure.pdb_data.pdb)
-    
-    # Load the structure using MDAnalysis
+IGNORED_RESIDUES = ['HOH', 'SO4', 'AOP', 'PCA']
+
+
+# proLIF - redefining HB-acceptors (slightly wider angle)
+class HBAcceptor(plf.interactions.HBAcceptor):
+    def __init__(self): 
+        super().__init__(DHA_angle=(120, 180))
+
+
+# proLIF - redefining HB-donors (slightly wider angle)
+class HBDonor(plf.interactions.HBDonor):
+    def __init__(self): 
+        super().__init__(DHA_angle=(120, 180))
+        
+
+def prolif_calculation(chemokine_partner_complex, chemokine_chain, chemokine_residues=None, partner_chains=None, partner_residues=None):
+    """
+    Calculate interactions between a chemokine and its partner(s) using ProLIF.
+
+    Parameters:
+        structure: Structure object with a .pdb_data.pdb field.
+        chemokine_chain: str, chain ID of the chemokine.
+        chemokine_residues: list of int/str (optional), residue numbers in the chemokine chain.
+        partner_chains: list of str (optional), chain IDs of the binding partner(s).
+        partner_residues: list or set of int/str (optional), residue numbers to filter in partner chains.
+
+    Returns:
+        ProLIF Fingerprint object.
+    """
+    pdbdata = StringIO(chemokine_partner_complex.pdb_data.pdb)
     u = mda.Universe(pdbdata, format="pdb")
-    print("Now guessing bonds...")
     u.atoms.guess_bonds(vdwradii={"H": 0.4, "O": 1.48})
+
+    # Build chemokine selection
+    if chemokine_residues:
+        chem_clause = " or ".join(f"resnum {r}" for r in chemokine_residues)
+        chemokine_selection = f"chainID {chemokine_chain} and ({chem_clause})"
+    else:
+        chemokine_selection = f"chainID {chemokine_chain}"
+    print(chemokine_selection)
+    # Build partner selection (based on chain and optional residues)
+    if partner_chains:
+        partner_clauses = []
+        for chain in partner_chains:
+            if partner_residues:
+                res_clause = " or ".join(f"resnum {r}" for r in partner_residues)
+                sel = f"chainID {chain} and ({res_clause})"
+            else:
+                sel = f"chainID {chain}"
+            partner_clauses.append(sel)
+        partner_selection = " or ".join(partner_clauses)
     
-    # Select multiple chains and concatenate the AtomGroups
-    ref_chain = u.select_atoms("chainID {}".format(chain_ids[0]))
-    for chain_id in chain_ids[1:]:
-        ref_chain += u.select_atoms("chainID {}".format(chain_id))
+    print(partner_selection)
     
-    target_chain = u.select_atoms(f"all and not resname HOH")
-    
-    # Generate an RDKit molecule for the reference chain
+    # Select atoms
+    ref_chain = u.select_atoms(chemokine_selection)
+    target_chain = u.select_atoms(partner_selection)
+
+    # Convert to ProLIF molecules
     ref_mol = plf.Molecule.from_mda(ref_chain, force=True)
     target_mol = plf.Molecule.from_mda(target_chain, force=True)
-    
-    # Calculate interactions using ProLIF
+
+    # Calculate interactions
     fp = plf.Fingerprint()
     fp.run_from_iterable([ref_mol], target_mol)
-    interactions_dict = fp.ifp
-    
-    return interactions_dict
 
-
-
-
-def save_interactions(interactions_dict):
-    # Dictionary to keep track of chemokine partner pairs to avoid duplicates
-    pair_instances = {}
-
-    for key, value in interactions_dict.items():
-        for residue_pair, interactions in value.items():
-            # Define identifiers for chemokine and partner
-            chemokine_id = f"{residue_pair[0].name} {residue_pair[0].number}"
-            partner_id = f"{residue_pair[1].name} {residue_pair[1].number}"
-            pair_key = (chemokine_id, partner_id)
-
-            # Check if this pair is already processed
-            if pair_key not in pair_instances:
-                # Create or get ChemokinePartnerPair instance
-                pair_instance, created = ChemokinePartnerPair.objects.get_or_create(
-                    structure=structure_instance,
-                    partner=partner_instance,
-                    defaults={'chemokine_id': chemokine_id, 'partner_id': partner_id}
-                )
-                pair_instances[pair_key] = pair_instance
-            else:
-                pair_instance = pair_instances[pair_key]
-
-            # Create interactions
-            for interaction_type, details in interactions.items():
-                ChemokinePartnerInteraction.objects.create(
-                    chemokine_partner_pair=pair_instance,
-                    chemokine_residue=chemokine_id,
-                    partner_residue=partner_id,
-                    interaction_type=interaction_type,
-                    # You might want to save more detailed interaction details here
-                )
+    return fp

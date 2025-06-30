@@ -2,35 +2,113 @@
 {% load static %}
 
 {% block addon_css %}
+<style>
+  /* Custom styles */
+  .dataTables_wrapper .dataTables_filter {
+      float: right;
+      text-align: right;
+  }
+  table.dataTable thead th, table.dataTable tfoot th {
+      white-space: nowrap;
+  }
+  table.dataTable th, table.dataTable td {
+      text-align: left;
+      white-space: nowrap;
+  }
+  table.dataTable td {
+      padding: 5px 10px;
+  }
+  .dataTables_filter, .dataTables_length {
+      margin-bottom: 20px;
+  }
+  .filter-select {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+      height: 40px; /* Match the height for uniformity */
+      vertical-align: middle; /* Center text vertically */
+  }
+  .filter-number {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+      font-size: 1em; /* Increase font size */
+      height: 40px; /* Set a larger height to match select boxes */
+      text-align: center; /* Center align text */
+      vertical-align: middle; /* Center text vertically */
+  }
+  .filter-container {
+      padding: 5px;
+      background: #f8f9fa;
+  }
+  /* Remove alternating row colors */
+  table.dataTable tbody tr {
+      background-color: white; /* Set a consistent background color */
+  }
+  /* Add hover effect for highlighting and clickable cursor */
+  table.dataTable tbody tr:hover {
+      background-color: #f2f2f2; /* Highlight color on hover */
+      cursor: pointer; /* Change cursor to pointer */
+  }
+  /* Fixed width for table columns */
+  table.dataTable th, table.dataTable td {
+      max-width: 200px; /* Change the width to fit your needs */
+      width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1>Proteins</h1>
-    <hr class="my-2"> 
-    <div class="scrollable-container">
-        <table id="partners">
+<div class="container-fluid">
+    <div class="p-3 mb-2 bg-light rounded-3">
+        <div class="container-fluid">
+          <div class="row">
+            <!-- Text Column -->
+            <div class="col">
+              <h2 class="display-6 fw-bold">Browse chemokine proteins</h2>
+              <hr class="my-2">
+                <p></p>
+            </div>  
+          </div>
+        </div>    
+      </div>
+  
+      <br>
+
+    <div>
+        <table id="partners" class="table table-striped table-bordered" width="100%">
             <thead>
                 <tr>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                </tr>
-                <tr>
                     <th>Chemokine Type</th>
-                    <th>Name</th>
+                    <th>Subfamily</th>
                     <th>Species</th>
                     <th>UniProt</th>
+                </tr>
+                <tr class="filter-row">
+                    <th><select class="form-control filter-select"><option value=""></option></select></th>
+                    <th><select class="form-control filter-select"><option value=""></option></select></th>
+                    <th><select class="form-control filter-select"><option value=""></option></select></th>
+                    <th><select class="form-control filter-select"><option value=""></option></select></th>
                 </tr>
             </thead>
             <tbody>
               {% for protein in proteins %}
-              <tr>
-                <td>{{ protein.family }}</td>
-                <td><a href="/protein/{{ protein.name }}">{{ protein.name|safe }}</a></td>
+              <tr data-href="/protein/{{ protein.gene_name }}">
+                <td>{{ protein.type }}</td>
+                <td>{{ protein.subfamily }}</td>
                 <td>{{ protein.species }}</td>
-                <td><a href="https://www.uniprot.org/uniprot/{{ protein.uniprot_id }}" target="_blank">{{ protein.uniprot_id }}</a></td>
+                <td>
+                    <span>
+                    {{ protein.uniprot_id }} 
+                    <a href="https://www.uniprot.org/uniprot/{{ protein.uniprot_id }}" 
+                       target="_blank" 
+                       title="Go to UniProt">
+                        <span class="material-symbols-outlined">open_in_new</span>
+                    </a>
+                    </span>
+                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -38,21 +116,56 @@
     </div>
 </div>
 
-    <!-- Include jQuery -->
-    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script>
+    $(document).ready(function() {
+        var table = $('#partners').DataTable({
+            responsive: true,
+            paging: true,
+            scrollX: true,
+            autoWidth: true,
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ],
+            pageLength: -1, // Default number of rows to display
+            initComplete: function () {
+                var api = this.api();
 
-    <!-- Include DataTables JS and CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+                api.columns().every(function () {
+                    var column = this;
+                    var select = $(column.header()).find('select');
+                    
+                    // Populate the dropdown with unique values
+                    column.data().unique().sort().each(function (d, j) {
+                        var strippedText = $('<div/>').html(d).text().replace("open_in_new", "").trim();
+                        if ($('option', select).filter(function () { return $(this).val() === strippedText; }).length === 0) {
+                            select.append('<option value="' + strippedText + '">' + strippedText + '</option>');
+                        }
+                    });
 
-    <script>
-        $(document).ready( function () {
-            $('#partners').DataTable({
-                "pageLength": -1,  // Set the page length to -1 to show all entries
-                "lengthMenu": [[-1], ["All"]]  // Adjust the length menu to only have the "All" option
-            });
+                    select.on('change', function () {
+                        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                        column.search(val ? val : '', true, false).draw(); // Remove the anchors
+                    });
+                });
+            }
         });
-    </script>
 
-</body>
+        // Clickable row functionality
+        $('#partners tbody').on('click', 'tr', function(event) {
+            // Ignore click if target is a link or a child of a link
+            if (!$(event.target).closest('a').length) {
+                var url = $(this).data('href');
+                if (url) {
+                    window.location.href = url;
+                }
+            }
+        });
+
+        // Prevent table sort when clicking on filter dropdown
+        $('.filter-select').on('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+</script>
 {% endblock %}

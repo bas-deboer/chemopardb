@@ -154,44 +154,47 @@ function hideToolTip(plotid) {
     tipElement.setAttribute('visibility', 'hidden');
 }
 
-function toggleLoop(id, type, skipmaxmin, el) {
-  svg = $(el).closest('svg');
-    if (type=='long') {
-      svg.find(id+".long").hide();
-      svg.find(id+".short").show();
-    } else {
-      svg.find(id+".long").show();
-      svg.find(id+".short").hide();
-    }
-    // $(id+".long").each(function () {
-    //     curr = $(this).css("display");
-    //     if (curr == 'none') $(this).removeAttr("display");
-    //     if (!curr) $(this).css("display", "none");
-    // });
+//function toggleLoop(id, type, skipmaxmin, el) {
+//  svg = $(el).closest('svg');
+//    if (type=='long') {
+//      svg.find(id+".long").hide();
+//      svg.find(id+".short").show();
+//    } else {
+//      svg.find(id+".long").show();
+//      svg.find(id+".short").hide();
+//    }
+//
+//    // console.log('toggleLoop');
+//    if (skipmaxmin!=1 && typeof overlay_modifications === 'function') overlay_modifications();
+//    if (skipmaxmin!=1) maxmin();
+//}
 
-    // $(id+".short").each(function () {
-    //     curr = $(this).css("display");
-    //     if (curr == 'none') $(this).removeAttr("display");
-    //     if (!curr) $(this).css("display", "none");
-    // });
-    // console.log('draw c', (+new Date()) - start);
-/*    if (id == ".ICL3" || id == ".ICL2" || id == ".ICL1" || id == ".C-term" ) {
-      if (skipmaxmin!=1) redraw_terminus("C");
-    }
-    // console.log('draw n', (+new Date()) - start);
-    if (id == ".ECL3" || id == ".ECL2" || id == ".ECL1" || id == ".N-term" ) {
-      if (skipmaxmin!=1) redraw_terminus("N");
-    }*/
-    // console.log('maxmin', (+new Date()) - start);
-    // if (skipmaxmin!=1) maxmin();
-    // console.log('done', (+new Date()) - start);
-    // if (skipmaxmin!=1) $("#snake").html($("#snake").html());
-    // if (skipmaxmin!=1) reload_tooltips();
+function toggleSignalSequence() {
+  // Select all SVG elements that have the data-signal attribute set to "true"
+  var $signalElements = $('svg [data-signal="true"]');
 
-    // console.log('toggleLoop');
-    if (skipmaxmin!=1 && typeof overlay_modifications === 'function') overlay_modifications();
-    if (skipmaxmin!=1) maxmin();
+  // Check if these elements are currently visible.
+  if ($signalElements.is(':visible')) {
+    // Hide them
+    $signalElements.hide();
+  } else {
+    // Show them
+    $signalElements.show().css("fill", "#D3D3D3"); // Light grey color for background
+
+    // ➕ Update associated text color (next sibling <text> or rtext)
+    $signalElements.each(function () {
+      var $text = $(this).next("text");
+      if ($text.length) {
+        $text.css("fill", "black"); // ensure text is visible on light grey
+      }
+    });
+  }
 }
+
+
+
+
+
 
 function redraw_terminus(term) {
   // console.log('redraw term',term);
@@ -417,14 +420,6 @@ function maxmin() {
 
         }
     });
-
-    // Alternative for height - otherwise the height of the element itself is skipped
-    //svgmax = document.getElementById('snake').getBBox().height;
-
-    // if (svgmin>y_min) svgmin = y_min;
-    // if (svgmax<y_max) svgmax = y_max;
-
-    // console.log('max '+svgmax+' '+classmax+' min'+svgmin+' '+classmin+' count'+count);
 
     var svg = $('#snake').closest('svg')[0];
     check = document.getElementById("snakeplot").getAttribute('viewBox');

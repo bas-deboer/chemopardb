@@ -32,16 +32,53 @@
   .closebtn:hover {
     color: black;
   }
-  </style>
+  .feature-box {
+    padding: 20px;
+    background-color: #ffffff;
+    border: 1px solid #d1d1d1;
+    border-radius: 5px;
+    text-align: center;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .feature-box h3 {
+    margin-bottom: 10px;
+  }
+  .feature-box p {
+    margin-bottom: 0;
+  }
+  .feature-box i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #007bff;
+  }
+  .text-justify {
+    text-align: justify;
+  }
+  .btn-custom {
+    background-color: #272838;
+    color: #9E9EA5;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin-top: 10px;
+    cursor: pointer;
+  }
+  
+  .btn-custom:hover {
+    background-color: #272838;
+    color: #FFFFFF;
+  }
+  
+  
+  
+</style>
 {% endblock %}
 
 {% block content %}
-
-<div class="alert warning">
-  <span class="closebtn">&times;</span>  
-  <strong>Notice:</strong> This version of ChemoPar-db is currently under development. If you encounter any issues, please don't hesitate to contact us. Your feedback is valuable and helps us improve.
-</div>
-
     <div class="container py-4">
   
         <div class="p-5 mb-4 bg-light rounded-3">
@@ -50,11 +87,11 @@
                 <!-- Text Column -->
                 <div class="col-md-7">
                   <h1 class="display-5 fw-bold">Welcome to ChemoPar-db</h1>
+                  <p>The <b>Chemo</b>kine <b>Par</b>tner <b>d</b>ata<b>b</b>ase
                   <hr class="my-2">
-                  <p class="fs-4">ChemoPar-db contains all available chemokine PDB structures which are organized, annotated, and aligned. You can browse the UniProt reviewed chemokine protein entries or you can search the database for all structures.</p>
+                  <p class="fs-4">ChemoPar-db is a user-friendly structural chemogenomics database that compiles chemokine structures from the Protein Data Bank and analyses molecular interactions using interaction fingerprints.</p>
                     <div class="input-group">
-                        <input id="searchstructure" class="form-control mr-sm-2 custom-input" type="text" placeholder="Search structures" aria-label="Search">
-                        <button id="searchButton" type="button" class="btn" data-mdb-ripple-init>Search</button>
+                        <input id="searchdatabase" class="form-control mr-sm-2 custom-input" type="text" placeholder="Search the database" aria-label="Search">
                     </div>
                 </div>  
                 <!-- Image Column -->
@@ -66,74 +103,73 @@
               </div>
             </div>    
           </div>
-     
 
-          <div class="container-fluid py-5">
-            <div class="row">
-              <div class="col-md-12">
-                <div class="h-100 p-5 text-white bg-dark rounded-3 d-flex align-items-center">
-                  <div class="text-content me-3">
-                    <h2>Chemokine-Partner interaction analysis</h2>
-                    <p>Dive into our analysis of chemokine-partner complexes, where we unlock the secrets of their interactions through detailed structural examination. By annotating binding regions on chemokines, our research illuminates the different binding regions on chemokines. This concise exploration not only advances our understanding of chemokine mechanisms but also opens new avenues for therapeutic innovation.</p>
-                    <div class="btn-box">
-                        <a href="/partner" class="btn">Browse Partners</a>
-                    </div>
-                  </div>
-                  <div class="image-content ms-auto">
-                    <figure>
-                      <img src="{% static 'media/7SK6_interaction_matrix.png' %}" alt="Chemokine-Partner Interaction Matrix" style="max-width: 100%; height: auto;"></img>
-                    </figure>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          
-    <div class="container-fluid py-5">
-        <div class="col-md-6 offset-md-6">
-          <div class="h-100 p-5 bg-light border rounded-3">
-            <h2>About</h2>
-            <p style='text-align:justify;'>Chemokines are a family of small signaling proteins (chemotactic cytokines) that play crucial roles in cellular signaling processes, particularly in the immune system. 
-                They are involved in guiding and regulating the movement of immune cells within the body, helping to orchestrate the immune response to various pathogens and inflammatory signals.
-            </p>
-            <p style='text-align:justify;'>
-                Read more about the general structural features of chemokines and how this database was constructed on the about page.
-            </p>
-            <div class="btn-box">
-                <a href="/about" class="btn">Read more</a>
-            </div>
-          </div>
-        </div>
-        </div>
-      </div>
-    </div>
 
 </div>
+    <!-- Initialize jQuery UI Autocomplete -->
     <script>
-        document.getElementById('searchButton').addEventListener('click', function() {
-            let txt1 = document.getElementById('searchstructure').value;
-            var newPageUrl = '/structure/?filter=' + txt1; 
-            window.location.href = newPageUrl;
-        });
-
-        document.getElementById('searchstructure').addEventListener('keyup', function(event) {
-            if (event.key === "Enter" || event.keyCode === 13) {
-                document.getElementById('searchButton').click();
-            }
+        $(document).ready(function() {
+            $("#searchdatabase").autocomplete({
+                source: function(request, response) {
+                    $.ajax({
+                        url: "{% url 'protein-autocomplete' %}",
+                        dataType: "json",
+                        data: {
+                            term: request.term
+                        },
+                        success: function(proteinData) {
+                            $.ajax({
+                                url: "{% url 'structure-autocomplete' %}",
+                                dataType: "json",
+                                data: {
+                                    term: request.term
+                                },
+                                success: function(structureData) {
+                                    // Combine and process results
+                                    let combinedData = [];
+    
+                                    if (proteinData.length > 0) {
+                                        combinedData.push({ label: "Chemokines", type: "header" });
+                                        combinedData = combinedData.concat(proteinData);
+                                    } else {
+                                        combinedData.push({ label: "No chemokines found", type: "no-results" });
+                                    }
+    
+                                    if (structureData.length > 0) {
+                                        combinedData.push({ label: "Structures", type: "header" });
+                                        combinedData = combinedData.concat(structureData);
+                                    } else {
+                                        combinedData.push({ label: "No structures found", type: "no-results" });
+                                    }
+    
+                                    response(combinedData);
+                                }
+                            });
+                        }
+                    });
+                },
+                minLength: 2,
+                select: function(event, ui) {
+                    if (ui.item.url) {
+                        window.location.href = ui.item.url;
+                    }
+                }
+            }).autocomplete("instance")._renderItem = function(ul, item) {
+                if (item.type === "header") {
+                    return $("<li>")
+                        .addClass("ui-autocomplete-category")
+                        .append("<div>" + item.label + "</div>")
+                        .appendTo(ul);
+                } else if (item.type === "no-results") {
+                    return $("<li>")
+                        .append("<div style='color: gray;'>" + item.label + "</div>")
+                        .appendTo(ul);
+                } else {
+                    return $("<li>")
+                        .append("<div>" + item.label + "</div>")
+                        .appendTo(ul);
+                }
+            };
         });
     </script>
-
-    <script>
-      var close = document.getElementsByClassName("closebtn");
-      var i;
-      
-      for (i = 0; i < close.length; i++) {
-        close[i].onclick = function(){
-          var div = this.parentElement;
-          div.style.opacity = "0";
-          setTimeout(function(){ div.style.display = "none"; }, 600);
-        }
-      }
-      </script>
 {% endblock %}

@@ -1,3 +1,33 @@
+"""
+Modified Script for Chemokine SVG Diagram
+
+Original Source:
+    Title: diagrams_gprotein.py
+    Author: University of Copenhagen
+    Date Accessed: September 2023
+    Original License: Apache License 2.0
+    Original Copyright: © 2015 University of Copenhagen
+    Original Source Location: https://github.com/protwis/protwis/blob/master/common/diagrams_gprotein.py
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+    Unless required by applicable law or agreed to in writing, software distributed under the License
+    is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+    either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+Description of Modifications:
+    - Adapted the original G protein plot style to represent chemokines in `DrawArrestinPlot`.
+    - Updated segment data with `CHEMOKINE_SEGMENTS` for chemokine-specific regions.
+    - Modified `drawSnakePlotHelix`, `drawSnakePlotSheet`, `drawSnakePlotLoop`, and `drawSnakePlotTerminals` to reflect chemokine structure.
+    - Adjusted SVG output functions to better fit chemokine visual representation.
+    - Creating a separate `DrawArrestinPlot` class focused on chemokine data.
+
+NOTICE: This file includes derivative works of the original code licensed under the Apache License 2.0 by the University of Copenhagen. 
+Modifications made to the original code are marked by the description above. This modified version retains the same license.
+"""
+
+
 from common.diagrams import Diagram
 #from common.definitions import CHEMOKINE_SEGMENTS
 
@@ -22,8 +52,9 @@ CHEMOKINE_SEGMENTS = OrderedDict([
 # https://github.com/protwis/protwis
 class DrawArrestinPlot(Diagram):
 
-    def __init__(self, residue_list, protein_name, nobuttons = None):
-        self.nobuttons = 'arrestin'
+    def __init__(self, residue_list, protein_name, signal_start=None, signal_end=None, nobuttons=None):
+    
+        self.nobuttons = nobuttons if nobuttons is not None else 'arrestin'
         self.type = 'snakeplot'
         plot_data = {}
         plot_data['direction'] = [0, 0, 1, 0, 1, 0, 1, 0]  # 0: EC->IC, 1: IC->EC
@@ -33,10 +64,13 @@ class DrawArrestinPlot(Diagram):
         #self.family = protein_class
         self.output = ''
 
-        # FIXME DO PUREIMAGE
-        # $pureImage = isset($_GET['pureimage']) && $_GET['pureimage'] == 'TRUE' ? TRUE : FALSE;
+        # Store the signal range if provided.
+        if signal_start is not None and signal_end is not None:
+            print(signal_start, signal_end)
+            self.signal_range = (signal_start, signal_end)
+        else:
+            self.signal_range = None
 
-        # get sequence, baldwin, and bw information of this receptor
 
         self.sequence = residue_list
         self.segments = {}
@@ -52,17 +86,38 @@ class DrawArrestinPlot(Diagram):
                 self.segments[segment] = []
             self.segments_full[segment] = r.segment
             label = ''
-            displaylabel = ''
-            if r.generic_number:
-                label = str(r.generic_number)
+            if r.ccn_number:
+                label = str(r.ccn_number)
             elif hasattr(r, 'family_generic_number'):
                 label = str(r.family_generic_number)
-            if r.generic_number: displaylabel = str(r.generic_number)
-            displaylabel = r.amino_acid + str(r.sequence_number) + " \n " + displaylabel
+
+            displaylabel = f"{r.amino_acid}{r.sequence_number}"
+            if r.ccn_number:
+                displaylabel += f" {r.ccn_number}"
             if hasattr(r, 'frequency'):
-                displaylabel = displaylabel + "\n" + r.frequency
+                displaylabel += f"\n{r.frequency}"
+
             self.segments[segment].append([r.sequence_number, r.amino_acid, label, displaylabel])
+
             i += 1
+
+        # Ensure Helix is present to avoid KeyError
+        if "Helix" not in self.segments:
+            self.segments["Helix"] = []
+
+        # If C-term exists, append its residues to the Helix segment and remove it from segments.
+        if "C-term" in self.segments:
+            if "Helix" in self.segments:
+                # Append C-term residues to the helix residues.
+                self.segments["Helix"] += self.segments["C-term"]
+            else:
+                # If Helix doesn't exist, treat C-term as Helix.
+                self.segments["Helix"] = self.segments["C-term"]
+            # Remove the C-term so it doesn't get drawn as a terminal.
+            del self.segments["C-term"]
+            if "C-term" in self.segments_full:
+                del self.segments_full["C-term"]
+
 
         for helix_num in range(1,2): #FIX for missing generic numbers
             rs = self.segments['Helix']
@@ -72,7 +127,6 @@ class DrawArrestinPlot(Diagram):
                         if rs[i+1][2]: #if it has generic number
                             number = str(int(rs[i+1][2].split('x')[1])-1)
                             rs[i][2] = str(helix_num) + "x" + number
-                            #print(rs[i][2])
 
         self.helixWidth = 85            # Width of helix
         self.resNumPerRow = 4           # Residue number per row in helix
@@ -104,8 +158,6 @@ class DrawArrestinPlot(Diagram):
         self.traceoutput = ""
         self.helixoutput = ""
 
-        #print(self.segments)
-
         # Draw sheets and helices
         self.count = 1
         self.count_sheet = 0
@@ -127,19 +179,23 @@ class DrawArrestinPlot(Diagram):
                     self.helixoutput += self.drawSnakePlotSheet(s)
                     self.count += 1
                     self.count_sheet += 1
-
+        
         # Draw loops
         self.count = 0
-        for s in ['B1', '30s-loop',
-       '40s-loop', '50s-loop', 'Helix']:
-            if self.segments_full[s]=='30s-loop':
-                self.drawSnakePlotLoop(s)         
-            if self.segments_full[s]=='40s-loop':
-                self.drawSnakePlotLoop(s)
-            if self.segments_full[s]=='50s-loop':
-                self.drawSnakePlotLoop(s) 
+        for s in ['B1', '30s-loop', 'B2', '40s-loop', 'B3', '50s-loop', 'Helix']:
+            if s in self.segments_full:
+                if self.segments_full[s] == '30s-loop':
+                    self.drawSnakePlotLoop(s)         
+                elif self.segments_full[s] == '40s-loop':
+                    self.drawSnakePlotLoop(s)
+                elif self.segments_full[s] == '50s-loop':
+                    self.drawSnakePlotLoop(s)
+                else:
+                    self.count += 1
             else:
-                self.count += 1
+                print(f"Warning: segment '{s}' not found in segments_full")
+
+        self.drawCTermBox()
         
         # Draw terminals
         self.drawSnakePlotTerminals()
@@ -151,38 +207,66 @@ class DrawArrestinPlot(Diagram):
         return mark_safe(self.create(self.output,self.maxX['right']+30,self.high-self.low+self.offsetY*2,"snakeplot", self.nobuttons))
 
 
+    def drawCTermBox(self):
+        if not self.TBCoords:
+            print("Warning: No helices drawn, skipping drawCTermBox.")
+            return
+        
+        helix_num = max(self.TBCoords.keys())  # get the last helix drawn
+
+        # Use the bottom coordinate of that helix as the last residue position.
+        x, y = self.TBCoords[helix_num]['bottom']
+
+        # Define an orientation/offset; here we use a positive offset (to the right)
+        orientation = 1
+        offset = 0
+
+        # Calculate rectangle (box) position
+        box_x = x + offset * orientation - 25  # center the box horizontally relative to the offset
+        box_y = y + 30  # adjust vertically so it sits near the residue
+
+        # Create the rectangle and text elements.
+        box = (
+            f"<rect class='C-term-box' x='{box_x}' y='{box_y}' rx='5' ry='5' "
+            f"width='50' height='20' stroke='black' fill='white' stroke-width='1'/>"
+        )
+        text = (
+            f"<text class='C-term-box' x='{x + offset * orientation}' y='{y+43}' text-anchor='middle' "
+            f"font-size='12' font-family='helvetica'>C-term</text>"
+        )
+
+        # Append them to the SVG output.
+        self.output += box + text
+
     def drawSnakePlotTerminals(self):
         y_offset = 50
         font_size = 12
         font_family = 'helvetica'
         bezier_pull = 80
-
         between_residues = 18
 
-
-        for i in ['N','C']:
+        for i in ['N', 'C']:
             drawn_residues = []
+            name = i + "-term"
+            if name not in self.segments:
+                continue  # continue if no terminus
 
-            name = i+"-term"
-            if name not in self.segments: continue # continue if no terminus
+            rs = self.segments[name]  # get residues
 
-            rs = self.segments[name] # get residues
-
-            ### TEMP FIX for N-term segments to concatenate
-            if name=="N-term":
+            # TEMP FIX for N-term segments to concatenate
+            if name == "N-term":
                 rs = self.segments["N-term"] + self.segments["CX"] + self.segments["N-loop"]
-            ###
 
-            if i=='N':
+            if i == 'N':
                 orientation = 1
-                y_max = self.maxY['bottom']-between_residues*4
+                y_max = self.maxY['bottom'] - between_residues * 4
                 x_max = self.maxX['left']
                 position = 'bottom'
                 linked_helix = 1
                 rs.reverse()
             else:
                 orientation = 1
-                y_max = self.maxY['bottom']+between_residues*4
+                y_max = self.maxY['bottom'] + between_residues * 4
                 x_max = self.maxX['left']
                 position = 'bottom'
                 linked_helix = 4
@@ -190,77 +274,90 @@ class DrawArrestinPlot(Diagram):
             x1 = self.TBCoords[linked_helix][position][0]
             y1 = self.TBCoords[linked_helix][position][1]
 
-            # Get positions of two  linking residues from each helix
-            x2 = x1-30
-            y2 = y1+60*orientation
+            # For N-term, use the original parameters:
+            if name == "N-term":
+                x2 = x1 - 90 * orientation
+                y2 = y_max + 90
+                bezierX = x1 + 60 * orientation
+                bezierY = (y_max + y1) / 2 + 60 * orientation
+            
+            else:  # C-term
+                x2 = x1 - 90 * orientation
+                y2 = y_max + 90
+                bezierX = x1 + 60 * orientation
+                bezierY = (y_max + y1) / 2 + 60 * orientation
 
-            # Make line and box for short version
-            points = "M "+str(x1)+" "+str(y1)+" Q"+str(x1+30)+" "+str(y2)+" "+str(x2)+" "+str(y2)
-            self.output += "<path class='"+name+" short' d='" + points + "' stroke='black' fill='none' stroke-width='2' />"
-            self.output += "<rect class='"+name+" short segment' onclick='toggleLoop(\"."+name+"\",\"short\",false,this);' x="+str(x2-25)+" y="+str(y2-13)+" rx=5 ry=5 width='50' height='20' stroke='black' fill='white' stroke-width='1' style2='fill:red;stroke:black;stroke-width:5;opacity:0.5'/>"
-            self.output += str("<text class='"+name+" short segment' onclick='toggleLoop(\"."+name+"\",\"short\",false,this);' x="+str(x2)+" y="+str(y2)+" text-anchor='middle' font-size="+str(font_size)+" font-family='"+font_family+"'>"+name+"</text>")
+                # Filter residues to only those whose segment is "C-term"
+                c_term_residues = [r for r in rs if str(getattr(r, 'segment', "")) == "C-term"]
+                # Only adjust (scale) the curve if there are less than 12 C-term residues.
+                if len(c_term_residues) < 1:
+                    current_length = self.lengthbezier([x1, y1], [bezierX, bezierY], [x2, y2], 0.001)
+                    target_length = len(rs) * between_residues + 30
+                    scale_factor = target_length / float(current_length)
+                    x2 = x1 + (x2 - x1) * scale_factor
+                    y2 = y1 + (y2 - y1) * scale_factor
+                    bezierX = x1 + (bezierX - x1) * scale_factor
+                    bezierY = y1 + (bezierY - y1) * scale_factor
 
-            x2 = x1-90*orientation
-            y2 = y_max+90
-            bezierX = x1+60*orientation
-            bezierY = (y_max+y1)/2+60*orientation
-
-            points = "M "+str(x1)+" "+str(y1)+" Q"+str(bezierX)+" "+str(bezierY)+" "+str(x2)+" "+str(y2)
-
+            points = "M " + str(x1) + " " + str(y1) + " Q" + str(bezierX) + " " + str(bezierY) + " " + str(x2) + " " + str(y2)
+            # Draw the bezier path for terminal connection:
+            self.output += "<path class='" + name + " long' d='" + points + "' stroke='black' fill='none' stroke-width='2' />"
             pos = 40
-
-            length = self.lengthbezier([x1,y1],[bezierX,bezierY],[x2,y2],0.001)
+            length = self.lengthbezier([x1, y1], [bezierX, bezierY], [x2, y2], 0.001)
 
             bend = 0
             distance_between_rows = 30
             pos_bend = 0
-            bend_direction = -1*orientation
+            bend_direction = -1 * orientation
 
-            for i in range(0,len(rs)):
-
-                r = rs[i]
-                if pos<length:
-                    where = self.wherebezier([x1,y1],[bezierX,bezierY],[x2,y2],0.001,pos)
+            for j in range(0, len(rs)):
+                r = rs[j]
+                if pos < length:
+                    where = self.wherebezier([x1, y1], [bezierX, bezierY], [x2, y2], 0.001, pos)
                 else:
-                    if pos_bend==0 and bend!=0: #if first residue in line put in middle
-                        where[1][0] = where[1][0]-between_residues*bend_direction
-                        #where[1][0] = where[1][0]
-                        where[1][1] = where[1][1]+orientation*distance_between_rows/2
-                    elif pos_bend==between_residues and bend!=0: #if 2nd residue in line put in middle
-                         #where[1][0] = where[1][0]-between_residues*bend_direction
-                         where[1][0] = where[1][0]+between_residues*bend_direction
-                         where[1][1] = where[1][1]+orientation*distance_between_rows/2
+                    if pos_bend == 0 and bend != 0:
+                        where[1][0] = where[1][0] - between_residues * bend_direction
+                        where[1][1] = where[1][1] + orientation * distance_between_rows / 2
+                    elif pos_bend == between_residues and bend != 0:
+                        where[1][0] = where[1][0] + between_residues * bend_direction
+                        where[1][1] = where[1][1] + orientation * distance_between_rows / 2
                     else:
-                        where[1][0] = where[1][0]+between_residues*bend_direction
-                        where[1][1] =  where[1][1]
-                    last_bend_x = where[1][0]
-                    last_bend_y = where[1][1]
-
+                        where[1][0] = where[1][0] + between_residues * bend_direction
+                        where[1][1] = where[1][1]
                     pos_bend += between_residues
-                    if pos_bend>=abs(x2-x_max)-40: #no more bend left
+                    if pos_bend >= abs(x2 - x_max) - 40:
                         pos_bend = 0
                         bend += 1
-                        if bend_direction==1:
-                            bend_direction = -1
-                        elif bend_direction==-1:
-                            bend_direction = 1
+                        bend_direction = -bend_direction
 
-                if i==0: self.output += "<line class='"+name+" long' x1="+str(x1)+" y1="+str(y1)+" x2="+str(where[1][0])+" y2="+str(where[1][1])+" stroke='black' fill='none' stroke-width='2' stroke-dasharray2='1,1' />"
+                if bend == 0:
+                    labely = where[1][1]
 
-                if bend==0: labely = where[1][1]
-
-                drawn_residues.append(self.DrawResidue(where[1][0],where[1][1],r[1], r[0], rs[i][3], self.residue_radius-1,name+" long"))
+                display_label = rs[j][2] if name == "N-term" else rs[j][3]
+                drawn_residues.append(
+                    self.DrawResidue(
+                        x=where[1][0],                 # X coordinate
+                        y=where[1][1],                 # Y coordinate
+                        aa=r[1],                       # Amino acid letter
+                        residue_number=r[0],           # Sequence number
+                        label=display_label,           # Tooltip label (should be the CCN number or other info)
+                        radius=self.residue_radius - 1,# Circle radius
+                        resclass=name + " long"        # SVG class
+                    )
+                )
                 pos += between_residues
 
-                if where[1][1]<self.low: self.low = where[1][1]
-                if where[1][1]>self.high: self.high = where[1][1]
+                if where[1][1] < self.low:
+                    self.low = where[1][1]
+                if where[1][1] > self.high:
+                    self.high = where[1][1]
 
-            if name=='N-term': drawn_residues = drawn_residues[::-1]
+            if name == 'N-term':
+                drawn_residues = drawn_residues[::-1]
             self.output += ''.join(drawn_residues)
-            self.output += "<rect onclick='toggleLoop(\"."+name+"\",\"long\",false,this);' class='"+name+" long segment' x="+str(self.TBCoords[linked_helix][position][0]+50*orientation-25)+" y="+str((labely+self.TBCoords[linked_helix][position][1])/2-13)+" rx=5 ry=5 width='50' height='20' stroke='black' fill='white' stroke-width='1' style2='fill:red;stroke:black;stroke-width:5;opacity:0.5'/>"
-            self.output += str("<text onclick='toggleLoop(\"."+name+"\",\"long\",false,this);' class='"+name+" long segment' x="+str(self.TBCoords[linked_helix][position][0]+50*orientation)+" y="+str((labely+self.TBCoords[linked_helix][position][1])/2)+" text-anchor='middle' font-size="+str(font_size)+" font-family='"+font_family+"'>"+name+"</text>")
-
-
+            # Draw terminal label without any onclick toggling:
+            self.output += "<rect class='" + name + " long segment' x='" + str(self.TBCoords[linked_helix][position][0] + 50 * orientation - 25) + "' y='" + str((labely + self.TBCoords[linked_helix][position][1]) / 2 - 13) + "' rx='5' ry='5' width='50' height='20' stroke='black' fill='white' stroke-width='1' style2='fill:red;stroke:black;stroke-width:5;opacity:0.5'/>"
+            self.output += "<text class='" + name + " long segment' x='" + str(self.TBCoords[linked_helix][position][0] + 50 * orientation) + "' y='" + str((labely + self.TBCoords[linked_helix][position][1]) / 2) + "' text-anchor='middle' font-size='" + str(font_size) + "' font-family='" + font_family + "'>" + name + "</text>"
 
 
     def drawSnakePlotHelix(self, segment):
@@ -297,7 +394,7 @@ class DrawArrestinPlot(Diagram):
 
             # Move down with right amount
             y = round(startY+row*self.residue_radius*2.4+row_pos*self.residue_radius*0.5+indentY+bulgeY)
-            output_residue = self.DrawResidue(x,y,rs[i][1], rs[i][0], rs[i][3], self.residue_radius)
+            output_residue = self.DrawResidue(x,y,rs[i][1], rs[i][0], rs[i][2], self.residue_radius)
 
 
             if x<self.maxX['left']: self.maxX['left'] = x
@@ -378,7 +475,7 @@ class DrawArrestinPlot(Diagram):
             x = round(startX)
             y = round(startY + i * self.residue_radius * 1.5)
 
-            output_residue = self.DrawResidueSquare(x, y, rs[i][1], rs[i][0], rs[i][3], self.residue_radius)
+            output_residue = self.DrawResidueSquare(x, y, rs[i][1], rs[i][0], rs[i][2], self.residue_radius)
             output_residues.append(output_residue)
 
             if x < self.maxX['left']: 
@@ -451,12 +548,6 @@ class DrawArrestinPlot(Diagram):
         Ey = ((y2+boxY+y_indent)/2)
         Fy = (Dy+Ey)/2
 
-        #JUST SIMPLE
-        #self.output += "<path class='"+name+" short' d='" + points2 + "' stroke='black' fill='none' stroke-width='2' />"
-        # self.output += "<rect onclick='toggleLoop(\"."+name+"\",\"short\");' class='"+name+" short' x="+str(Fx-18)+" y="+str(Fy-13)+" rx=5 ry=5 width='35' height='20' stroke='black' fill='white' stroke-width='1' style2='fill:red;stroke:black;stroke-width:5;opacity:0.5'/>"
-        # self.output += str("<text  onclick='toggleLoop(\"."+name+"\",\"short\");' class='"+name+" short' x="+str(Fx)+" y="+str(Fy)+" text-anchor='middle' font-size="+str(font_size)+" font-family='"+font_family+"'>"+name+"</text>")
-
-
         y_indent = y_indent*len(rs)/5 # get an approx need for y_indent for size of loop
 
         loop_long_length = 0
@@ -499,7 +590,7 @@ class DrawArrestinPlot(Diagram):
             r = rs[i]
             where = self.wherebezier([x1,y1],[boxX,boxY+y_indent],[x2,y2],0.001,pos)
 
-            self.output += self.DrawResidue(where[1][0],where[1][1],r[1], r[0], r[3], self.residue_radius-1,name)
+            self.output += self.DrawResidue(where[1][0],where[1][1],r[1], r[0], r[2], self.residue_radius-1,name)
             pos += between_residues
 
             if where[1][1]>self.high: self.high = where[1][1]

@@ -10,7 +10,8 @@ from django.urls import reverse
 from common.diagrams_chemokine import *
 from structure.utils import *
 
-from structure.models import Structure, PdbData, Chain, Rotamer, Entity, EntityType
+from common.models import ResiduePosition
+from structure.models import Structure, PdbData, Rotamer, Entity, EntityType, ChemokineBindingPartner
 from protein.models import Protein
 from residue.models import Residue
 from interaction.models import ChemokinePartnerInteraction
@@ -19,22 +20,63 @@ from .forms import ChainSelectionForm
 import requests
 from io import StringIO, BytesIO
 from Bio.PDB import PDBIO, PDBParser
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import zipfile
 import pandas as pd
 import glob
 import networkx as nx
 import numpy as np
-from matplotlib.colors import ListedColormap
-import mpld3
 import re
 import os
 import subprocess
 from random import randint
-from IPython.display import HTML
 import plotly.express as px
+from io import BytesIO
+
+
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from structure.models import Structure, Rotamer, Residue
+from protein.models import Protein
+
+def download_alignment(request, pdb_id):
+    structure = get_object_or_404(Structure, pdb_code__index=pdb_id)
+    protein = structure.protein
+    canonical_sequence = protein.sequence
+
+    protein_residues = Residue.objects.filter(protein_id=protein).order_by('sequence_number')
+    protein_dict = {res.generic_number: res for res in protein_residues if res.generic_number is not None}
+
+    structure_rotamers = Rotamer.objects.filter(structure_id=structure).order_by('sequence_number')
+    rotamers_by_chain = {}
+    for rotamer in structure_rotamers:
+        chain_id = rotamer.chain
+        if chain_id not in rotamers_by_chain:
+            rotamers_by_chain[chain_id] = {}
+        rotamers_by_chain[chain_id][rotamer.generic_number] = rotamer
+
+    all_generic_numbers = sorted(set(protein_dict.keys()).union(*(chain_dict.keys() for chain_dict in rotamers_by_chain.values())))
+
+    aligned_sequences = []
+    for gn in all_generic_numbers:
+        protein_residue = protein_dict.get(gn, None)
+        structure_rotamers_for_gn = {chain_id: rotamers_by_chain[chain_id].get(gn, None) for chain_id in rotamers_by_chain}
+        aligned_sequences.append((gn, protein_residue, structure_rotamers_for_gn))
+
+    aln_content = 'CLUSTAL\n\n'
+
+    uniprot_sequence = ''.join(protein_residue.amino_acid if protein_residue else '-' for gn, protein_residue, _ in aligned_sequences)
+    aln_content += f'Unipr/ {uniprot_sequence}\n'
+
+    for chain_id in rotamers_by_chain.keys():
+        structure_sequence = ''.join(
+            rotamers_by_chain[chain_id].get(gn, '-').amino_acid if gn in rotamers_by_chain[chain_id] and rotamers_by_chain[chain_id][gn] else '-'
+            for gn, _, _ in aligned_sequences
+        )
+        aln_content += f'Chain_{chain_id}/ {structure_sequence}\n'
+
+    response = HttpResponse(aln_content, content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename="{pdb_id}_alignment.aln"'
+    return response
 
 
 class StructureBrowser(TemplateView):
@@ -50,62 +92,89 @@ class StructureBrowser(TemplateView):
         return context
 
 
+from common.models import ResiduePosition
+
+
 class StructureDetails(TemplateView):
     template_name = 'structure/structure.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        pdb_id = self.kwargs.get('pdb_id', '')
-    
+        structure_id = self.kwargs.get('structure_id')
+
         try:
-            structure = Structure.objects.get(pdb_code__index=pdb_id)
+            # 1) Retrieve this Structure and its Protein
+            structure = Structure.objects.get(id=structure_id)
             protein = structure.protein
             canonical_sequence = protein.sequence
 
-            # Get all residues for alignment table
-            # Retrieve protein residues
-            protein_residues = Residue.objects.filter(protein_id=protein).order_by('sequence_number')
-            protein_dict = {res.generic_number: res for res in protein_residues if res.generic_number is not None}
+            # 2) Fetch all ResiduePosition objects (sorted by integer `position` field)
+            all_positions = ResiduePosition.objects.all().order_by('position')
+            pos_lookup = {pos_obj.ccn_number: pos_obj for pos_obj in all_positions}
+            context['all_positions'] = all_positions
 
-            # Retrieve structure rotamers grouped by chain
-            structure_rotamers = Rotamer.objects.filter(structure_id=structure).order_by('sequence_number')
+            # 3) Fetch all Residues for this protein
+            protein_residues = Residue.objects.filter(
+                protein=protein
+            ).order_by('sequence_number')
+            print(protein_residues)
+
+            # Build a lookup: position (int) → Residue
+            protein_dict = {}
+            for res in protein_residues:
+                if res.ccn_number and res.ccn_number in pos_lookup:
+                    pos_obj = pos_lookup[res.ccn_number]
+                    protein_dict[pos_obj.position] = res
+
+            # 4) Fetch all Rotamers for this Structure
+            structure_rotamers = Rotamer.objects.filter(
+                structure=structure
+            ).order_by('sequence_number')
+            print(structure_rotamers)
+
+            # Group rotamers by chain_id: rotamers_by_chain = { 'A': { pos_id: rotamer, … }, … }
             rotamers_by_chain = {}
-            for rotamer in structure_rotamers:
-                chain_id = rotamer.chain
-                if chain_id not in rotamers_by_chain:
-                    rotamers_by_chain[chain_id] = {}
-                rotamers_by_chain[chain_id][rotamer.generic_number] = rotamer
-
-            # Determine the range of generic numbers
-            all_generic_numbers = sorted(set(protein_dict.keys()).union(*(chain_dict.keys() for chain_dict in rotamers_by_chain.values())))
-
+            for rot in structure_rotamers:
+                if hasattr(rot, 'ccn_number') and rot.ccn_number and rot.ccn_number in pos_lookup:
+                    pos_obj = pos_lookup[rot.ccn_number]
+                    pos_id = pos_obj.position
+                    chain_id = rot.chain
+                    if chain_id not in rotamers_by_chain:
+                        rotamers_by_chain[chain_id] = {}
+                    rotamers_by_chain[chain_id][pos_id] = rot
+                    
+            # 5) Build aligned_sequences as a list of triples:
+            #      ( position_obj, protein_residue_or_None, { chain_id: Rotamer or None } )
             aligned_sequences = []
-            for gn in all_generic_numbers:
-                protein_residue = protein_dict.get(gn, None)
-                structure_rotamers_for_gn = {chain_id: rotamers_by_chain[chain_id].get(gn, None) for chain_id in rotamers_by_chain}
-                aligned_sequences.append((gn, protein_residue, structure_rotamers_for_gn))
+            for pos_obj in all_positions:
+                pos_id = pos_obj.position
+                protein_res = protein_dict.get(pos_id, None)
+                rot_for_pos = {
+                    chain_id: rotamers_by_chain.get(chain_id, {}).get(pos_id)
+                    for chain_id in rotamers_by_chain
+                }
+                aligned_sequences.append((pos_obj, protein_res, rot_for_pos))
 
             context['aligned_sequences'] = aligned_sequences
-            context['generic_numbers'] = all_generic_numbers
-            context['rotamers_by_chain'] = rotamers_by_chain
-            context['residues_aligned'] = [protein_dict.get(gn) for gn in all_generic_numbers]
-            context['chains'] = rotamers_by_chain.keys()
 
-            # Prepare residues grouped by segment
-            residues = Residue.objects.filter(protein=protein).order_by('sequence_number')
+            # 6) Also pass the list of chain IDs that appear in this structure
+            context['chains'] = list(rotamers_by_chain.keys())
+
+            # 7) Prepare “residues_by_segment” if you need by segment
             residues_by_segment = {}
-            for residue in residues:
-                segment = residue.segment
-                if segment not in residues_by_segment:
-                    residues_by_segment[segment] = []
-                residues_by_segment[segment].append(residue)
+            for residue in protein_residues:
+                seg = getattr(residue, 'segment', None)
+                if seg not in residues_by_segment:
+                    residues_by_segment[seg] = []
+                residues_by_segment[seg].append(residue)
+            context['residues_by_segment'] = residues_by_segment
 
+            # 8) Pass Structure / Protein objects into context
             context['structure'] = structure
             context['protein'] = protein
             context['canonical_sequence'] = canonical_sequence
-            context['residues_by_segment'] = residues_by_segment
 
-            # Entities
+            # 9) Entities (same as before)
             entity_types = EntityType.objects.prefetch_related(
                 Prefetch(
                     'entity_set',
@@ -115,35 +184,32 @@ class StructureDetails(TemplateView):
             )
             context['entity_types'] = entity_types
 
-            # Prepare residues data for the context
-            context['residues_data'] = structure_rotamers
+            # 10) Binding partners & interaction counts (same as before)
+            binding_partners = ChemokineBindingPartner.objects.filter(
+                structure=structure
+            ).annotate(interaction_count=Count('chemokinepartnerinteraction'))
 
-            # Get the IDs of these rotamers
-            rotamer_ids = structure_rotamers.values_list('id', flat=True)
-            # Fetch interactions that are linked to the fetched rotamers
-            interactions = ChemokinePartnerInteraction.objects.filter(chemokine_residue_id__in=rotamer_ids)
-            context['interactions'] = interactions
-
-            # Manually construct interaction URLs for each chain and count interactions per chain
             interaction_urls = {}
             interactions_count = {}
-            for chain_id in rotamers_by_chain.keys():
-                interaction_urls[chain_id] = f"/interaction/{structure.pdb_code.index}/{chain_id}/"
-                interactions_count[chain_id] = interactions.filter(chemokine_residue__chain=chain_id).exclude(
-                partner_chain=chain_id
-            ).count()
+            for partner in binding_partners:
+                if partner.interaction_count > 0:
+                    interaction_urls[partner] = f"/interaction/{structure.id}/{partner.id}/"
+                    interactions_count[partner] = partner.interaction_count
 
+            if not interactions_count:
+                interactions_count = None
+
+            context['binding_partners'] = binding_partners
             context['interaction_urls'] = interaction_urls
             context['interactions_count'] = interactions_count
 
         except Structure.DoesNotExist:
-            return render(request, 'error.html')
-        
+            return render(self.request, 'error.html')
+
         return context
 
 
 
-        
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         return render(request, self.template_name, context)
@@ -196,10 +262,10 @@ class StructureInteractions(TemplateView):
             context['chain_id'] = chain_id
             
 
-            try:
-                chain = Chain.objects.get(structure=structure, chain=chain_id)
-            except Chain.DoesNotExist:
-                residues = []   
+            #try:
+            #    chain = Chain.objects.get(structure=structure, chain=chain_id)
+            #except Chain.DoesNotExist:
+            #    residues = []   
 
 
             # Prepare residues data for the context
@@ -259,3 +325,31 @@ class StructureInteractions(TemplateView):
             context['error'] = "Structure does not exist."
 
         return context
+    
+
+#==============================================================================
+class PDBDownload(View):
+    """
+    Serve the PDB file for a specific structure.
+    """
+
+    def get(self, request, structure_id, *args, **kwargs):
+        # Fetch the structure by ID
+        try:
+            structure = Structure.objects.get(id=structure_id)
+        except Structure.DoesNotExist:
+            raise Http404("Structure not found.")
+
+        # Check if the structure has associated PDB data
+        if not structure.pdb_data or not structure.pdb_data.pdb:
+            return HttpResponse("PDB data not available for this structure.", status=404)
+
+        # Prepare PDB file content
+        pdb_content = structure.pdb_data.pdb
+        pdb_filename = f"{structure.pdb_code.index}.pdb"
+
+        # Create HTTP response with PDB content
+        response = HttpResponse(pdb_content, content_type="chemical/x-pdb")
+        response['Content-Disposition'] = f'attachment; filename="{pdb_filename}"'
+
+        return response
