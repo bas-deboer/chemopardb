@@ -24,6 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
   container.style.fontFamily = "monospace";
   container.style.whiteSpace = "pre";
   container.style.userSelect = "none";
+
+  container.style.marginBottom = "20px";
+
   segmenter.appendChild(container);
 
   chars.forEach(ch => {
@@ -51,6 +54,20 @@ document.addEventListener("DOMContentLoaded", () => {
     sep.style.left = pos * charWidth + "px";
     sep.dataset.index = i - 1;
     container.appendChild(sep);
+
+    const handle = document.createElement("div");
+    handle.className = "separator-handle";
+    handle.style.position = "absolute";
+    handle.style.bottom = "-14px";
+    handle.style.left = "-8px";
+    handle.style.width = "0";
+    handle.style.height = "0";
+    handle.style.borderLeft = "8px solid transparent";
+    handle.style.borderRight = "8px solid transparent";
+    handle.style.borderTop = "14px solid red";
+    handle.style.cursor = "ew-resize";
+    sep.appendChild(handle);
+
     separators.push(sep);
   }
 
@@ -83,6 +100,9 @@ document.addEventListener("DOMContentLoaded", () => {
   container.addEventListener("mousedown", e => {
     if (e.target.classList.contains("separator")) {
       active = e.target;
+      e.preventDefault();
+    } else if (e.target.parentElement && e.target.parentElement.classList.contains("separator")) {
+      active = e.target.parentElement;
       e.preventDefault();
     }
   });
@@ -121,4 +141,5 @@ document.addEventListener("DOMContentLoaded", () => {
     ranges.push(`${prev}-${chars.length}:${SEGMENT_NAMES[SEGMENT_NAMES.length - 1]}`);
     segmentsInput.value = ranges.join(",");
   });
+  
 });

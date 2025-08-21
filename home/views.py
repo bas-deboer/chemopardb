@@ -130,6 +130,43 @@ def chemokine_diagram(request):
     return render(request, "home/chemokine_diagram.html", {"form": form})
 
 
+def chemokine_diagram(request):
+    """Allow users to submit a sequence and then interactively define segments."""
+
+    if request.method == "POST":
+        seq = request.POST.get("sequence", "").replace("\n", "").strip().upper()
+        segment_def = request.POST.get("segments", "").strip()
+
+        if segment_def:
+            class ResidueObj:
+                def __init__(self, seq_num, aa, seg):
+                    self.sequence_number = seq_num
+                    self.amino_acid = aa
+                    self.segment = seg
+                    self.ccn_number = None
+
+            residues = []
+            try:
+                for item in segment_def.split(","):
+                    if not item.strip():
+                        continue
+                    range_part, seg_name = item.split(":")
+                    start, end = [int(x) for x in range_part.split("-")]
+                    seg_name = seg_name.strip()
+                    for i in range(start, end + 1):
+                        aa = seq[i - 1] if 0 <= i - 1 < len(seq) else "X"
+                        residues.append(ResidueObj(i, aa, seg_name))
+                svg = str(DrawArrestinPlot(residues, "Custom Sequence", nobuttons='chemokine'))
+            except Exception as exc:
+                svg = f"<p>Error generating diagram: {escape(exc)}</p>"
+            return render(request, "home/chemokine_diagram.html", {"svg": svg})
+        else:
+            return render(request, "home/chemokine_diagram.html", {"seq": seq})
+
+    form = ChemokineDiagramForm()
+    return render(request, "home/chemokine_diagram.html", {"form": form})
+
+
 
 def generate_structure_chart(structures=None):
     """Helper function to generate chart data for structures published per year and cumulative total."""

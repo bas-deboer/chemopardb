@@ -126,10 +126,11 @@ class Diagram:
     
         output = ("<br>Pick color:" + colors)
     
-        # Append the Properties and Clear buttons plus our new Signal Sequence button.
-        output += ('<br><button style="width:120px;" onclick="applyPresentColors(\'' + self.type + '\')">Properties</button> ' +
-                   '<button style="width:120px;" onclick="resetColors(\'' + self.type + '\')">Clear</button> ' +
-                   '<button style="width:120px;" onclick="toggleSignalSequence(\'' + self.type + '\')">Signal Sequence</button>')
+        # Append the Properties and Clear buttons.
+        output += (
+            '<br><button style="width:120px;" onclick="applyPresentColors(\'' + self.type + '\')">Properties</button> '
+            '<button style="width:120px;" onclick="resetColors(\'' + self.type + '\')">Clear</button>'
+        )
     
         return boxstyle + output
 
