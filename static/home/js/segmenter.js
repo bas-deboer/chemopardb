@@ -24,7 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
   container.style.fontFamily = "monospace";
   container.style.whiteSpace = "pre";
   container.style.userSelect = "none";
+
   container.style.marginBottom = "20px";
+
   segmenter.appendChild(container);
 
   chars.forEach(ch => {
@@ -65,6 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
     handle.style.borderTop = "14px solid red";
     handle.style.cursor = "ew-resize";
     sep.appendChild(handle);
+
     separators.push(sep);
   }
 
@@ -138,4 +141,5 @@ document.addEventListener("DOMContentLoaded", () => {
     ranges.push(`${prev}-${chars.length}:${SEGMENT_NAMES[SEGMENT_NAMES.length - 1]}`);
     segmentsInput.value = ranges.join(",");
   });
+  
 });
