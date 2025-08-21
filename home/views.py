@@ -1,10 +1,13 @@
 from django.shortcuts import render
 from collections import defaultdict
 import plotly.graph_objects as go
-from .forms import DateForm
+from django.utils.html import escape
+
+from .forms import DateForm, ChemokineDiagramForm
 from protein.models import Protein
 from structure.models import Structure, Rotamer
 from common.models import ResiduePosition
+from common.diagrams_chemokine import DrawArrestinPlot
 from collections import Counter
 
 def index(request):
@@ -44,6 +47,43 @@ def charts(request):
         'structure_state_pie': structure_state_pie,
         'ccn_position_barplot': ccn_position_barplot,
     })
+
+
+def chemokine_diagram(request):
+    """Allow users to submit a sequence and then interactively define segments."""
+
+    if request.method == "POST":
+        seq = request.POST.get("sequence", "").replace("\n", "").strip().upper()
+        segment_def = request.POST.get("segments", "").strip()
+
+        if segment_def:
+            class ResidueObj:
+                def __init__(self, seq_num, aa, seg):
+                    self.sequence_number = seq_num
+                    self.amino_acid = aa
+                    self.segment = seg
+                    self.ccn_number = None
+
+            residues = []
+            try:
+                for item in segment_def.split(","):
+                    if not item.strip():
+                        continue
+                    range_part, seg_name = item.split(":")
+                    start, end = [int(x) for x in range_part.split("-")]
+                    seg_name = seg_name.strip()
+                    for i in range(start, end + 1):
+                        aa = seq[i - 1] if 0 <= i - 1 < len(seq) else "X"
+                        residues.append(ResidueObj(i, aa, seg_name))
+                svg = str(DrawArrestinPlot(residues, "Custom Sequence", nobuttons='chemokine'))
+            except Exception as exc:
+                svg = f"<p>Error generating diagram: {escape(exc)}</p>"
+            return render(request, "home/chemokine_diagram.html", {"svg": svg})
+        else:
+            return render(request, "home/chemokine_diagram.html", {"seq": seq})
+
+    form = ChemokineDiagramForm()
+    return render(request, "home/chemokine_diagram.html", {"form": form})
 
 
 
