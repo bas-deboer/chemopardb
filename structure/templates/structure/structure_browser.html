@@ -226,6 +226,18 @@
             }
         });
 
+        var params = new URLSearchParams(window.location.search);
+        var method = params.get('method');
+        var state = params.get('state');
+        if (method) {
+            table.column(5).search('^' + method + '$', true, false).draw();
+            $(table.column(5).header()).find('select').val(method);
+        }
+        if (state) {
+            table.column(7).search('^' + state + '$', true, false).draw();
+            $(table.column(7).header()).find('select').val(state);
+        }
+
         // Clickable row functionality
         $('#residues tbody').on('click', 'tr', function(event) {
             // Ignore click if target is a link or a child of a link
