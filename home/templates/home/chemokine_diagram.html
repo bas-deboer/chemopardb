@@ -4,8 +4,26 @@
 <div class="container mt-4">
   <h2>Custom Chemokine Diagram</h2>
   {% if svg %}
-    <div class="mt-4">{{ svg|safe }}</div>
+    <div id="diagram-container" class="mt-4">{{ svg|safe }}</div>
     <a href="{% url 'chemokine_diagram' %}" class="btn btn-secondary mt-3">Start Over</a>
+    <script src="{% static 'home/js/saveSvgAsPng.js' %}"></script>
+    <script src="{% static 'home/js/diagrams.js' %}"></script>
+    <script src="{% static 'home/js/color_picker.js' %}"></script>
+    <script src="{% static 'home/js/svg-pan-zoom.min.js' %}"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const svgElem = document.querySelector('#diagram-container svg');
+        if (svgElem) {
+          svgPanZoom(svgElem, {
+            panEnabled: true,
+            zoomEnabled: true,
+            controlIconsEnabled: true,
+            fit: true,
+            center: true
+          });
+        }
+      });
+    </script>
   {% elif seq %}
     <form id="segment-form" method="post">
       {% csrf_token %}

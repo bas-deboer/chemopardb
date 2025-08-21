@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   container.style.width = charWidth * chars.length + "px";
 
   const separators = [];
+  const labels = [];
   const totalSeparators = SEGMENT_NAMES.length - 1;
   for (let i = 1; i <= totalSeparators; i++) {
     const sep = document.createElement("div");
@@ -53,6 +54,31 @@ document.addEventListener("DOMContentLoaded", () => {
     separators.push(sep);
   }
 
+  // create labels for each segment
+  SEGMENT_NAMES.forEach(name => {
+    const label = document.createElement("div");
+    label.className = "segment-label";
+    label.textContent = name;
+    label.style.position = "absolute";
+    label.style.top = "-1.5em";
+    label.style.fontSize = "0.8em";
+    label.style.pointerEvents = "none";
+    container.appendChild(label);
+    labels.push(label);
+  });
+
+  function updateLabels() {
+    const positions = [0, ...separators.map(sep => parseFloat(sep.style.left)), container.clientWidth];
+    labels.forEach((label, i) => {
+      const start = positions[i];
+      const end = positions[i + 1];
+      const center = (start + end) / 2 - label.offsetWidth / 2;
+      label.style.left = center + "px";
+    });
+  }
+
+  updateLabels();
+
   let active = null;
   container.addEventListener("mousedown", e => {
     if (e.target.classList.contains("separator")) {
@@ -69,7 +95,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const max = index === separators.length - 1 ? rect.width : parseFloat(separators[index + 1].style.left) - charWidth;
     if (x < min) x = min;
     if (x > max) x = max;
+    x = Math.round(x / charWidth) * charWidth;
+    if (x < min) x = min; // ensure snapping doesn't violate bounds
+    if (x > max) x = max;
     active.style.left = x + "px";
+    updateLabels();
   });
   document.addEventListener("mouseup", () => {
     active = null;
