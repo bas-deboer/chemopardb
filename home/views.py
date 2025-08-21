@@ -30,23 +30,67 @@ def example(request):
 
 
 def charts(request):
-    structure_chart = generate_structure_chart()
-    species_pie_chart = generate_species_pie_chart()
-    type_pie_chart = generate_structure_type_pie_chart()
-    chemokine_type_pie = generate_chemokine_type_pie_chart()
-    subfamily_pie = generate_chemokine_subfamily_pie_chart()
-    structure_state_pie = generate_structure_state_pie_chart()
+    structures = list(
+        Structure.objects.select_related("protein", "structure_type").all()
+    )
+    structure_chart = generate_structure_chart(structures)
+    species_pie_chart = generate_species_pie_chart(structures)
+    type_pie_chart = generate_structure_type_pie_chart(structures)
+    chemokine_type_pie = generate_chemokine_type_pie_chart(structures)
+    subfamily_pie = generate_chemokine_subfamily_pie_chart(structures)
+    structure_state_pie = generate_structure_state_pie_chart(structures)
     ccn_position_barplot = generate_ccn_position_barplot()
 
-    return render(request, 'home/charts.html', {
-        'structure_chart': structure_chart,
-        'species_pie_chart': species_pie_chart,
-        'type_pie_chart': type_pie_chart,
-        'chemokine_type_pie': chemokine_type_pie,
-        'subfamily_pie': subfamily_pie,
-        'structure_state_pie': structure_state_pie,
-        'ccn_position_barplot': ccn_position_barplot,
-    })
+    return render(
+        request,
+        "home/charts.html",
+        {
+            "structure_chart": structure_chart,
+            "species_pie_chart": species_pie_chart,
+            "type_pie_chart": type_pie_chart,
+            "chemokine_type_pie": chemokine_type_pie,
+            "subfamily_pie": subfamily_pie,
+            "structure_state_pie": structure_state_pie,
+            "ccn_position_barplot": ccn_position_barplot,
+        },
+    )
+
+
+def chemokine_diagram(request):
+    """Allow users to submit a sequence and then interactively define segments."""
+
+    if request.method == "POST":
+        seq = request.POST.get("sequence", "").replace("\n", "").strip().upper()
+        segment_def = request.POST.get("segments", "").strip()
+
+        if segment_def:
+            class ResidueObj:
+                def __init__(self, seq_num, aa, seg):
+                    self.sequence_number = seq_num
+                    self.amino_acid = aa
+                    self.segment = seg
+                    self.ccn_number = None
+
+            residues = []
+            try:
+                for item in segment_def.split(","):
+                    if not item.strip():
+                        continue
+                    range_part, seg_name = item.split(":")
+                    start, end = [int(x) for x in range_part.split("-")]
+                    seg_name = seg_name.strip()
+                    for i in range(start, end + 1):
+                        aa = seq[i - 1] if 0 <= i - 1 < len(seq) else "X"
+                        residues.append(ResidueObj(i, aa, seg_name))
+                svg = str(DrawArrestinPlot(residues, "Custom Sequence", nobuttons=True))
+            except Exception as exc:
+                svg = f"<p>Error generating diagram: {escape(exc)}</p>"
+            return render(request, "home/chemokine_diagram.html", {"svg": svg})
+        else:
+            return render(request, "home/chemokine_diagram.html", {"seq": seq})
+
+    form = ChemokineDiagramForm()
+    return render(request, "home/chemokine_diagram.html", {"form": form})
 
 
 def chemokine_diagram(request):
@@ -87,32 +131,47 @@ def chemokine_diagram(request):
 
 
 
-def generate_structure_chart():
+def generate_structure_chart(structures=None):
     """Helper function to generate chart data for structures published per year and cumulative total."""
-    structures = Structure.objects.all()
+    if structures is None:
+        structures = Structure.objects.all()
     year_counts = count_publications_by_year(structures)
     
     sorted_years = sorted(year_counts.keys())
     publication_counts = [year_counts[year] for year in sorted_years]
     cumulative_counts = [sum(publication_counts[:i + 1]) for i in range(len(publication_counts))]
 
-    fig = go.Figure(data=[
-        go.Bar(x=sorted_years, y=publication_counts, name='Structures Published', marker_color='blue'),
-        go.Scatter(x=sorted_years, y=cumulative_counts, mode='lines+markers', name='Cumulative Structures',
-                   line=dict(color='red', width=2), marker=dict(color='red', size=6))
-    ])
-
-    fig.update_layout(
-        #title={'text': "Number of Chemokine Structures Published per Year and Cumulative Total", 'font_size': 24, 'xanchor': 'center', 'x': 0.5},
-        xaxis_title='Year', yaxis_title='Number of Structures',
-        legend=dict(x=0.01, y=0.99, bordercolor='Black', borderwidth=1)
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=sorted_years,
+                y=publication_counts,
+                name="Structures Published",
+                marker_color="blue",
+            ),
+            go.Scatter(
+                x=sorted_years,
+                y=cumulative_counts,
+                mode="lines+markers",
+                name="Cumulative Structures",
+                line=dict(color="red", width=2),
+                marker=dict(color="red", size=6),
+            ),
+        ]
     )
 
-    return fig.to_html()
+    fig.update_layout(
+        xaxis_title="Year",
+        yaxis_title="Number of Structures",
+        legend=dict(x=0.01, y=0.99, bordercolor="Black", borderwidth=1),
+    )
 
-def generate_species_pie_chart():
+    return fig.to_html(full_html=False, include_plotlyjs=False, div_id="structure_chart")
+
+def generate_species_pie_chart(structures=None):
     """Generates a pie chart showing the species distribution of proteins that have structures."""
-    structures = Structure.objects.select_related('protein').all()
+    if structures is None:
+        structures = Structure.objects.select_related('protein').all()
 
     species_counts = defaultdict(int)
     for structure in structures:
@@ -122,10 +181,28 @@ def generate_species_pie_chart():
     labels = list(species_counts.keys())
     values = list(species_counts.values())
 
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.3, textinfo='none', showlegend=False)])
-    fig.update_layout(title=None)
+    fig = go.Figure(
+        data=[
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.3,
+                textinfo="label+percent",
+                textposition="inside",
+            )
+        ]
+    )
+    fig.update_layout(title=None, showlegend=True)
 
-    return fig.to_html()
+    html = fig.to_html(full_html=False, include_plotlyjs=False, div_id="species_pie")
+    html += (
+        "<script>"  # add click handler to filter browse page
+        "document.getElementById('species_pie').on('plotly_click', function(data){"
+        "var label=data.points[0].label;"
+        "window.location='/protein?species=' + encodeURIComponent(label);"
+        "});" "</script>"
+    )
+    return html
 
 
 def count_publications_by_year(structures):
@@ -136,9 +213,10 @@ def count_publications_by_year(structures):
             year_counts[structure.publication_date.year] += 1
     return year_counts
 
-def generate_structure_type_pie_chart():
+def generate_structure_type_pie_chart(structures=None):
     """Generates a pie chart showing the distribution of structure types (X-ray, NMR, Cryo-EM)."""
-    structures = Structure.objects.select_related('structure_type').all()
+    if structures is None:
+        structures = Structure.objects.select_related('structure_type').all()
 
     type_counts = defaultdict(int)
     for structure in structures:
@@ -148,16 +226,33 @@ def generate_structure_type_pie_chart():
     labels = list(type_counts.keys())
     values = list(type_counts.values())
 
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.3, textinfo='none', showlegend=False)])
-    fig.update_layout(
-        title=None
+    fig = go.Figure(
+        data=[
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.3,
+                textinfo="label+percent",
+                textposition="inside",
+            )
+        ]
     )
+    fig.update_layout(title=None, showlegend=True)
 
-    return fig.to_html()
+    html = fig.to_html(full_html=False, include_plotlyjs=False, div_id="structure_type_pie")
+    html += (
+        "<script>"
+        "document.getElementById('structure_type_pie').on('plotly_click', function(data){"
+        "var label=data.points[0].label;"
+        "window.location='/structure?method=' + encodeURIComponent(label);"
+        "});" "</script>"
+    )
+    return html
 
-def generate_chemokine_type_pie_chart():
+def generate_chemokine_type_pie_chart(structures=None):
     """Generates a pie chart showing distribution of chemokine types for proteins with structures."""
-    structures = Structure.objects.select_related('protein').all()
+    if structures is None:
+        structures = Structure.objects.select_related('protein').all()
 
     type_counts = defaultdict(int)
     for structure in structures:
@@ -167,15 +262,34 @@ def generate_chemokine_type_pie_chart():
     labels = list(type_counts.keys())
     values = list(type_counts.values())
 
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.3, textinfo='none', showlegend=False)])
-    fig.update_layout(title=None)
+    fig = go.Figure(
+        data=[
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.3,
+                textinfo="label+percent",
+                textposition="inside",
+            )
+        ]
+    )
+    fig.update_layout(title=None, showlegend=True)
 
-    return fig.to_html()
+    html = fig.to_html(full_html=False, include_plotlyjs=False, div_id="chemokine_type_pie")
+    html += (
+        "<script>"
+        "document.getElementById('chemokine_type_pie').on('plotly_click', function(data){"
+        "var label=data.points[0].label;"
+        "window.location='/protein?type=' + encodeURIComponent(label);"
+        "});" "</script>"
+    )
+    return html
 
 
-def generate_chemokine_subfamily_pie_chart():
+def generate_chemokine_subfamily_pie_chart(structures=None):
     """Generates a pie chart showing distribution of chemokine subfamilies for proteins with structures."""
-    structures = Structure.objects.select_related('protein').all()
+    if structures is None:
+        structures = Structure.objects.select_related('protein').all()
 
     subfamily_counts = defaultdict(int)
     for structure in structures:
@@ -185,14 +299,33 @@ def generate_chemokine_subfamily_pie_chart():
     labels = list(subfamily_counts.keys())
     values = list(subfamily_counts.values())
 
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.3, textinfo='none', showlegend=False)])
-    fig.update_layout(title=None)
+    fig = go.Figure(
+        data=[
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.3,
+                textinfo="label+percent",
+                textposition="inside",
+            )
+        ]
+    )
+    fig.update_layout(title=None, showlegend=True)
 
-    return fig.to_html()
+    html = fig.to_html(full_html=False, include_plotlyjs=False, div_id="subfamily_pie")
+    html += (
+        "<script>"
+        "document.getElementById('subfamily_pie').on('plotly_click', function(data){"
+        "var label=data.points[0].label;"
+        "window.location='/protein?subfamily=' + encodeURIComponent(label);"
+        "});" "</script>"
+    )
+    return html
 
-def generate_structure_state_pie_chart():
+def generate_structure_state_pie_chart(structures=None):
     """Generates a pie chart showing the distribution of structure states."""
-    structures = Structure.objects.all()
+    if structures is None:
+        structures = Structure.objects.all()
 
     state_counts = defaultdict(int)
     for structure in structures:
@@ -202,10 +335,28 @@ def generate_structure_state_pie_chart():
     labels = list(state_counts.keys())
     values = list(state_counts.values())
 
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.3, textinfo='none', showlegend=False)])
-    fig.update_layout(title=None)
+    fig = go.Figure(
+        data=[
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.3,
+                textinfo="label+percent",
+                textposition="inside",
+            )
+        ]
+    )
+    fig.update_layout(title=None, showlegend=True)
 
-    return fig.to_html()
+    html = fig.to_html(full_html=False, include_plotlyjs=False, div_id="structure_state_pie")
+    html += (
+        "<script>"
+        "document.getElementById('structure_state_pie').on('plotly_click', function(data){"
+        "var label=data.points[0].label;"
+        "window.location='/structure?state=' + encodeURIComponent(label);"
+        "});" "</script>"
+    )
+    return html
 
 def generate_ccn_position_barplot():
     """Generates a barplot showing how much each CCN position occurs across all chemokine chains (rotamers), ordered by canonical position."""
@@ -233,5 +384,5 @@ def generate_ccn_position_barplot():
         margin=dict(l=40, r=20, t=60, b=90),
         xaxis_tickangle=45,
     )
-    return fig.to_html()
+    return fig.to_html(full_html=False, include_plotlyjs=False, div_id="ccn_position_barplot")
 
