@@ -1,0 +1,29 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Custom Chemokine Diagram</h2>
+  {% if svg %}
+    <div class="mt-4">{{ svg|safe }}</div>
+    <a href="{% url 'chemokine_diagram' %}" class="btn btn-secondary mt-3">Start Over</a>
+  {% elif seq %}
+    <form id="segment-form" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="sequence" value="{{ seq }}">
+      <input type="hidden" name="segments" id="id_segments">
+      <div id="segmenter" data-seq="{{ seq }}" class="mb-3"></div>
+      <button type="submit" class="btn btn-success">Generate Diagram</button>
+    </form>
+    <script src="{% static 'home/js/segmenter.js' %}"></script>
+  {% else %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        {{ form.sequence.label_tag }}
+        {{ form.sequence }}
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Sequence</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}
