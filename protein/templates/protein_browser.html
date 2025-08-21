@@ -151,6 +151,23 @@
             }
         });
 
+        var params = new URLSearchParams(window.location.search);
+        var type = params.get('type');
+        var subfamily = params.get('subfamily');
+        var species = params.get('species');
+        if (type) {
+            table.column(0).search('^' + type + '$', true, false).draw();
+            $(table.column(0).header()).find('select').val(type);
+        }
+        if (subfamily) {
+            table.column(1).search('^' + subfamily + '$', true, false).draw();
+            $(table.column(1).header()).find('select').val(subfamily);
+        }
+        if (species) {
+            table.column(2).search('^' + species + '$', true, false).draw();
+            $(table.column(2).header()).find('select').val(species);
+        }
+
         // Clickable row functionality
         $('#partners tbody').on('click', 'tr', function(event) {
             // Ignore click if target is a link or a child of a link
