@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Chemokine Residue Search</h1>
+<form method="get">
+  <label for="ccn_numbers">Select CCN numbers:</label>
+  <select name="ccn_numbers" multiple id="ccn_numbers" class="form-control">
+    {% for ccn in ccn_choices %}
+    <option value="{{ ccn }}"{% if ccn in selected_ccn_numbers %} selected{% endif %}>{{ ccn }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-primary mt-2">Search</button>
+</form>
+
+{% if binding_partners %}
+  <h2 class="mt-4">Results</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>PDB</th>
+        <th>Chemokine Chain</th>
+        <th>Partner</th>
+        <th>Partner Chain</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for bp in binding_partners %}
+      <tr>
+        <td>{{ bp.structure.pdb_code.index }}</td>
+        <td>{{ bp.chemokine_chain }}</td>
+        <td>{{ bp.partner_name }}</td>
+        <td>{{ bp.partner_chain }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}
