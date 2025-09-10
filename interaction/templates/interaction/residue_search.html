@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Chemokine Residue Search</h1>
+<form method="get" id="residue-form">
+  <div id="sequence" class="mb-2">
+    {% for ccn in ccn_choices %}
+    <span class="residue{% if ccn in selected_ccn_numbers %} selected{% endif %}" data-ccn="{{ ccn }}">{{ ccn }}</span>
+    {% endfor %}
+  </div>
+  <div id="selected-inputs"></div>
+  <button type="submit" class="btn btn-primary mt-2">Search</button>
+</form>
+
+{% if binding_partners %}
+  <h2 class="mt-4">Results</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>PDB</th>
+        <th>Chemokine Chain</th>
+        <th>Partner</th>
+        <th>Partner Chain</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for bp in binding_partners %}
+      <tr>
+        <td>{{ bp.structure.pdb_code.index }}</td>
+        <td>{{ bp.chemokine_chain }}</td>
+        <td>{{ bp.partner_name }}</td>
+        <td>{{ bp.partner_chain }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+
+<style>
+  #sequence {
+    font-family: monospace;
+  }
+  #sequence .residue {
+    cursor: pointer;
+    padding: 2px 4px;
+    border: 1px solid #ccc;
+    margin: 1px;
+    display: inline-block;
+  }
+  #sequence .residue.selected {
+    background-color: #007bff;
+    color: #fff;
+  }
+</style>
+
+{{ selected_ccn_numbers|json_script:"initial-selected" }}
+<script>
+  const residues = document.querySelectorAll('#sequence .residue');
+  const selected = new Set(JSON.parse(document.getElementById('initial-selected').textContent));
+  const container = document.getElementById('selected-inputs');
+
+  function updateInputs() {
+    container.innerHTML = '';
+    selected.forEach(ccn => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'ccn_numbers';
+      input.value = ccn;
+      container.appendChild(input);
+    });
+  }
+
+  residues.forEach(res => {
+    res.addEventListener('click', () => {
+      const ccn = res.dataset.ccn;
+      if (selected.has(ccn)) {
+        selected.delete(ccn);
+        res.classList.remove('selected');
+      } else {
+        selected.add(ccn);
+        res.classList.add('selected');
+      }
+      updateInputs();
+    });
+  });
+
+  updateInputs();
+</script>
+{% endblock %}
+
