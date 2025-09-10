@@ -49,6 +49,7 @@ from structure.utils import *
 from structure.models import Structure, PdbData, Rotamer, Entity, ChemokineBindingPartner
 from protein.models import Protein
 from residue.models import Residue
+from common.models import ResiduePosition
 from interaction.models import (
     ChemokinePartnerInteraction,
     ChemokinePartnerIFP,
@@ -942,14 +943,29 @@ class IFPSimilarityMatrixView(TemplateView):
         return sim_matrix
 
 
+class ResidueSearchView(TemplateView):
+    """Allow users to filter chemokine-partner complexes by CCN numbers."""
 
-from django.views.generic import TemplateView
-from interaction.models import ChemokinePartnerIFP
-import numpy as np
-import plotly.graph_objects as go
-from scipy.spatial.distance import squareform
-from scipy.cluster.hierarchy import linkage, dendrogram
-from rdkit.DataStructs.cDataStructs import TanimotoSimilarity
+    template_name = "interaction/residue_search.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["ccn_choices"] = list(
+            ResiduePosition.objects.order_by("position").values_list("ccn_number", flat=True)
+        )
+        selected = self.request.GET.getlist("ccn_numbers")
+        context["selected_ccn_numbers"] = selected
+        if selected:
+            interactions = ChemokinePartnerInteraction.objects.filter(
+                chemokine_residue__ccn_number__in=selected
+            )
+            bp_ids = interactions.values_list("chemokine_binding_partner_id", flat=True).distinct()
+            context["binding_partners"] = ChemokineBindingPartner.objects.filter(
+                id__in=bp_ids
+            ).select_related("structure")
+        return context
+
+
 
 class IFPSimilarityMatrixAntibodyView(TemplateView):
     template_name = 'interaction/ifp_similarity_matrix_antibody.html'

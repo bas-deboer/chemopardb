@@ -19,4 +19,5 @@ urlpatterns = [
     path('similarity-matrix/', views.IFPSimilarityMatrixView.as_view(), name='ifp_similarity_matrix'),
     path('binding-partner/<int:binding_partner_id>/pdb_download/', views.PDBDownload.as_view(), name='pdb_download'),
     path('ifp/similarity/antibody/', views.IFPSimilarityMatrixAntibodyView.as_view(), name='ifp_similarity_antibody'),
+    path('residue-search/', views.ResidueSearchView.as_view(), name='residue_search'),
 ]
