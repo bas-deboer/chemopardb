@@ -8,7 +8,7 @@ from django.views.decorators.cache import cache_page
 app_name = 'protein' 
 
 urlpatterns = [
-    path('', cache_page(60*60*24)(ProteinBrowser.as_view()), name='browse'),
+    path('', cache_page(60*60*24)(ProteinBrowser.as_view()), name='protein_browser'),
     path('<str:name>/', views.protein, name='protein'),
     path('autocomplete', views.Autocomplete, name='autocomplete'),
 ]

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'home/base.html' %}
 {% block content %}
 <h1>Chemokine Residue Search</h1>
 <form method="get" id="residue-form">
@@ -20,6 +20,7 @@
         <th>Chemokine Chain</th>
         <th>Partner</th>
         <th>Partner Chain</th>
+        <th>Interacting Residues</th>
       </tr>
     </thead>
     <tbody>
@@ -29,6 +30,13 @@
         <td>{{ bp.chemokine_chain }}</td>
         <td>{{ bp.partner_name }}</td>
         <td>{{ bp.partner_chain }}</td>
+        <td>
+          {% if bp.interacting_ccns %}
+            {{ bp.interacting_ccns|join:", " }}
+          {% else %}
+            -
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>

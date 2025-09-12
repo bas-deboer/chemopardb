@@ -1,0 +1,172 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block addon_css %}
+<style>
+  .dataTables_wrapper .dataTables_filter {
+      float: right;
+      text-align: right;
+  }
+  table.dataTable thead th, table.dataTable tfoot th {
+      white-space: nowrap;
+  }
+  table.dataTable th, table.dataTable td {
+      text-align: left;
+      white-space: nowrap;
+      max-width: 500px;
+      width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+  }
+  table.dataTable td {
+      padding: 5px 10px;
+  }
+  .dataTables_filter, .dataTables_length {
+      margin-bottom: 20px;
+  }
+  .filter-select {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+      height: 40px;
+      vertical-align: middle;
+  }
+  .filter-number {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+      font-size: 1em;
+      height: 40px;
+      text-align: center;
+      vertical-align: middle;
+  }
+  .filter-container {
+      padding: 5px;
+      background: #f8f9fa;
+  }
+  table.dataTable tbody tr {
+      background-color: white;
+  }
+  table.dataTable tbody tr:hover {
+      background-color: #f2f2f2;
+      cursor: pointer;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="bg-light rounded-3 p-3 mb-2">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col">
+          <h2 class="display-6 fw-bold">Browse Predicted Chemokine-GPCR Complexes</h2>
+          <hr class="my-2">
+          <p>Explore computed models for chemokine-GPCR complexes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <br>
+
+  <div>
+    <table id="predicted-complexes" class="table table-striped table-bordered" width="100%">
+      <thead>
+        <tr>
+          <th>Chemokine</th>
+          <th>GPCR</th>
+          <th>Chemokine Organism</th>
+          <th>GPCR Organism</th>
+          <th>Method</th>
+          <th>State</th>
+          <th>Date</th>
+        </tr>
+        <tr class="filter-row">
+          <th><select class="form-control filter-select"><option value=""></option></select></th>
+          <th><select class="form-control filter-select"><option value=""></option></select></th>
+          <th><select class="form-control filter-select"><option value=""></option></select></th>
+          <th><select class="form-control filter-select"><option value=""></option></select></th>
+          <th><select class="form-control filter-select"><option value=""></option></select></th>
+          <th><select class="form-control filter-select"><option value=""></option></select></th>
+          <th><select class="form-control filter-select"><option value=""></option></select></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for complex in predicted_complexes %}
+        <tr data-href="{% url 'predicted_complex_details' complex.id %}">
+          <td>
+            <a target="_blank" href="{% url 'protein_details' complex.chemokine_protein.id %}">
+              {{ complex.chemokine_protein.gene_name|default:complex.chemokine_protein.name }}
+            </a>
+          </td>
+          <td>
+            <a target="_blank" href="{% url 'protein_details' complex.gpcr_protein.id %}">
+              {{ complex.gpcr_protein.gene_name|default:complex.gpcr_protein.name }}
+            </a>
+          </td>
+          <td>{{ complex.chemokine_protein.species|default:"-" }}</td>
+          <td>{{ complex.gpcr_protein.species|default:"-" }}</td>
+          <td>{{ complex.method|default:"AlphaFold-Multimer" }}</td>
+          <td>
+            {% if complex.state %}
+              <span class="text-center">{{ complex.state }}</span>
+            {% else %} - {% endif %}
+          </td>
+          <td>{{ complex.date_generated|date:"Y-m-d" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    var table = $('#predicted-complexes').DataTable({
+        responsive: true,
+        paging: false,
+        scrollX: true,
+        autoWidth: true,
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ],
+        initComplete: function () {
+            var api = this.api();
+
+            api.columns().every(function () {
+                var column = this;
+                var select = $(column.header()).find('select');
+                column.data().unique().sort().each(function (d, j) {
+                    var strippedText = $('<div/>').html(d).text().replace("open_in_new", "").trim();
+                    if ($('option', select).filter(function () { return $(this).val() === strippedText; }).length === 0) {
+                        select.append('<option value="' + strippedText + '">' + strippedText + '</option>');
+                    }
+                });
+
+                select.on('change', function () {
+                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                    column.search(val ? val : '', true, false).draw();
+                });
+            });
+        }
+    });
+
+    // Clickable row functionality
+    $('#predicted-complexes tbody').on('click', 'tr', function(event) {
+        if (!$(event.target).closest('a').length) {
+            var url = $(this).data('href');
+            if (url) {
+                window.location.href = url;
+            }
+        }
+    });
+
+    // Prevent table sort when clicking on filter dropdown
+    $('.filter-select').on('click', function(e) {
+        e.stopPropagation();
+    });
+});
+</script>
+{% endblock %}

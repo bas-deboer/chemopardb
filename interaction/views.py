@@ -943,26 +943,69 @@ class IFPSimilarityMatrixView(TemplateView):
         return sim_matrix
 
 
-class ResidueSearchView(TemplateView):
-    """Allow users to filter chemokine-partner complexes by CCN numbers."""
+import re
 
+def ccn_custom_sort_key(ccn):
+    """
+    Custom sort key for CCN numbers:
+    - NTc.: descending by integer after 'Cm'
+    - Others: ascending by integer after the dot (if possible)
+    """
+    prefix_order = [
+        "NTc.", "CX.", "cxb1.", "B1.", "b1b2.", "B2.", "b2b3.", "B3.", "b3h.", "H.", "CT."
+    ]
+    ccn = str(ccn)
+    for i, prefix in enumerate(prefix_order):
+        if ccn.startswith(prefix):
+            if prefix == "NTc.":
+                # Match NTc.Cm<number>
+                m = re.match(r"NTc\.Cm(\d+)", ccn)
+                if m:
+                    num_part = int(m.group(1))
+                else:
+                    num_part = -1  # Put malformed at the end
+                return (i, -num_part, ccn)  # Descending
+            else:
+                # Try to extract number after the dot
+                m = re.match(rf"{re.escape(prefix)}(\d+)", ccn)
+                if m:
+                    num_part = int(m.group(1))
+                else:
+                    num_part = float('inf')
+                return (i, num_part, ccn)
+    return (len(prefix_order), float('inf'), ccn)
+
+
+class ResidueSearchView(TemplateView):
     template_name = "interaction/residue_search.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["ccn_choices"] = list(
-            ResiduePosition.objects.order_by("position").values_list("ccn_number", flat=True)
+        interactive_ccns = list(
+            ChemokinePartnerInteraction.objects.filter(
+                chemokine_residue__ccn_number__isnull=False
+            ).values_list("chemokine_residue__ccn_number", flat=True).distinct()
         )
+        # Sort using the custom key
+        interactive_ccns = sorted(interactive_ccns, key=ccn_custom_sort_key)
+        context["ccn_choices"] = interactive_ccns
         selected = self.request.GET.getlist("ccn_numbers")
         context["selected_ccn_numbers"] = selected
         if selected:
             interactions = ChemokinePartnerInteraction.objects.filter(
                 chemokine_residue__ccn_number__in=selected
-            )
+            ).select_related('chemokine_residue__residue', 'chemokine_binding_partner')
             bp_ids = interactions.values_list("chemokine_binding_partner_id", flat=True).distinct()
-            context["binding_partners"] = ChemokineBindingPartner.objects.filter(
+            partners = ChemokineBindingPartner.objects.filter(
                 id__in=bp_ids
             ).select_related("structure")
+            partner_to_ccns = defaultdict(set)
+            for interaction in interactions:
+                ccn = interaction.chemokine_residue.residue.ccn_number
+                partner_to_ccns[interaction.chemokine_binding_partner_id].add(ccn)
+            for bp in partners:
+                bp.interacting_ccns = sorted(partner_to_ccns.get(bp.id, []), key=ccn_custom_sort_key)
+            context["binding_partners"] = partners
         return context
 
 

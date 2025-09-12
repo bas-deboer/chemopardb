@@ -5,6 +5,10 @@ from django.utils.html import escape
 
 
 class Structure(models.Model):
+    """
+    Represents a macromolecular structure PDB entry, including metadata like 
+    structure type, resolution, protein, and publication.
+    """
     STATE_CHOICES = [
         ('monomer', 'Monomer'),
         ('dimer', 'Dimer'),
@@ -21,7 +25,7 @@ class Structure(models.Model):
     publication = models.ForeignKey('common.Publication', null=True, on_delete=models.CASCADE)
     publication_date = models.DateField(null=True)
     pdb_data = models.ForeignKey('PdbData', null=True, on_delete=models.CASCADE)
-    chain_id = models.CharField(max_length=100, null=True, blank=True)  # New field to store chain ID
+    chain_id = models.CharField(max_length=100, null=True, blank=True)
     
     def __str__(self):
         if self.pdb_code:
@@ -75,7 +79,6 @@ class ChemokineBindingPartner(models.Model):
     """
     Captures a binding pair between a chemokine and its partner within a given structure.
     """
-    
     structure = models.ForeignKey('Structure', on_delete=models.CASCADE, related_name='chemokine_binding_partners', help_text="The structure in which the binding pair is observed.", null=True)
     partner = models.ForeignKey('partner.Partner', null=True, blank=True, on_delete=models.SET_NULL,
                                 related_name="binding_instances",
@@ -186,3 +189,81 @@ class Fragment(models.Model):
 
     class Meta():
         db_table = "structure_fragment"
+        
+
+class PredictedStructure(models.Model):
+    """
+    Stores AlphaFold-predicted structures for chemokines.
+    """
+    STATE_CHOICES = [
+        ('monomer', 'Monomer'),
+        ('dimer', 'Dimer'),
+        ('tetramer', 'Tetramer'),
+        ('polymer', 'Polymer'),
+        (None, 'None'),
+    ]
+    protein = models.ForeignKey('protein.Protein', on_delete=models.CASCADE, related_name='alphafold_models')
+    state = models.CharField(max_length=50, choices=STATE_CHOICES, null=True, blank=True)
+    pdb_data = models.ForeignKey('PdbData', null=True, on_delete=models.CASCADE)
+    stats_text = models.ForeignKey('StatsText', null=True, on_delete=models.CASCADE)
+    date_generated = models.DateField(null=True, blank=True)
+    method = models.CharField(max_length=100, help_text="Method used for modeling", null=True, blank=True)
+
+    def __str__(self):
+        return f"AlphaFold model for {self.protein} ({self.uniprot_accession})"
+
+    class Meta:
+        db_table = "structure_model"
+    
+    def get_cleaned_pdb(self):
+        return self.pdb_data.pdb
+    
+
+class PredictedComplex(models.Model):
+    """
+    Stores computed models of chemokine-GPCR complexes.
+    """
+    STATE_CHOICES = [
+        ('monomer', 'Monomer'),
+        ('dimer', 'Dimer'),
+        ('tetramer', 'Tetramer'),
+        ('polymer', 'Polymer'),
+        (None, 'None'),
+    ]
+    chemokine_protein = models.ForeignKey('protein.Protein', on_delete=models.CASCADE, related_name='chemokine_complex_models')
+    gpcr_protein = models.ForeignKey('protein.Protein', on_delete=models.CASCADE, related_name='gpcr_complex_models')
+    state = models.CharField(max_length=50, choices=STATE_CHOICES, null=True, blank=True)
+    pdb_data = models.ForeignKey('PdbData', null=True, on_delete=models.CASCADE)
+    stats_text = models.ForeignKey('StatsText', null=True, on_delete=models.CASCADE)
+    date_generated = models.DateField(null=True, blank=True)
+    method = models.CharField(max_length=100, help_text="Method used for modeling", null=True, blank=True)
+    
+    def __str__(self):
+        return f"Computed complex: {self.chemokine_protein} + {self.gpcr_protein}"
+
+    class Meta:
+        db_table = "structure_complex_model"
+    
+    def get_cleaned_pdb(self):
+        return self.pdb_data.pdb
+    
+
+class StatsText(models.Model):
+    stats_text = models.TextField()
+
+    def __repr__(self):
+        if self.stats_text and len(self.stats_text)>0:
+            line = self.stats_text.split('\n')[0]
+        else:
+            line = 'empty object'
+        return '<StatsText: {}>'.format(line)
+
+    def __str__(self):
+        if self.stats_text and len(self.stats_text)>0:
+            line = self.stats_text.split('\n')[0]
+        else:
+            line = 'empty object'
+        return '<StatsText: {}>'.format(line)
+
+    class Meta():
+        db_table = 'stats_text'

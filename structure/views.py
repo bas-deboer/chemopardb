@@ -353,3 +353,45 @@ class PDBDownload(View):
         response['Content-Disposition'] = f'attachment; filename="{pdb_filename}"'
 
         return response
+    
+
+from django.views.generic import TemplateView, DetailView
+from structure.models import PredictedStructure, PredictedComplex
+
+class PredictedStructureBrowser(TemplateView):
+    """
+    Browse all predicted (e.g., AlphaFold) chemokine structures.
+    """
+    template_name = "structure/predicted_structure_browser.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['predicted_structures'] = PredictedStructure.objects.select_related('protein').all()
+        return context
+
+class PredictedStructureDetails(DetailView):
+    """
+    Show details for a single predicted structure.
+    """
+    model = PredictedStructure
+    template_name = "structure/predicted_structure_details.html"
+    context_object_name = "predicted_structure"
+
+class PredictedComplexBrowser(TemplateView):
+    """
+    Browse all predicted chemokine-GPCR complex models.
+    """
+    template_name = "structure/predicted_complex_browser.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['predicted_complexes'] = PredictedComplex.objects.select_related('chemokine_protein', 'gpcr_protein').all()
+        return context
+
+class PredictedComplexDetails(DetailView):
+    """
+    Show details for a single predicted complex.
+    """
+    model = PredictedComplex
+    template_name = "structure/predicted_complex_details.html"
+    context_object_name = "predicted_complex"

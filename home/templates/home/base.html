@@ -44,9 +44,6 @@
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
-    <!-- Additional CSS -->
-    {% block addon_css %}{% endblock %}
-
     <!-- Custom Styles -->
     <style>
         * {
@@ -165,61 +162,25 @@
             display: block;
             margin-top: 0; /* Adjusts positioning if needed */
         }
+        /* Add to your style.css or inside <style> in base.html */
+        .navbar .custom-input {
+            min-width: 200px;
+            background-color: #fff !important;
+            color: #595C8D;
+        }
         
     </style>
+
+    <!-- Additional CSS -->
+    {% block addon_css %}{% endblock %}
+
 </head>
 
 <body>
 
     <!-- Header -->
     <header class="header">
-        <nav class="navbar navbar-expand-lg fixed-top px-3" data-bs-theme="dark">
-            <a class="navbar-brand" href="/index">
-                <img src="{% static 'home/images/ChemoPar_logo.png' %}" height="50" alt="ChemoPar-db Logo">ChemoPar-db
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="/index">Home</a>
-                        </li>
-                        <!-- Browse Dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link {% if request.resolver_match.url_name == '/protein' %}active{% endif %} dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Browse
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="/protein">Browse Proteins</a></li>
-                                <li><a class="dropdown-item" href="/structure">Browse Structures</a></li>
-                                <li><a class="dropdown-item" href="/partner">Browse Partners</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'charts' %}active{% endif %}" href="/charts">Charts</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'api' %}active{% endif %}" href="/api">API</a>
-                        </li>
-                        <!-- Info Dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="infoDropdown" role="button" aria-expanded="false">
-                                Info
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="infoDropdown">
-                                <li><a class="dropdown-item" href="/example">Example</a></li>                                
-                                <li><a class="dropdown-item" href="https://chemopar-db.readthedocs.io/en/latest/" target="_blank">Documentation</a></li>
-                                <li><a class="dropdown-item" href="https://chemopar-db.readthedocs.io/en/latest/contact.html" target="_blank">Contact</a></li>
-                                <li><a class="dropdown-item" href="https://chemopar-db.readthedocs.io/en/latest/citing_chemopar-db.html" target="_blank">Citing ChemoPar-db</a></li>
-                            </ul>
-                        </li>
-                </ul>
-                <form class="form-inline my-2 my-lg-0 custom-form" onsubmit="return false;">
-                    <input id="search" class="form-control mr-sm-2 custom-input" type="search" placeholder="Search" aria-label="Search">
-                </form>
-            </div>
-        </nav>
+        {% include "home/navbar.html" %}
     </header>
 
     <!-- Page Content -->
