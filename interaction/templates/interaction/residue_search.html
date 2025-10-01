@@ -1,96 +1,157 @@
 {% extends 'home/base.html' %}
-{% block content %}
-<h1>Chemokine Residue Search</h1>
-<form method="get" id="residue-form">
-  <div id="sequence" class="mb-2">
-    {% for ccn in ccn_choices %}
-    <span class="residue{% if ccn in selected_ccn_numbers %} selected{% endif %}" data-ccn="{{ ccn }}">{{ ccn }}</span>
-    {% endfor %}
-  </div>
-  <div id="selected-inputs"></div>
-  <button type="submit" class="btn btn-primary mt-2">Search</button>
-</form>
+{% load static %}
 
-{% if binding_partners %}
-  <h2 class="mt-4">Results</h2>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>PDB</th>
-        <th>Chemokine Chain</th>
-        <th>Partner</th>
-        <th>Partner Chain</th>
-        <th>Interacting Residues</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for bp in binding_partners %}
-      <tr>
-        <td>{{ bp.structure.pdb_code.index }}</td>
-        <td>{{ bp.chemokine_chain }}</td>
-        <td>{{ bp.partner_name }}</td>
-        <td>{{ bp.partner_chain }}</td>
-        <td>
-          {% if bp.interacting_ccns %}
-            {{ bp.interacting_ccns|join:", " }}
-          {% else %}
-            -
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-{% endif %}
+{% block addon_css %}
+  <link rel="stylesheet" href="{% static 'home/css/jquery.dataTables.min.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'home/css/yadcf_bootstrap_version.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css" />
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="bg-light rounded-3 p-3 mb-2">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col">
+          <h2 class="display-6 fw-bold">Interaction Search</h2>
+          <p class="mb-0">Select one or more chemokine residues to find structures with binding partners interacting at those positions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form method="get" id="residue-form" class="mb-3">
+    <div id="sequence" class="mb-2"></div>
+    <div id="selected-inputs"></div>
+    <button type="submit" class="btn btn-primary">Search</button>
+  </form>
+
+  {% if binding_partners %}
+  <div style="font-size: 0.8rem;">
+    <table id="residue-results" class="table table-striped table-bordered" width="100%">
+      <thead>
+        <tr>
+          <th>PDB</th>
+          <th>Chemokine Chain</th>
+          <th>Partner</th>
+          <th>Partner Chain</th>
+          <th>Interacting Residues</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bp in binding_partners %}
+        <tr data-href="{% url 'interaction:chemokine_binding_partner_detail' bp.id %}">
+          <td>
+            <a href="{% url 'structure_details' bp.structure.id %}">{{ bp.structure.pdb_code.index }}</a>
+          </td>
+          <td>{{ bp.chemokine_chain }}</td>
+          <td>{{ bp.partner_name }}</td>
+          <td>{{ bp.partner_chain }}</td>
+          <td>
+            {% if bp.interacting_ccns %}
+              {{ bp.interacting_ccns|join:", " }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
 
 <style>
-  #sequence {
-    font-family: monospace;
-  }
+  #sequence { display: flex; flex-wrap: wrap; gap: 6px; }
   #sequence .residue {
     cursor: pointer;
-    padding: 2px 4px;
-    border: 1px solid #ccc;
-    margin: 1px;
-    display: inline-block;
+    padding: 4px 8px;
+    border: 1px solid var(--brand);
+    border-radius: 14px;
+    color: var(--brand);
+    background: #fff;
+    user-select: none;
+    font-size: 0.9rem;
   }
   #sequence .residue.selected {
-    background-color: #007bff;
+    background-color: var(--brand);
     color: #fff;
   }
+  /* Table link behavior */
+  #residue-results a { text-decoration: none !important; }
+  #residue-results a:hover { text-decoration: underline !important; }
 </style>
 
+{{ ccn_choices|json_script:"ccn-choices" }}
 {{ selected_ccn_numbers|json_script:"initial-selected" }}
-<script>
-  const residues = document.querySelectorAll('#sequence .residue');
-  const selected = new Set(JSON.parse(document.getElementById('initial-selected').textContent));
-  const container = document.getElementById('selected-inputs');
 
-  function updateInputs() {
-    container.innerHTML = '';
-    selected.forEach(ccn => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'ccn_numbers';
-      input.value = ccn;
-      container.appendChild(input);
+{% endblock %}
+
+{% block addon_js %}
+  <script src="{% static 'home/js/select2.js' %}"></script>
+  <script src="{% static 'home/js/jquery.dataTables.yadcf.js' %}"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function(){
+    // Build residue chips dynamically from choices
+    const choices = JSON.parse(document.getElementById('ccn-choices').textContent || '[]');
+    const initial = new Set(JSON.parse(document.getElementById('initial-selected').textContent || '[]'));
+    const seq = document.getElementById('sequence');
+    const container = document.getElementById('selected-inputs');
+
+    function updateInputs(sel){
+      container.innerHTML = '';
+      sel.forEach(ccn => {
+        const input = document.createElement('input');
+        input.type = 'hidden'; input.name = 'ccn_numbers'; input.value = ccn;
+        container.appendChild(input);
+      });
+    }
+
+    // Render chips
+    const selected = new Set(initial);
+    choices.forEach(ccn => {
+      const span = document.createElement('span');
+      span.className = 'residue' + (selected.has(ccn) ? ' selected' : '');
+      span.dataset.ccn = ccn;
+      span.textContent = ccn;
+      span.addEventListener('click', () => {
+        if (selected.has(ccn)) { selected.delete(ccn); span.classList.remove('selected'); }
+        else { selected.add(ccn); span.classList.add('selected'); }
+        updateInputs(selected);
+      });
+      seq.appendChild(span);
     });
-  }
+    updateInputs(selected);
 
-  residues.forEach(res => {
-    res.addEventListener('click', () => {
-      const ccn = res.dataset.ccn;
-      if (selected.has(ccn)) {
-        selected.delete(ccn);
-        res.classList.remove('selected');
+    // Enhance results table if present
+    const tbl = document.getElementById('residue-results');
+    if (tbl && $.fn.DataTable) {
+      var dt;
+      if ($.fn.DataTable.isDataTable('#residue-results')) {
+        dt = $('#residue-results').DataTable();
       } else {
-        selected.add(ccn);
-        res.classList.add('selected');
+        dt = $('#residue-results').DataTable({
+          responsive: true,
+          paging: false,
+          scrollX: true,
+          autoWidth: true,
+          dom: 'Bfrtip',
+          order: [],
+          buttons: ['copy','csv','excel','pdf','print']
+        });
       }
-      updateInputs();
-    });
+      // Clickable rows to binding partner detail
+      $('#residue-results tbody').off('click.rownav').on('click.rownav','tr', function(e){
+        if (!$(e.target).closest('a').length){
+          const url = $(this).data('href'); if (url) window.location.href = url;
+        }
+      });
+      function adjust(){ if (dt) dt.columns.adjust(); }
+      adjust(); setTimeout(adjust,50); setTimeout(adjust,200);
+      $(window).on('resize', adjust);
+      $('#residue-results').on('draw.dt', adjust);
+    }
   });
-
-  updateInputs();
-</script>
+  </script>
 {% endblock %}

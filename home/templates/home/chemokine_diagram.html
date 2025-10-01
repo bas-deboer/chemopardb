@@ -1,48 +1,280 @@
 {% extends "home/base.html" %}
 {% load static %}
+
+{% block addon_css %}
+<style>
+  .chemokine-diagram-page .monospace-block {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.85rem;
+  }
+  .chemokine-diagram-page .segment-table td,
+  .chemokine-diagram-page .segment-table th {
+    vertical-align: middle;
+  }
+  .chemokine-diagram-page .sequence-chip {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.9rem;
+    background: rgba(82, 105, 215, 0.08);
+    border-radius: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    display: inline-block;
+  }
+
+  .chemokine-diagram-page #diagram-container {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .chemokine-diagram-page #diagram-container svg {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .chemokine-diagram-page #diagram-container svg text {
+    font-family: Arial, Helvetica, sans-serif !important;
+  }
+
+  .chemokine-diagram-page .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #5269d7;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Custom Chemokine Diagram</h2>
-  {% if svg %}
-    <div id="diagram-container" class="mt-4">{{ svg|safe }}</div>
-    <a href="{% url 'chemokine_diagram' %}" class="btn btn-secondary mt-3">Start Over</a>
-    <script src="{% static 'home/js/saveSvgAsPng.js' %}"></script>
-    <script src="{% static 'home/js/diagrams.js' %}"></script>
-    <script src="{% static 'home/js/color_picker.js' %}"></script>
-    <script src="{% static 'home/js/svg-pan-zoom.min.js' %}"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const svgElem = document.querySelector('#diagram-container svg');
-        if (svgElem) {
-          svgPanZoom(svgElem, {
-            panEnabled: true,
-            zoomEnabled: true,
-            controlIconsEnabled: true,
-            fit: true,
-            center: true
-          });
-        }
-      });
-    </script>
-  {% elif seq %}
-    <form id="segment-form" method="post">
-      {% csrf_token %}
-      <input type="hidden" name="sequence" value="{{ seq }}">
-      <input type="hidden" name="segments" id="id_segments">
-      <div id="segmenter" data-seq="{{ seq }}" class="mb-3"></div>
-      <button type="submit" class="btn btn-success">Generate Diagram</button>
-    </form>
-    <script src="{% static 'home/js/segmenter.js' %}"></script>
-  {% else %}
-    <form method="post">
-      {% csrf_token %}
-      <div class="mb-3">
-        {{ form.sequence.label_tag }}
-        {{ form.sequence }}
-      </div>
-      <button type="submit" class="btn btn-primary">Submit Sequence</button>
-    </form>
+<div class="container py-4 chemokine-diagram-page">
+  {% if errors %}
+  <div class="alert alert-danger" role="alert">
+    <strong>We could not process the sequence:</strong>
+    <ul class="mb-0">
+      {% for message in errors %}
+      <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  </div>
   {% endif %}
+
+  <div id="loading-overlay" class="loading-overlay" style="display: none;">
+  <div class="text-center">
+    <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+    <div class="mt-3">Aligning sequence...</div>
+  </div>
 </div>
 
+{% if svg %}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+            <div>
+              <h5 class="h5 text-uppercase text-muted mb-3">Custom Chemokine Diagram</h5>
+              <p class="text-muted mb-0">
+                {% if mapping_reference %}
+                Segments mapped via reference alignment ({{ mapping_reference }})
+                {% else %}
+                Segments mapped via reference alignment
+                {% endif %}.
+              </p>
+            </div>
+            <div class="btn-group">
+              <button type="button" class="btn btn-outline-primary btn-sm" onclick="saveSvgAsPng(document.querySelector('#diagram-container svg'), 'chemokine-diagram.png');">
+                Download PNG
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" onclick="downloadInlineSvg('#diagram-container svg', 'chemokine-diagram.svg');">
+                Download SVG
+              </button>
+            </div>
+          </div>
+          <div id="diagram-container" class="border rounded bg-white p-3">
+            {{ svg|safe }}
+          </div>
+        </div>
+      </div>
+
+      {% if alignment_rows %}
+      <div class="card shadow-sm mt-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class=class="h5 text-uppercase text-muted mb-3">User sequence vs chosen reference</h5>
+            <span class="badge bg-success-subtle text-success">Auto-generated</span>
+          </div>
+          <div class="monospace-block bg-body-tertiary border rounded p-3 overflow-auto">
+            {% for row in alignment_rows %}
+            <div class="mb-2">
+              <div class="text-muted small">Position {{ row.index }}</div>
+              <div>{{ row.reference }}</div>
+              <div>{{ row.match }}</div>
+              <div>{{ row.query }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="h5 text-uppercase text-muted mb-3">Sequence overview</h5>
+          <p class="mb-2"><strong>Length:</strong> {{ sequence|length }} residues</p>
+          {% if coverage %}
+          <p class="mb-2">
+            <strong>Aligned residues:</strong>
+            {{ coverage.mapped }} / {{ coverage.total }} ({{ coverage.percent }}%)
+          </p>
+          {% endif %}
+          {% if used_reference %}
+          <p class="mb-2"><strong>Reference used:</strong> {{ used_reference }}{% if pair_identity %} ({{ pair_identity }}% identity user sequence){% endif %}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="h5 text-uppercase text-muted mb-3">Adjust segmentation</h5>
+          <p class="small text-muted">Fine-tune segment boundaries and regenerate the diagram.</p>
+          <form method="post" class="mb-2">
+            {% csrf_token %}
+            <input type="hidden" name="sequence" value="{{ sequence }}">
+            <label for="id_segments" class="form-label">Segment definition</label>
+            <textarea id="id_segments" name="segments" rows="4" class="form-control font-monospace mb-3">{{ segment_string }}</textarea>
+            <button type="submit" class="btn btn-outline-primary w-100">Regenerate diagram</button>
+          </form>
+          <p class="small text-muted mb-0">Format: <code>start-end:segment</code> separated by commas.</p>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="h5 text-uppercase text-muted mb-3">Submit another sequence</h5>
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              {{ form.sequence.label_tag }}
+              {{ form.sequence }}
+              {% if form.sequence.help_text %}
+              <div class="form-text">{{ form.sequence.help_text }}</div>
+              {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Align &amp; generate</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="h5 text-uppercase text-muted mb-3">Custom chemokine diagram</h5>
+          <p class="text-muted">Paste a chemokine sequence to automatically identify structural segments and render a snake-plot style diagram.</p>
+          <ul class="mb-4">
+            <li>Segments are inferred from the reference chemokine MSA and CCN numbering.</li>
+            <li>You can adjust boundaries manually after the initial diagram is created.</li>
+          </ul>
+          <div class="alert alert-info border-start border-3" role="alert">
+            <strong>Need a reference?</strong> Try any CC or CXC chemokine sequence. Only alphabetic characters are required.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="h5 text-uppercase text-muted mb-3">Submit a sequence</h5>
+          <form method="post" class="chemokine-form">
+            {% csrf_token %}
+            <div class="mb-3">
+              {{ form.sequence.label_tag }}
+              {{ form.sequence }}
+              {% if form.sequence.help_text %}
+              <div class="form-text">{{ form.sequence.help_text }}</div>
+              {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Align &amp; generate diagram</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
 {% endblock %}
+
+{% block addon_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const forms = document.querySelectorAll('.chemokine-form');
+    const overlay = document.getElementById('loading-overlay');
+
+    forms.forEach(form => {
+      form.addEventListener('submit', () => {
+        if (overlay) {
+          overlay.style.display = 'flex';
+        }
+      });
+    });
+  });
+</script>
+{% if svg %}
+<script src="{% static 'home/js/saveSvgAsPng.js' %}"></script>
+<script src="{% static 'home/js/diagrams.js' %}"></script>
+<script src="{% static 'home/js/color_picker.js' %}"></script>
+<script>
+  function downloadInlineSvg(selector, filename) {
+    const svgElement = document.querySelector(selector);
+    if (!svgElement) return;
+    const serializer = new XMLSerializer();
+    const source = serializer.serializeToString(svgElement);
+    const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const svgElem = document.querySelector('#diagram-container svg');
+    if (!svgElem) {
+      return;
+    }
+    const mainGroup = svgElem.querySelector('g');
+    if (!mainGroup || typeof mainGroup.getBBox !== 'function') {
+      return;
+    }
+    const bbox = mainGroup.getBBox();
+    const padding = 20;
+    const viewBox = [
+      bbox.x - padding,
+      bbox.y - padding,
+      bbox.width + padding * 2,
+      bbox.height + padding * 2,
+    ];
+    svgElem.setAttribute('viewBox', viewBox.join(' '));
+    svgElem.removeAttribute('width');
+    svgElem.removeAttribute('height');
+    svgElem.style.width = '100%';
+    svgElem.style.height = 'auto';
+  });
+</script>
+{% endif %}
+{% endblock %}
+
+

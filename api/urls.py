@@ -11,7 +11,7 @@ from api import views
 
 urlpatterns = [
     # Documentation
-    path('', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('', SpectacularSwaggerView.as_view(url_name='schema', template_name='api/swagger.html'), name='swagger-ui'),
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     # Protein
     path('protein_details/', cache_page(3600*24*7)(views.ProteinDetailList.as_view()), name='protein-details'),

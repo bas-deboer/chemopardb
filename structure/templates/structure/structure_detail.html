@@ -1,0 +1,254 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block addon_css %}
+<link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
+<link href="{% static 'home/css/color_picker.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'home/css/construct_browser.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css">
+<link href="{% static 'home/css/modal.css' %}" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="{% static 'home/css/jquery.powertip.css' %}">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<style>
+  .structure-detail-page { max-width: 1200px; }
+
+  .structure-header h1 { font-weight: 600; letter-spacing: 0.4px; }
+
+  .metric-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: #eef2f7;
+    color: #2f3b52;
+    font-size: 0.85rem;
+    gap: 0.35rem;
+  }
+
+  .metric-pill .material-symbols-outlined { font-size: 1rem; }
+
+  .definition-list dt { font-weight: 600; color: #1d2f46; }
+  .definition-list dd { margin-bottom: 0.75rem; }
+
+  .viewer-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .viewer-bar button {
+    border-radius: 4px;
+    border: 1px solid #3a5ca9;
+    color: #305099;
+    background: #edf2fd;
+    padding: 0.3rem 0.75rem;
+    font-weight: 600;
+  }
+
+  .sequence-table-wrapper { overflow-x: auto; }
+
+  .res-table th,
+  .res-table td { text-align: center; white-space: nowrap; }
+
+  .segment-header { background: #f5f7fb; font-weight: 600; }
+
+  .res-color-A, .res-color-M, .res-color-V, .res-color-L, .res-color-I { background-color: #ffe066; }
+  .res-color-R, .res-color-K { background-color: #74c0fc; color: #0b2b51; }
+  .res-color-D, .res-color-E { background-color: #ff6b6b; color: #ffffff; }
+  .res-color-N, .res-color-Q, .res-color-S, .res-color-T { background-color: #845ef7; color: #ffffff; }
+  .res-color-W { background-color: #51cf66; }
+  .res-color-Y, .res-color-F { background-color: #63e6be; }
+  .res-color-P { background-color: #ffa8a8; color: #5f0f0f; }
+  .res-color-G { background-color: #b197fc; }
+  .res-color-H { background-color: #228be6; color: #ffffff; }
+  .res-color-C { background-color: #ffd43b; }
+  .mutation { color: #d6336c; font-weight: 600; }
+
+  .external-link { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+  .empty-state { margin: 0; color: #6c757d; }
+
+  .list-group-item .badge { background: #eef2f7; color: #2f3b52; }
+
+  @media (max-width: 767.98px) {
+    .metric-pill { font-size: 0.8rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="structure-detail-page container-xl py-4">
+  <div class="structure-header text-center text-md-start mb-4">
+    <p class="text-uppercase text-muted small mb-1">Structure</p>
+    <h1 class="detail_title mb-2">
+      {% if structure.protein and structure.protein.gene_name %}
+        {{ structure.protein.gene_name }}
+      {% elif structure.protein and structure.protein.name %}
+        {{ structure.protein.name }}
+      {% else %}
+        {{ structure.pdb_code.index|default:'Structure' }}
+      {% endif %}
+      {% if structure.pdb_code and structure.pdb_code.index %}
+        - {{ structure.pdb_code.index }}
+      {% endif %}
+    </h1>
+    
+    <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+      {% if structure_method %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">biotech</span>
+        {{ structure_method }}
+      </span>
+      {% endif %}
+      {% if structure_resolution %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">insights</span>
+        Resolution: {{ structure_resolution }} &#197;
+      </span>
+      {% endif %}
+      {% if chain_count %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">hub</span>
+        Chains: {{ chain_count }}
+      </span>
+      {% endif %}
+      {% if residue_count %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">straighten</span>
+        Sequence: {{ residue_count }} aa
+      </span>
+      {% endif %}
+      {% if binding_partner_count %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">diversity_2</span>
+        Partners: {{ binding_partner_count }}
+      </span>
+      {% endif %}
+      {% if structure_publication_date %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">event</span>
+        Released: {{ structure_publication_date|date:'Y-m-d' }}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4 align-items-stretch">
+    <div class="col-lg-4 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body">
+          <h5 class="card-title">Summary</h5>
+          <dl class="definition-list">
+            <dt>Protein</dt>
+            <dd>
+              {% if structure.protein %}
+              <span>
+                {{ structure.protein.gene_name|default:structure.protein.name|default:'-' }}
+                {% if structure.protein.gene_name %}
+                <a class="external-link" href="{% url 'protein:protein' structure.protein.gene_name %}" target="_blank" rel="noopener">
+                  <span>View protein entry</span>
+                  <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                </a>
+                {% endif %}
+              </span>
+              {% else %}-{% endif %}
+            </dd>
+
+            <dt>Organism</dt>
+            <dd>{% if structure.protein %}<i>{{ structure.protein.species|default:'-' }}</i>{% else %}-{% endif %}</dd>
+
+            <dt>UniProt ID</dt>
+            <dd>
+              {% if structure.protein and structure.protein.uniprot_id %}
+              <a class="external-link" href="https://www.uniprot.org/uniprot/{{ structure.protein.uniprot_id }}" target="_blank" rel="noopener">
+                <span>{{ structure.protein.uniprot_id }}</span>
+                <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+              </a>
+              {% else %}-{% endif %}
+            </dd>
+
+            <dt>PDB ID</dt>
+            <dd>
+              {% if structure.pdb_code and structure.pdb_code.index %}
+              <a class="external-link" href="https://www.rcsb.org/structure/{{ structure.pdb_code.index }}" target="_blank" rel="noopener">
+                <span>{{ structure.pdb_code.index }}</span>
+                <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+              </a>
+              {% else %}-{% endif %}
+            </dd>
+
+            <dt>Method</dt>
+            <dd>{{ structure_method|default:'-' }}</dd>
+
+            <dt>Resolution</dt>
+            <dd>{% if structure_resolution %}{{ structure_resolution }} &#197;{% else %}-{% endif %}</dd>
+
+            <dt>State</dt>
+            <dd>{{ structure_state|default:'-' }}</dd>
+
+            <dt>Publication</dt>
+            <dd>
+              {% if structure.publication and structure.publication.web_link and structure.publication.web_link.index %}
+              <a class="external-link" href="http://dx.doi.org/{{ structure.publication.web_link.index }}" target="_blank" rel="noopener">
+                <span>{{ structure.publication.web_link.index }}</span>
+                <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+              </a>
+              {% else %}-{% endif %}
+            </dd>
+
+            <dt>Release date</dt>
+            <dd>{{ structure_publication_date|date:'Y-m-d'|default:'-' }}</dd>
+          </dl>
+
+          <hr class="my-4">
+          <div class="action-row">
+            <a class="btn btn-outline-primary btn-sm{% if not pdb_available %} disabled{% endif %}" href="{% if pdb_available %}{% url 'pdb_download' structure.id %}{% else %}#{% endif %}" {% if not pdb_available %}tabindex="-1" aria-disabled="true"{% endif %}>
+              <span class="material-symbols-outlined" aria-hidden="true">download</span>
+              Download PDB
+            </a>
+            {% if structure.pdb_code and structure.pdb_code.index %}
+            <a class="btn btn-outline-secondary btn-sm" href="https://www.rcsb.org/structure/{{ structure.pdb_code.index }}" target="_blank" rel="noopener">
+              <span class="material-symbols-outlined" aria-hidden="true">language</span>
+              Open in RCSB
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}
+
+{% block addon_js %}
+<script src="{% static 'home/js/ngl.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const hasViewer = {{ pdb_available|yesno:"true,false" }};
+    if (!hasViewer) return;
+    const stage = new NGL.Stage('viewport', { backgroundColor: 'white' });
+    const pdbText = '{{ structure.pdb_data.pdb|default:""|escapejs }}';
+    if (pdbText) {
+      const blob = new Blob([pdbText], { type: 'text/plain' });
+      const file = new File([blob], 'structure.pdb');
+      stage.loadFile(file, { defaultRepresentation: true }).then(function () {
+        stage.autoView();
+      }).catch(function (err) { console.error('NGL load error:', err); });
+    }
+    const container = stage.viewer && stage.viewer.container ? stage.viewer.container : document.getElementById('viewport');
+    if (container) {
+      const preventScroll = function (event) { event.preventDefault(); };
+      container.addEventListener('wheel', preventScroll, { passive: false });
+      container.addEventListener('mousewheel', preventScroll, { passive: false });
+    }
+    window.addEventListener('resize', function () { stage.handleResize(); });
+    const fullscreenButton = document.getElementById('fullscreen');
+    if (fullscreenButton) {
+      fullscreenButton.addEventListener('click', function () { stage.toggleFullscreen(); });
+    }
+  });
+</script>
+{% endblock %}

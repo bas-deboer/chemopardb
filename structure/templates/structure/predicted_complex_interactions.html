@@ -1,0 +1,479 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block addon_css %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<style>
+  .predicted-complex-page {
+    max-width: 1200px;
+  }
+
+  .complex-summary-header h1 {
+    font-weight: 600;
+    letter-spacing: 0.4px;
+  }
+
+  .metric-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: #eef2f7;
+    color: #2f3b52;
+    font-size: 0.85rem;
+    gap: 0.35rem;
+  }
+
+  .metric-pill .material-symbols-outlined {
+    font-size: 1rem;
+  }
+
+  .definition-list dt {
+    font-weight: 600;
+    color: #1d2f46;
+  }
+
+  .definition-list dd {
+    margin-bottom: 0.75rem;
+  }
+
+  .legend-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .legend-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: inline-block;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    margin-right: 0.5rem;
+  }
+
+  #viewport {
+    height: 460px;
+    border: 1px solid #dbe3ef;
+    border-radius: 6px;
+    background: #f9fbff;
+  }
+
+  .viewer-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0rem;
+    margin-top: 0rem;
+    font-size: 0.85rem;
+  }
+
+  .viewer-bar button {
+    border-radius: 4px;
+    border: 1px solid #3a5ca9;
+    color: #305099;
+    background: #edf2fd;
+    padding: 0.3rem 0.75rem;
+    font-weight: 600;
+  }
+
+  .action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .action-row .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .interaction-table-wrapper {
+    max-height: 420px;
+    overflow: auto;
+    border: 1px solid #e1e8f7;
+    border-radius: 6px;
+  }
+
+  .interaction-table-wrapper table {
+    margin-bottom: 0;
+  }
+
+  .interaction-table-wrapper thead th {
+    position: sticky;
+    top: 0;
+    background: #f5f7fb;
+    z-index: 1;
+  }
+
+  .stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: #f3f5fb;
+    border: 1px solid #d3d9ea;
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 991.98px) {
+    #viewport {
+      height: 360px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="predicted-complex-page container-xl py-4">
+  <div class="complex-summary-header text-center text-md-start mb-4">
+    <p class="text-uppercase text-muted small mb-1">Predicted complex interactions</p>
+    <h1 class="detail_title mb-2">{{ predicted_complex.chemokine_protein.gene_name|default:predicted_complex.chemokine_protein.name }} + {{ predicted_complex.gpcr_partner.name|default:"-" }}</h1>
+    <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">biotech</span>
+        Method: {{ predicted_complex.method|default:"AlphaFold-Multimer" }}
+      </span>
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">event</span>
+        Generated: {{ predicted_complex.date_generated|date:"Y-m-d" }}
+      </span>
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">scatter_plot</span>
+        Residue contacts: {{ interaction_total }}
+      </span>
+    </div>
+  </div>
+
+  <div class="row g-4 align-items-stretch">
+    <div class="col-lg-4 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body">
+          <h5 class="h5 text-uppercase text-muted mb-3">SUMMARY</h5>
+          <dl class="definition-list">
+            <dt>Chemokine</dt>
+            <dd>
+              {% if predicted_complex.chemokine_protein %}
+              <span>
+                {{ predicted_complex.chemokine_protein.gene_name|default:predicted_complex.chemokine_protein.name|default:"-" }}
+                <a href="{% url 'protein:protein' predicted_complex.chemokine_protein.gene_name|default:predicted_complex.chemokine_protein.name %}" target="_blank" class="uniprot-link">
+                  <span class="link-text">View chemokine entry</span>
+                  <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                </a>
+              </span>
+              {% else %}-{% endif %}
+            </dd>
+
+            <dt>Chemokine organism</dt>
+            <dd><i>{{ predicted_complex.chemokine_protein.species|default:"-" }}</i></dd>
+
+            <dt>Partner</dt>
+            <dd>
+              {% if predicted_complex.gpcr_partner %}
+              <span>{{ predicted_complex.gpcr_partner.name|default:"-" }}
+                <a href="{% url 'partner_detail' predicted_complex.gpcr_partner.id %}" target="_blank" class="uniprot-link">
+                  <span class="link-text">View partner entry</span>
+                  <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                </a>
+              </span>
+              {% else %}-{% endif %}
+            </dd>
+
+            <dt>Partner description</dt>
+            <dd><i>{{ predicted_complex.gpcr_partner.description|default:"-" }}</i></dd>
+
+            <dt>Interactions detected</dt>
+            <dd>{{ interaction_total }}</dd>
+
+          </dl>
+
+
+          <hr class="my-4">
+          <div class="action-row">
+            <button type="button" id="download-complex" class="btn btn-outline-primary btn-sm">
+              <span class="material-symbols-outlined" aria-hidden="true">download</span>
+              Download PDB
+            </button>
+            <a class="btn btn-outline-secondary btn-sm" href="{{ details_url }}">
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+              Back to complex details
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body">
+          <h5 class="h5 text-uppercase text-muted mb-3">3D VIEW</h5>
+          <div id="viewport"></div>
+          <div class="viewer-bar">
+            <button id="fullscreen" type="button">Full Screen</button>
+            <span>Powered by <a href="https://github.com/arose/ngl" target="_blank">NGL viewer</a></span>
+          </div>
+          <div class="mt-4">
+            <h6 class="text-uppercase text-muted small mb-2">Model confidence legend</h6>
+            <ul class="legend-list" style="font-size: 0.9rem;">
+              <li><span class="legend-swatch" style="background: #0b2c9e;"></span>Very high confidence (pLDDT &gt; 90)</li>
+              <li><span class="legend-swatch" style="background: #3fc1c9;"></span>High confidence (70 &le; pLDDT &lt; 90)</li>
+              <li><span class="legend-swatch" style="background: #ffdb13;"></span>Low confidence (50 &le; pLDDT &lt; 70)</li>
+              <li><span class="legend-swatch" style="background: #ff7d45;"></span>Very low confidence (pLDDT &lt; 50)</li>
+            </ul>
+          </div>
+          {% if not show_viewer %}
+          <p class="text-muted mt-3 mb-0">No structure preview available for this complex.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if has_interactions %}
+  <div class="row g-4 mt-1">
+    <div class="col-12">
+      <div class="card site-card shadow-sm">
+        <div class="card-body site-card-body">
+          <h5 class="h5 text-uppercase text-muted mb-3">RESIDUE CONTACTS</h5>
+          <p class="small text-muted">Residues are ordered by chemokine position and interaction type. Use the viewer controls to highlight contacting residues.</p>
+          <a class="btn btn-outline-primary btn-sm mb-3" href="{% url 'predicted_complex_interactions_csv' predicted_complex.pk %}">
+            <span class="material-symbols-outlined" aria-hidden="true">table_view</span>
+            Download contacts (CSV)
+          </a>
+          <div class="interaction-table-wrapper">
+            <table class="table table-sm table-striped align-middle mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">Chemokine residue</th>
+                  <th scope="col">CCN</th>
+                  <th scope="col">Partner residue</th>
+                  <th scope="col">GPCRdb generic</th>
+                  <th scope="col">Interaction</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for interaction in interactions %}
+                <tr>
+                  <td>
+                    {{ interaction.chemokine_residue_name|default:"?" }}
+                    {{ interaction.chemokine_residue_number|default:"-" }}
+                  </td>
+                  <td>
+                    {% if interaction.chemokine_residue %}
+                      {{ interaction.chemokine_residue.ccn_number|default:"-" }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    {{ interaction.partner_residue_name|default:"?" }}
+                    {{ interaction.partner_residue_number|default:"-" }}
+                  </td>
+                  <td>{{ interaction.partner_generic_number|default:"-" }}</td>
+                  <td>{{ interaction.interaction_type }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="row g-4 mt-1">
+    <div class="col-12">
+      <div class="card site-card shadow-sm">
+        <div class="card-body site-card-body">
+          <p class="text-muted mb-0">No residue-level interactions were identified for this complex.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block addon_js %}
+<script src="{% static 'home/js/ngl.js' %}"></script>
+<script src="{% static 'home/js/ngl.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var stage = new NGL.Stage('viewport', { backgroundColor: 'white' });
+
+    var container = stage.viewer && stage.viewer.container ? stage.viewer.container : document.getElementById('viewport');
+    if (container) {
+      var preventScroll = function (e) { e.preventDefault(); };
+      container.addEventListener('wheel', preventScroll, { passive: false });
+      container.addEventListener('mousewheel', preventScroll, { passive: false });
+    }
+    window.addEventListener('resize', function () { stage.handleResize(); });
+
+    var chemokineParts = [];
+    var partnerParts = [];
+    {% for interaction in interactions %}
+      {% if interaction.chemokine_residue_number %}
+        chemokineParts.push('resi {{ interaction.chemokine_residue_number }}');
+      {% endif %}
+      {% if interaction.partner_residue_number %}
+        partnerParts.push('resi {{ interaction.partner_residue_number }}');
+      {% endif %}
+    {% endfor %}
+
+    function uniq(arr) {
+      var seen = Object.create(null);
+      return arr.filter(function (value) {
+        if (seen[value]) return false;
+        seen[value] = true;
+        return true;
+      });
+    }
+    chemokineParts = uniq(chemokineParts);
+    partnerParts = uniq(partnerParts);
+
+    function orSelection(parts) {
+      if (!parts || !parts.length) return 'none';
+      return '(' + parts.map(function (s) { return '(' + s + ')'; }).join(' or ') + ')';
+    }
+
+    var chemokineSele = orSelection(chemokineParts);
+    var partnerSele = orSelection(partnerParts);
+    var chemokineSeleOnB = (chemokineSele === 'none') ? 'none' : '(' + chemokineSele + ') and :B';
+
+    var pdbText = '{{ predicted_complex.pdb_data.pdb|escapejs }}';
+    var blob = pdbText ? new Blob([pdbText], { type: 'text/plain' }) : null;
+    var file = blob ? new File([blob], 'complex.pdb') : null;
+
+    var AF_COLORS = { veryHigh: 0x0b2c9e, confident: 0x3fc1c9, low: 0xffdb13, veryLow: 0xff7d45 };
+    var afSchemeId = NGL.ColormakerRegistry.addScheme(function () {
+      this.atomColor = function (atom) {
+        var p = atom.bfactor;
+        if (p >= 90) return AF_COLORS.veryHigh;
+        if (p >= 70) return AF_COLORS.confident;
+        if (p >= 50) return AF_COLORS.low;
+        return AF_COLORS.veryLow;
+      };
+    }, 'af_plddt');
+
+    var cartoonComp, chemokineSurface, chemokineSticks, partnerSticks;
+
+    function addToggles() {
+      var bar = document.querySelector('.viewer-bar');
+      if (!bar) return;
+
+      var row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.gap = '12px';
+      row.style.flexWrap = 'wrap';
+      row.style.alignItems = 'center';
+      row.style.marginTop = '8px';
+
+      var surfaceToggle = document.createElement('input');
+      surfaceToggle.type = 'checkbox';
+      surfaceToggle.id = 'toggle-surface';
+      surfaceToggle.checked = true;
+      var surfaceLabel = document.createElement('label');
+      surfaceLabel.htmlFor = 'toggle-surface';
+      surfaceLabel.textContent = 'Show chemokine surface';
+      surfaceToggle.addEventListener('change', function () {
+        if (chemokineSurface) {
+          chemokineSurface.setVisibility(surfaceToggle.checked);
+          stage.requestRender();
+        }
+      });
+
+      var sticksToggle = document.createElement('input');
+      sticksToggle.type = 'checkbox';
+      sticksToggle.id = 'toggle-sticks';
+      sticksToggle.checked = true;
+      var sticksLabel = document.createElement('label');
+      sticksLabel.htmlFor = 'toggle-sticks';
+      sticksLabel.textContent = 'Show contact sticks';
+      sticksToggle.addEventListener('change', function () {
+        var visible = sticksToggle.checked;
+        if (chemokineSticks) chemokineSticks.setVisibility(visible);
+        if (partnerSticks) partnerSticks.setVisibility(visible);
+        stage.requestRender();
+      });
+
+      row.appendChild(surfaceToggle);
+      row.appendChild(surfaceLabel);
+      row.appendChild(sticksToggle);
+      row.appendChild(sticksLabel);
+      bar.appendChild(row);
+    }
+
+    if (file) {
+      stage.loadFile(file, { ext: 'pdb' }).then(function (o) {
+        try {
+          cartoonComp = o.addRepresentation('cartoon', { color: afSchemeId, quality: 'auto' });
+        } catch (e) {
+          console.warn('Custom scheme failed, falling back to bfactor. Error:', e);
+          cartoonComp = o.addRepresentation('cartoon', { colorScheme: 'bfactor', quality: 'auto' });
+        }
+
+        chemokineSurface = o.addRepresentation('surface', {
+          sele: ':B',
+          opacity: 0.45,
+          opaqueBack: false,
+          roughness: 0.9,
+          metalness: 0.0
+        });
+
+        if (chemokineSeleOnB !== 'none') {
+          chemokineSticks = o.addRepresentation('licorice', {
+            sele: chemokineSeleOnB,
+            multipleBond: true,
+            radiusType: 'size',
+            radiusSize: 0.18
+          });
+        }
+        if (partnerSele !== 'none') {
+          partnerSticks = o.addRepresentation('licorice', {
+            sele: '(' + partnerSele + ') and not :A',
+            multipleBond: true,
+            radiusType: 'size',
+            radiusSize: 0.18
+          });
+        }
+
+        o.autoView();
+        if (typeof renderPlddtLegend === 'function') {
+          renderPlddtLegend(stage, AF_COLORS);
+        }
+        addToggles();
+      }).catch(function (err) { console.error('NGL load error:', err); });
+    } else {
+      console.warn('No PDB data provided for predicted complex viewer.');
+    }
+
+    var fsBtn = document.getElementById('fullscreen');
+    if (fsBtn) {
+      fsBtn.addEventListener('click', function () { stage.toggleFullscreen(); });
+    }
+
+    var downloadBtn = document.getElementById('download-complex');
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', function () {
+        if (!pdbText) return;
+        var filename = '{{ predicted_complex.chemokine_protein.gene_name|default:predicted_complex.chemokine_protein.name|default:"complex" }}_{{ predicted_complex.gpcr_partner.name|default:"gpcr" }}.pdb';
+        var downloadBlob = new Blob([pdbText], { type: 'chemical/x-pdb' });
+        var url = URL.createObjectURL(downloadBlob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      });
+    }
+  });
+</script>
+{% endblock %}
+

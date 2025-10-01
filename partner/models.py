@@ -4,6 +4,8 @@ class Partner(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(null=True, blank=True)
     type = models.CharField(max_length=100, null=True, blank=True)
+    gpcrdb_url = models.URLField(null=True, blank=True)
+    uniprot_id = models.CharField(max_length=20, null=True, blank=True)
     structures = models.ManyToManyField('structure.Structure', related_name="partners", blank=True)
 
     def __str__(self):

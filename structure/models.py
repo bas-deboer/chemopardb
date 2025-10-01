@@ -231,15 +231,24 @@ class PredictedComplex(models.Model):
         (None, 'None'),
     ]
     chemokine_protein = models.ForeignKey('protein.Protein', on_delete=models.CASCADE, related_name='chemokine_complex_models')
-    gpcr_protein = models.ForeignKey('protein.Protein', on_delete=models.CASCADE, related_name='gpcr_complex_models')
+    gpcr_partner = models.ForeignKey('partner.Partner', on_delete=models.CASCADE, related_name='predicted_complex_models', null=True, blank=True)
     state = models.CharField(max_length=50, choices=STATE_CHOICES, null=True, blank=True)
     pdb_data = models.ForeignKey('PdbData', null=True, on_delete=models.CASCADE)
     stats_text = models.ForeignKey('StatsText', null=True, on_delete=models.CASCADE)
+    iptm = models.FloatField(null=True, blank=True, help_text="AlphaFold ipTM score")
+    ptm = models.FloatField(null=True, blank=True, help_text="AlphaFold pTM score")
+    ranking_confidence = models.FloatField(null=True, blank=True, help_text="AlphaFold ranking confidence")
+    mean_plddt = models.FloatField(null=True, blank=True, help_text="Mean predicted LDDT across all chains")
+    mean_plddt_A = models.FloatField(null=True, blank=True, help_text="Mean predicted LDDT for chain A")
+    mean_plddt_B = models.FloatField(null=True, blank=True, help_text="Mean predicted LDDT for chain B")
+    mean_pae = models.FloatField(null=True, blank=True, help_text="Mean predicted aligned error")
+    mean_ipae = models.FloatField(null=True, blank=True, help_text="Mean interface predicted aligned error")
     date_generated = models.DateField(null=True, blank=True)
     method = models.CharField(max_length=100, help_text="Method used for modeling", null=True, blank=True)
     
     def __str__(self):
-        return f"Computed complex: {self.chemokine_protein} + {self.gpcr_protein}"
+        partner_name = getattr(self.gpcr_partner, 'name', 'partner')
+        return f"Computed complex: {self.chemokine_protein} + {partner_name}"
 
     class Meta:
         db_table = "structure_complex_model"

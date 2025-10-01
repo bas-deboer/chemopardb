@@ -3,428 +3,383 @@
 {% load custom_filters %}
 
 {% block addon_css %}
-    <!-- CSS dependencies -->
-    <link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
-    <link href="{% static 'home/css/color_picker.css' %}" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'home/css/jquery.dataTables.min.css' %}" type="text/css">
-    <link rel="stylesheet" href="{% static 'home/css/construct_browser.css' %}" type="text/css">
-    <link rel="stylesheet" href="{% static 'home/css/yadcf_bootstrap_version.css' %}" type="text/css">
-    <link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css">
-    <link href="{% static 'home/css/construct_alignment.css' %}" rel="stylesheet">
-    <link href="{% static 'home/css/modal.css' %}" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="{% static 'home/css/jquery.powertip.css' %}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
+<link href="{% static 'home/css/color_picker.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'home/css/construct_browser.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css">
+<link href="{% static 'home/css/modal.css' %}" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="{% static 'home/css/jquery.powertip.css' %}">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<style>
+  .structure-detail-page { max-width: 1200px; }
 
-    <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        #Viewer {
-            width: 600px;
-            height: 500px;
-            position: relative;
-            overflow: hidden;
-        }
-        .scrollable-table {
-            overflow-x: auto;
-            white-space: nowrap;
-            position: relative;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            table-layout: auto; /* Allow columns to adjust based on content */
-        }
-        th, td {
-            padding: 10px; /* Increased padding for better readability */
-            text-align: center;
-        }
-        th {
-            background-color: white;
-        }
-        .segment-header {
-            background-color: white;
-            text-align: center;
-            font-weight: bold;
-            padding: 10px;
-        }
-        .residue {
-            text-align: center;
-            padding: 10px;
-        }
-        .res-color-A, .res-color-M, .res-color-V, .res-color-L, .res-color-I {
-            background-color: yellow;
-        }
-        .res-color-R, .res-color-K {
-            background-color: blue;
-            color: white;
-        }
-        .res-color-D, .res-color-E {
-            background-color: red;
-            color: white;
-        }
-        .res-color-N, .res-color-Q, .res-color-S, .res-color-T {
-            background-color: darkviolet;
-            color: white;
-        }
-        .res-color-W {
-            background-color: green;
-        }
-        .res-color-Y, .res-color-F {
-            background-color: springgreen;
-        }
-        .res-color-P {
-            background-color: lightcoral;
-            color: white;
-        }
-        .res-color-G {
-            background-color: plum;
-        }
-        .res-color-H {
-            background-color: dodgerblue;
-        }
-        .res-color-C {
-            background-color: goldenrod;
-        }
-        .mutation {
-            color: red;
-            text-align: center;
-            font-size: 150%;
-            font-weight: bold;
-        }
-        .fixed-column {
-            position: sticky;
-            left: 0;
-            background-color: white;
-            z-index: 1;
-        }
-        .fixed-column th,
-        .fixed-column td {
-            background-color: white;
-        }
-        .interaction-btn {
-            background-color: #272838;
-            color: #ffffff8c;
-            border: none;
-            padding: 10px 12px;
-            margin: 5px 0;
-            text-align: center;
-            text-decoration: none;
-            display: block;
-            font-size: 14px;
-            border-radius: 4px;
-            width: auto;
-            transition: color 0.3s;
-        }
-        .interaction-btn:hover {
-            color: #ffffff;
-        }
-    </style>
+  .structure-header h1 { font-weight: 600; letter-spacing: 0.4px; }
+
+  .metric-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: #eef2f7;
+    color: #2f3b52;
+    font-size: 0.85rem;
+    gap: 0.35rem;
+  }
+
+  .metric-pill .material-symbols-outlined { font-size: 1rem; }
+
+  .definition-list dt { font-weight: 600; color: #1d2f46; }
+  .definition-list dd { margin-bottom: 0.75rem; }
+
+  .viewer-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0rem;
+    margin-top: 0rem;
+    font-size: 0.85rem;
+  }
+
+  .viewer-bar button {
+    border-radius: 4px;
+    border: 1px solid #3a5ca9;
+    color: #305099;
+    background: #edf2fd;
+    padding: 0.3rem 0.75rem;
+    font-weight: 600;
+  }
+
+  .sequence-table-wrapper { overflow-x: auto; }
+
+  .res-table th,
+  .res-table td { text-align: center; white-space: nowrap; }
+
+  .segment-header { background: #f5f7fb; font-weight: 600; }
+
+  .res-color-A, .res-color-M, .res-color-V, .res-color-L, .res-color-I { background-color: #ffe066; }
+  .res-color-R, .res-color-K { background-color: #74c0fc; color: #0b2b51; }
+  .res-color-D, .res-color-E { background-color: #ff6b6b; color: #ffffff; }
+  .res-color-N, .res-color-Q, .res-color-S, .res-color-T { background-color: #845ef7; color: #ffffff; }
+  .res-color-W { background-color: #51cf66; }
+  .res-color-Y, .res-color-F { background-color: #63e6be; }
+  .res-color-P { background-color: #ffa8a8; color: #5f0f0f; }
+  .res-color-G { background-color: #b197fc; }
+  .res-color-H { background-color: #228be6; color: #ffffff; }
+  .res-color-C { background-color: #ffd43b; }
+  .mutation { color: #d6336c; font-weight: 600; }
+
+
+  .empty-state { margin: 0; color: #6c757d; }
+
+  .list-group-item .badge { background: #eef2f7; color: #2f3b52; }
+
+  @media (max-width: 767.98px) {
+    .metric-pill { font-size: 0.8rem; }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Page Heading -->
-    <h1 class="detail_title text-center">
-        {% if not structure.pdb_code %}
-            AlphaFold model {{ structure.protein.accession }}-AF
-        {% else %}
-            Structure {{ structure.pdb_code.index }}
-        {% endif %}
+<div class="structure-detail-page container-xl py-4">
+  <div class="structure-header text-center text-md-start mb-4">
+    <p class="text-uppercase text-muted small mb-1">Structure</p>
+    <h1 class="detail_title mb-2">
+      {% if structure.pdb_code and structure.pdb_code.index %}
+        {{ structure.pdb_code.index }}
+      {% endif %}
+      |
+      {% if structure.protein and structure.protein.gene_name %}
+        {{ structure.protein.gene_name }}
+      {% elif structure.protein and structure.protein.name %}
+        {{ structure.protein.name }}
+      {% endif %}
     </h1>
-    <br>
 
-    <!-- Main Content -->
-    <div class="row">
-        <!-- Structure Details -->
-        <div class="col-md-6">
-            <h3>Structure Details</h3>
-            <hr class="my-2">
-            <div class="row">
-                <div class="col-5">
-                    <ul class="list-unstyled">
-                        <li>
-                            <b>PDB ID:</b> {{ structure.pdb_code.index }}
-                            <a href="https://www.rcsb.org/structure/{{ structure.pdb_code.index }}" target="_blank" title="Go to PDB">
-                                <span class="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        </li>
-                        <li>
-                            <b>Protein:</b>
-                            <a href="/protein/{{ structure.protein.gene_name }}">{{ structure.protein.gene_name }}</a>
-                        </li>
-                        <li>
-                            <b>Organism:</b>
-                            <i>{{ protein.species }}</i>
-                        </li>
-                        <li>
-                            <b>UniProt ID:</b> {{ structure.protein.uniprot_id }}
-                            <a href="https://www.uniprot.org/uniprot/{{ structure.protein.uniprot_id }}" target="_blank" title="Go to UniProt">
-                                <span class="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        </li>
-                    </ul>
-
-                    <ul class="list-unstyled">
-                        <li><b>Method:</b> <a>{{ structure.structure_type.name }}</a></li>
-                        <li>
-                            <b>Resolution:</b>
-                            {% if structure.resolution != None %}
-                                <a>{{ structure.resolution }} Å</a>
-                            {% endif %}
-                        </li>
-                        <li><b>Date:</b> <a>{{ structure.publication_date }}</a></li>
-                        <li>
-                            <b>Reference:</b> {{ structure.publication.web_link.index }}
-                            <a href="https://doi.org/{{ structure.publication.web_link.index }}" target="_blank" title="Go to Publication">
-                                <span class="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        </li>
-                        <li><b>State:</b> <a>{{ structure.state }}</a></li>
-                    </ul>
-
-                    <div class="btn-group">
-                        <a href="./pdb_download/" class="interaction-btn">Download Full PDB</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- 3D View -->
-        <div class="col-md-6">
-            <h3>3D View</h3>
-            <hr class="my-2">
-            <div class="row justify-content-center">
-                <div>
-                    <div id="viewport" style="width:500px; height:400px;"></div>
-                    <div style="width:500px; background-color:#eaeaea; border-radius: 0 0 5px 5px;">
-                        <p style="padding: 2px 0 2px 5px; font-size: 10px;">
-                            <button id="fullscreen">Full Screen</button>
-                            <a href="https://github.com/arose/ngl" target="_blank">NGL</a> is a WebGL based 3D viewer powered by
-                            <a href="https://mmtf.rcsb.org" target="_blank">MMTF</a>.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+      {% if structure_method %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">biotech</span>
+        Method: {{ structure_method }}
+      </span>
+      {% endif %}
+      {% if structure_resolution %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">insights</span>
+        Resolution: {{ structure_resolution }} &#197;
+      </span>
+      {% endif %}
+      {% if chain_count %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">hub</span>
+        Chains: {{ chain_count }}
+      </span>
+      {% endif %}
+      {% if binding_partner_count %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">diversity_2</span>
+        Partners: {{ binding_partner_count }}
+      </span>
+      {% endif %}
+      {% if structure_publication_date %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">event</span>
+        Released: {{ structure_publication_date|date:"Y-m-d" }}
+      </span>
+      {% endif %}
     </div>
+  </div>
 
-    <br>
+  <div class="row g-4 align-items-stretch">
+    <div class="col-lg-4 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body">
+          <h5 class="card-title">SUMMARY</h5>
+          <dl class="definition-list">
 
-    <div class="col-md-12">
-        <h3>Chemokine-Partner Complexes</h3>
-        {% if binding_partners %}
-            <hr class="my-2">
-            {% for partner in binding_partners %}
-                <div class="row">
-                    <a href="/interaction/binding-partner/{{partner.id}}/" class="interaction-btn">
-                        View complex: {{ partner.chemokine_name }} (chain {{ partner.chemokine_chain }})
-                        – {{ partner.partner_name }} (chain {{ partner.partner_chain }})
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>No chemokine binding partners found.</p>
-        {% endif %}
-    </div>
-    
-<div class="scrollable-table">
-  <table>
-    <thead>
-      <tr>
-        <th>Segment</th>
-        {% for segment, residues in residues_by_segment.items %}
-          <th class="segment-header" colspan="{{ residues|length }}">{{ segment }}</th>
-          <th class="segment-header">&nbsp;</th>
-        {% endfor %}
-      </tr>
-      <tr>
-        <th>&nbsp;</th>
-        {% for segment, residues in residues_by_segment.items %}
-          {% for residue in residues %}
-            <th>{{ residue.ccn_number }}</th>
-          {% endfor %}
-          <th>&nbsp;</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      <!-- UniProt Sequence row -->
-      <tr>
-        <td><b>UniProt Sequence</b></td>
-        {% for segment, residues in residues_by_segment.items %}
-          {% for residue in residues %}
-            {% comment %}
-              For each cell: find the aligned_sequences tuple with matching CCN number
-            {% endcomment %}
-            {% with target_ccn=residue.ccn_number %}
-              {% for pos_obj, protein_residue, struct_rots in aligned_sequences %}
-                {% if pos_obj.ccn_number == target_ccn %}
-                  <td class="residue
-                             {% if protein_residue %}res-color-{{ protein_residue.amino_acid }}{% else %}empty{% endif %}"
-                      title="{% if protein_residue %}{{ protein_residue.amino_acid }}{{ protein_residue.sequence_number }}{% endif %}">
-                    {% if protein_residue %}
-                      {{ protein_residue.amino_acid }}
-                    {% else %}
-                      -
-                    {% endif %}
-                  </td>
+            <dt>PDB ID</dt>
+            <dd>
+              {% if structure.pdb_code and structure.pdb_code.index %}
+              <span>
+                {{ structure.pdb_code.index }}
+                <a class="uniprot-link" href="https://www.rcsb.org/structure/{{ structure.pdb_code.index }}" target="_blank" rel="noopener">
+                  <span class="link-text">Open RCSB entry</span>
+                  <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                </a>
+              </span>
+              {% else %}-{% endif %}
+            </dd>
+
+            <dt>Protein</dt>
+            <dd>
+              {% if structure.protein %}
+              <span>
+                {{ structure.protein.gene_name|default:structure.protein.name|default:'-' }}
+                {% if structure.protein.gene_name %}
+                <a class="uniprot-link" href="{% url 'protein:protein' structure.protein.gene_name %}" target="_blank" rel="noopener">
+                  <span class="link-text">View protein entry</span>
+                  <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                </a>
                 {% endif %}
-              {% endfor %}
-            {% endwith %}
-          {% endfor %}
-          <td>&nbsp;</td>
-        {% endfor %}
-      </tr>
+              </span>
+              {% else %}-{% endif %}
+            </dd>
 
-      <!-- Structure (Chain X) rows -->
-      {% for chain in chains %}
-        <tr>
-          <td><b>Structure (Chain {{ chain }})</b></td>
-          {% for segment, residues in residues_by_segment.items %}
-            {% for residue in residues %}
-              {% with target_ccn=residue.ccn_number %}
-                {% for pos_obj, protein_residue, struct_rots in aligned_sequences %}
-                  {% if pos_obj.ccn_number == target_ccn %}
-                    {% with rotamer=struct_rots|get_item:chain %}
-                      <td class="residue
-                                 {% if rotamer %}res-color-{{ rotamer.amino_acid }}{% else %}empty{% endif %}"
-                          title="{% if rotamer %}{{ rotamer.amino_acid }}{{ rotamer.sequence_number }}{% endif %}">
-                        {% if rotamer %}
-                          {{ rotamer.amino_acid }}
-                        {% else %}
-                          -
-                        {% endif %}
-                      </td>
-                    {% endwith %}
-                  {% endif %}
+            <dt>Organism</dt>
+            <dd>{% if structure.protein %}<i>{{ structure.protein.species|default:'-' }}</i>{% else %}-{% endif %}</dd>
+
+            <dt>UniProt ID</dt>
+            <dd>
+              {% if structure.protein and structure.protein.uniprot_id %}
+              <span>
+                {{ structure.protein.uniprot_id }}
+                <a class="uniprot-link" href="https://www.uniprot.org/uniprot/{{ structure.protein.uniprot_id }}" target="_blank" rel="noopener">
+                  <span class="link-text">Open UniProt</span>
+                  <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                </a>
+              </span>
+              {% else %}-{% endif %}
+            </dd>
+
+
+            <dt>Method</dt>
+            <dd>{{ structure_method|default:'-' }}</dd>
+
+            <dt>Resolution</dt>
+            <dd>{% if structure_resolution %}{{ structure_resolution }} &#197;{% else %}-{% endif %}</dd>
+
+            <dt>State</dt>
+            <dd>{{ structure_state|default:'-' }}</dd>
+
+            <dt>Publication</dt>
+            <dd>
+              {% if structure.publication and structure.publication.web_link and structure.publication.web_link.index %}
+              <span>
+                {{ structure.publication.web_link.index }}
+                <a class="uniprot-link" href="http://dx.doi.org/{{ structure.publication.web_link.index }}" target="_blank" rel="noopener">
+                  <span class="link-text">Open DOI</span>
+                  <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                </a>
+              </span>
+              {% else %}-{% endif %}
+            </dd>
+
+            <dt>Release date</dt>
+            <dd>{{ structure_publication_date|date:"Y-m-d"|default:'-' }}</dd>
+          </dl>
+
+          <hr class="my-4">
+          <div class="action-row">
+            <a class="btn btn-outline-primary btn-sm{% if not pdb_available %} disabled{% endif %}" href="{% if pdb_available %}{% url 'pdb_download' structure.id %}{% else %}#{% endif %}" {% if not pdb_available %}tabindex="-1" aria-disabled="true"{% endif %}>
+              <span class="material-symbols-outlined" aria-hidden="true">download</span>
+              Download PDB
+            </a>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body">
+          <h5 class="card-title">3D VIEW</h5>
+          {% if pdb_available %}
+          <div id="viewport"></div>
+          <div class="viewer-bar">
+            <button id="fullscreen" type="button">Full Screen</button>
+            <span>Powered by <a href="https://github.com/arose/ngl" target="_blank" rel="noopener">NGL Viewer</a></span>
+          </div>
+          {% else %}
+          <p class="empty-state">PDB coordinates are not available for this structure.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-1">
+    <div class="col-12">
+      <div class="card site-card shadow-sm">
+        <div class="card-body site-card-body">
+          <h5 class="card-title">SEQUENCE ALIGNMENT</h5>
+          <p class="text-muted small">Comparison between the canonical chemokine sequence and residues observed in the experimental structure across canonical numbering positions.</p>
+          {% if residues_by_segment %}
+          <div class="table-responsive sequence-table-wrapper">
+            <table class="table table-sm align-middle res-table">
+              <thead>
+                <tr>
+                  <th>Segment</th>
+                  {% for segment, residues in residues_by_segment.items %}
+                    <th class="segment-header text-center" colspan="{{ residues|length }}">{{ segment|default:"-" }}</th>
+                    <th class="segment-header">&nbsp;</th>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <th>&nbsp;</th>
+                  {% for segment, residues in residues_by_segment.items %}
+                    {% for residue in residues %}
+                      <th>{{ residue.ccn_number|default:"-" }}</th>
+                    {% endfor %}
+                    <th>&nbsp;</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>UniProt sequence</b></td>
+                  {% for segment, residues in residues_by_segment.items %}
+                    {% for residue in residues %}
+                      {% with target_ccn=residue.ccn_number %}
+                        {% for pos_obj, protein_residue, struct_rots in aligned_sequences %}
+                          {% if pos_obj.ccn_number == target_ccn %}
+                          <td class="residue {% if protein_residue %}res-color-{{ protein_residue.amino_acid }}{% else %}empty{% endif %}" title="{% if protein_residue %}{{ protein_residue.amino_acid }}{{ protein_residue.sequence_number }}{% endif %}">
+                            {% if protein_residue %}
+                              {{ protein_residue.amino_acid }}
+                            {% else %}-{% endif %}
+                          </td>
+                          {% endif %}
+                        {% endfor %}
+                      {% endwith %}
+                    {% endfor %}
+                    <td>&nbsp;</td>
+                  {% endfor %}
+                </tr>
+                {% for chain in chains %}
+                <tr>
+                  <td><b>Structure (chain {{ chain }})</b></td>
+                  {% for segment, residues in residues_by_segment.items %}
+                    {% for residue in residues %}
+                      {% with target_ccn=residue.ccn_number %}
+                        {% for pos_obj, protein_residue, struct_rots in aligned_sequences %}
+                          {% if pos_obj.ccn_number == target_ccn %}
+                            {% with rotamer=struct_rots|get_item:chain %}
+                            <td class="residue {% if rotamer %}res-color-{{ rotamer.amino_acid }}{% else %}empty{% endif %}" title="{% if rotamer %}{{ rotamer.amino_acid }}{{ rotamer.sequence_number }}{% endif %}">
+                              {% if rotamer %}{{ rotamer.amino_acid }}{% else %}-{% endif %}
+                            </td>
+                            {% endwith %}
+                          {% endif %}
+                        {% endfor %}
+                      {% endwith %}
+                    {% endfor %}
+                    <td>&nbsp;</td>
+                  {% endfor %}
+                </tr>
                 {% endfor %}
-              {% endwith %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <p class="empty-state">Sequence information is not available for this structure.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-1 mb-2">
+    <div class="col-12">
+      <div class="card site-card shadow-sm">
+        <div class="card-body site-card-body">
+          <h5 class="card-title">Chemokine-partner complexes</h5>
+          {% if binding_partners %}
+          <p class="text-muted small">Open a binding partner entry to explore residue-level interaction fingerprints.</p>
+          <div class="list-group">
+            {% for partner in binding_partners %}
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center flex-wrap" href="{{ partner.url }}">
+              <span>
+                {{ partner.chemokine_name|default:'-' }} (chain {{ partner.chemokine_chain|default:'-' }}) -
+                {{ partner.partner_name|default:'-' }} (chain {{ partner.partner_chain|default:'-' }})
+              </span>
+              {% if partner.interaction_count %}
+              <span class="badge rounded-pill">{{ partner.interaction_count }} interaction{{ partner.interaction_count|pluralize }}</span>
+              {% endif %}
+            </a>
             {% endfor %}
-            <td>&nbsp;</td>
-          {% endfor %}
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          </div>
+          {% else %}
+          <p class="empty-state">No chemokine binding partners are registered for this structure.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-
-<br>
-
-</div>
-
-
-
-
 {% endblock %}
 
 {% block addon_js %}
-    <script src="{% static 'home/js/ngl.js' %}"></script>
-    <script src="{% static 'home/js/table_functions.js' %}"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var stage = new NGL.Stage("viewport", { backgroundColor: "white" });
-            var stringBlob = new Blob(['{{ structure.pdb_data.pdb|escapejs }}'], { type: 'text/plain' });
-            var file = new File([stringBlob], 'complex.pdb');
-            $('[data-toggle="tooltip"]').tooltip();
+<script src="{% static 'home/js/ngl.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const hasViewer = {{ pdb_available|yesno:"true,false" }};
+    if (!hasViewer) {
+      return;
+    }
 
-            stage.loadFile(file, { defaultRepresentation: true });
+    const stage = new NGL.Stage('viewport', { backgroundColor: 'white' });
+    const pdbText = '{{ structure.pdb_data.pdb|default:""|escapejs }}';
 
-            $("#fullscreen").click(function() {
-                stage.toggleFullscreen();
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            var y_min = 0, y_max = 0;
-            $('rect').each(function() {
-                var rectclass = $(this).attr('class');
-                if (rectclass && rectclass.indexOf("CL") >= 0 && rectclass.indexOf("long") >= 0) {
-                    var numResidues = ($('.' + rectclass.replace(/ /g, ".")).length - 3) / 2;
-                    if (numResidues < 10) {
-                        toggleLoop('.' + rectclass.split(' ')[0], '', 1);
-                    }
-                }
-            });
-            maxmin();
+    if (pdbText) {
+      const blob = new Blob([pdbText], { type: 'text/plain' });
+      const file = new File([blob], 'structure.pdb');
+      stage.loadFile(file, { defaultRepresentation: true }).then(function () {
+        stage.autoView();
+      }).catch(function (err) {
+        console.error('NGL load error:', err);
+      });
+    }
 
-            $("text, circle").tooltip({
-                container: 'body',
-                placement: 'top',
-                animation: false,
-                html: true
-            });
+    const container = stage.viewer && stage.viewer.container ? stage.viewer.container : document.getElementById('viewport');
+    if (container) {
+      const preventScroll = function (event) { event.preventDefault(); };
+      container.addEventListener('wheel', preventScroll, { passive: false });
+      container.addEventListener('mousewheel', preventScroll, { passive: false });
+    }
 
-            $("circle").hover(function(){
-                $('.tooltip').css('top', (parseInt($('.tooltip').css('top')) + 2.8) + 'px');
-            });
-
-            $(".rtext").click(function() {
-                var parentid = $(this).closest('svg').attr('id');
-                var newcolor = $(".pick-color." + parentid + ".selected").attr('id');
-                if (newcolor) {
-                    newcolor = newcolor.split('-');
-                } else {
-                    var custom = $("#custom_color_" + parentid).val();
-                    var custom_text = getContrast50(custom);
-                    newcolor = ["pick", custom, custom_text];
-                }
-                console.log(newcolor);
-                $(this).css("fill", newcolor[2]);
-                $(this).prev().css("fill", newcolor[1]);
-            });
-
-            $(".rcircle").click(function() {
-                var parentid = $(this).closest('svg').attr('id');
-                var newcolor = $(".pick-color." + parentid + ".selected").attr('id');
-                if (newcolor) {
-                    newcolor = newcolor.split('-');
-                } else {
-                    var custom = $("#custom_color_" + parentid).val();
-                    var custom_text = getContrast50(custom);
-                    newcolor = ["pick", custom, custom_text];
-                }
-                console.log(newcolor);
-                $(this).css("fill", newcolor[1]);
-                $(this).next().css("fill", newcolor[2]);
-            });
-
-            $("#snake_svg_link").click(function() {
-                svgAsDataUri(document.getElementById("snakeplot"), {}, function(uri) {
-                    $("#snake_svg_link").attr('href', uri);
-                });
-            });
-            $("#helix_svg_link").click(function() {
-                svgAsDataUri(document.getElementById("helixbox"), {}, function(uri) {
-                    $("#helix_svg_link").attr('href', uri);
-                });
-            });
-        });
-
-        $(".pick-color").click(function() {
-            var plottype = $(this).attr('class').split(' ')[1];
-            console.log($(this).attr('id'));
-            $(".pick-color." + plottype).css({
-                'borderWidth': '2px',
-                'height': '20px'
-            }).removeClass('selected');
-            $(this).css({
-                'borderWidth': '3px',
-                'height': '22px'
-            }).addClass('selected');
-        });
-    </script>
-    <script src="{% static 'home/js/sequenceviewer.js' %}"></script>
-    <script src="{% static 'home/js/saveSvgAsPng.js' %}"></script>
-    <script src="{% static 'home/js/diagrams.js' %}"></script>
-    <script src="{% static 'home/js/color_picker.js' %}"></script>
-    <script src="{% static 'home/js/jquery.dataTables.min.js' %}"></script>
-    <script src="{% static 'home/js/jquery.dataTables.yadcf.js' %}"></script>
-    <script src="{% static 'home/js/select2.js' %}"></script>
-    <script src="{% static 'home/js/alignment.js' %}"></script>
-    <script src="{% static 'home/js/jquery.powertip.js' %}"></script>
+    window.addEventListener('resize', function () { stage.handleResize(); });
+    const fullscreenButton = document.getElementById('fullscreen');
+    if (fullscreenButton) {
+      fullscreenButton.addEventListener('click', function () { stage.toggleFullscreen(); });
+    }
+  });
+</script>
 {% endblock %}

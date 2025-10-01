@@ -2,73 +2,70 @@
 {% load static %} 
 
 {% block addon_css %}
-<style>
+  <link rel="stylesheet" href="{% static 'home/css/jquery.dataTables.min.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'home/css/yadcf_bootstrap_version.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css" />
   <style>
-    /* Custom styles */
-    .dataTables_wrapper .dataTables_filter {
-        float: right;
-        text-align: right;
-    }
-    table.dataTable thead th, table.dataTable tfoot th {
-        white-space: nowrap;
-    }
+    .dataTables_wrapper .dataTables_filter { float: right; text-align: right; }
+    table.dataTable thead th, table.dataTable tfoot th { white-space: nowrap; }
     table.dataTable th, table.dataTable td {
-        text-align: left;
-        white-space: nowrap;
+      text-align: left;
+      white-space: nowrap;
+      max-width: 500px;
+      width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    table.dataTable td {
-        padding: 5px 10px;
+    table.dataTable td { padding: 5px 5px; }
+    .dataTables_filter, .dataTables_length { margin-bottom: 20px; }
+    table.dataTable tbody tr { background-color: #fff; }
+    table.dataTable tbody tr:hover { background-color: #f2f2f2; cursor: pointer; }
+    /* Underline links only on hover inside the table */
+    #residues a { text-decoration: none !important; }
+    #residues a:hover { text-decoration: underline !important; }
+    /* Scale YADCF Select2 filter fonts to match table */
+    .select2-container { font-size: 0.8rem; }
+    .select2-dropdown,
+    .select2-results__options,
+    .select2-results__option,
+    .select2-selection__rendered,
+    .select2-selection__choice,
+    .select2-container .select2-search__field { font-size: 0.8rem; }
+    .yadcf-filter-wrapper { font-size: 0.8rem; }
+
+    /* Make removal of selected filters consistent across browsers */
+    .select2-container .select2-selection--multiple .select2-selection__choice {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
     }
-    .dataTables_filter, .dataTables_length {
-        margin-bottom: 20px;
+    .select2-container .select2-selection--multiple .select2-selection__choice__remove {
+      display: inline-block;
+      margin-right: 0;
+      background: none;
+      text-indent: 0;
+      cursor: pointer;
+      line-height: 1;
+      order: 0;
     }
-    .filter-select {
-        width: 100%;
-        padding: 4px;
-        box-sizing: border-box;
-        height: 40px; /* Match the height for uniformity */
-        vertical-align: middle; /* Center text vertically */
-    }
-    .filter-number {
-        width: 100%;
-        padding: 4px;
-        box-sizing: border-box;
-        font-size: 1em; /* Increase font size */
-        height: 40px; /* Set a larger height to match select boxes */
-        text-align: center; /* Center align text */
-        vertical-align: middle; /* Center text vertically */
-    }
-    .filter-container {
-        padding: 5px;
-        background: #f8f9fa;
-    }
-    /* Remove alternating row colors */
-    table.dataTable tbody tr {
-        background-color: white; /* Set a consistent background color */
-    }
-    /* Add hover effect for highlighting and clickable cursor */
-    table.dataTable tbody tr:hover {
-        background-color: #f2f2f2; /* Highlight color on hover */
-        cursor: pointer; /* Change cursor to pointer */
-    }
-    table.dataTable th, table.dataTable td {
-        max-width: 500px; /* Change the width to fit your needs */
-        width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .select2-container .select2-selection--multiple .select2-selection__choice__remove::before {
+      content: 'close';
+      font-family: 'Material Symbols Outlined';
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 16px;
+      color: #666;
     }
   </style>
 {% endblock %}
 
 {% block content %}
     <!-- Page Content-->
-    <div class="container-fluid">
       <div class="bg-light rounded-3 p-3 mb-2">
           <div class="container-fluid">
               <div class="row">
                   <div class="col">
-                      <h2 class="display-6 fw-bold">Browse Chemokine Structures</h2>
-                      <hr class="my-2">
+                      <h2 class="display-6 fw-bold">Browse chemokine structures</h2>
                       <p></p>
                   </div>  
               </div>
@@ -77,7 +74,7 @@
 
       <br>
 
-      <div>
+      <div style="font-size: 0.8rem;">
           <table id="residues" class="table table-striped table-bordered" width="100%">
               <thead>
                   <tr>
@@ -92,21 +89,7 @@
                       <th>Date</th>
                       <th>Reference</th>
                   </tr>
-                  <tr class="filter-row">
-                      <th><select class="form-control filter-select"><option value=""></option></select></th>
-                      <th><select class="form-control filter-select"><option value=""></option></select></th>
-                      <th><select class="form-control filter-select"><option value=""></option></select></th>
-                      <th><select class="form-control filter-select"><option value=""></option></select></th>
-                      <th><select class="form-control filter-select"><option value=""></option></select></th>
-                      <th><select class="form-control filter-select"><option value=""></option></select></th>
-                      <th>
-                          <input class="form-control filter-input" id="min-resolution" placeholder="Min">
-                          <input class="form-control filter-input" id="max-resolution" placeholder="Max">
-                      </th>                      
-                      <th><select class="form-control filter-select"><option value=""></option></select></th>
-                      <th><select class="form-control filter-select"><option value=""></option></select></th>
-                      <th><select class="form-control filter-select"><option value=""></option></select></th>
-                  </tr>
+                    
               </thead>
               <tbody>
                   {% for structure in structures %}
@@ -126,17 +109,12 @@
                             </span>
                       </td>                                      
                         <td class="expand">{{ structure.protein.species }}</td>
-                      <td>  
-                        <span>
-                            {{ structure.protein.uniprot_id }} 
-                            <a href="https://www.uniprot.org/uniprot/{{ structure.protein.uniprot_id }}" 
-                               target="_blank" 
-                               title="Go to UniProt">
-                                <span class="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        </span>
-                      </td>
-                      <td>{{ structure.structure_type.slug|escape }}</td>
+                  <td>
+                    <a class="uniprot-link" href="https://www.uniprot.org/uniprot/{{ structure.protein.uniprot_id }}" target="_blank" title="Go to UniProt">
+                      {{ structure.protein.uniprot_id }}
+                    </a>
+                  </td>
+                      <td>{{ structure.structure_type.name|default:'-'|escape }}</td>
                       <td>
                           {% if structure.resolution %}
                           <span class="text-center">{{ structure.resolution|floatformat:"1" }}</span>
@@ -169,92 +147,77 @@
 
   <br>
 
-  <script>
+    {% block addon_js %}
+    <script src="{% static 'home/js/jquery.dataTables.yadcf.js' %}"></script>
+    <script src="{% static 'home/js/select2.js' %}"></script>
+    <script>
     $(document).ready(function() {
-        var table = $('#residues').DataTable({
-            responsive: true,
-            paging: false,
-            scrollX: true,
-            autoWidth: true,
-            dom: 'Bfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'pdf', 'print'
-            ],
-            initComplete: function () {
-                var api = this.api();
-
-                api.columns().every(function () {
-                    var column = this;
-                    var select = $(column.header()).find('select');
-                    
-                    // Populate the dropdown with unique values
-                    column.data().unique().sort().each(function (d, j) {
-                        // Strip HTML tags and remove "open_in_new" text
-                        var strippedText = $('<div/>').html(d).text().replace("open_in_new", "").trim();
-                        if ($('option', select).filter(function () { return $(this).val() === strippedText; }).length === 0) {
-                            select.append('<option value="' + strippedText + '">' + strippedText + '</option>');
-                        }
-                    });
-
-                    select.on('change', function () {
-                        var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                        column.search(val ? val : '', true, false).draw(); // Remove the anchors
-                    });
-                });
-
-                // Custom filtering function for resolution range
-                $.fn.dataTable.ext.search.push(
-                    function(settings, data, dataIndex) {
-                        var min = parseFloat($('#min-resolution').val(), 10);
-                        var max = parseFloat($('#max-resolution').val(), 10);
-                        var resolution = parseFloat(data[5]) || 0; // Use data for the resolution column
-
-                        if ((isNaN(min) && isNaN(max)) ||
-                            (isNaN(min) && resolution <= max) ||
-                            (min <= resolution && isNaN(max)) ||
-                            (min <= resolution && resolution <= max)) {
-                            return true;
-                        }
-                        return false;
-                    }
-                );
-
-                // Event listener for min and max resolution filtering inputs
-                $('#min-resolution, #max-resolution').keyup(function() {
-                    table.draw();
-                });
-            }
+      var table;
+      if ($.fn.DataTable.isDataTable('#residues')) {
+        table = $('#residues').DataTable();
+      } else {
+        table = $('#residues').DataTable({
+          responsive: true,
+          paging: false,
+          scrollX: true,
+          autoWidth: true,
+          dom: 'Bfrtip',
+          order: [[0, 'asc']],
+          buttons: ['copy','csv','excel','pdf','print']
         });
+      }
 
-        var params = new URLSearchParams(window.location.search);
-        var method = params.get('method');
-        var state = params.get('state');
-        if (method) {
-            table.column(5).search('^' + method + '$', true, false).draw();
-            $(table.column(5).header()).find('select').val(method);
+      // Ensure header/body column widths align on first paint and on resize
+      function adjustColumns() {
+        if (table) { table.columns.adjust(); }
+      }
+      // Run a few times to catch async font/layout
+      adjustColumns();
+      setTimeout(adjustColumns, 50);
+      setTimeout(adjustColumns, 200);
+      $(window).on('resize', adjustColumns);
+      $('#residues').on('draw.dt', adjustColumns);
+
+      // Clickable row functionality
+      $('#residues tbody').off('click.rownav').on('click.rownav', 'tr', function(event) {
+        if (!$(event.target).closest('a').length) {
+          var url = $(this).data('href');
+          if (url) {
+            window.location.href = url;
+          }
         }
-        if (state) {
-            table.column(7).search('^' + state + '$', true, false).draw();
-            $(table.column(7).header()).find('select').val(state);
-        }
+      });
 
-        // Clickable row functionality
-        $('#residues tbody').on('click', 'tr', function(event) {
-            // Ignore click if target is a link or a child of a link
-            if (!$(event.target).closest('a').length) {
-                var url = $(this).data('href');
-                if (url) {
-                    window.location.href = url;
-                }
-            }
-        });
+      // YADCF filters
+      if (!$('#residues').data('yadcf-initialized')) {
+        yadcf.init(table, [
+          { column_number: 0, filter_type: 'multi_select', select_type: 'select2', column_data_type: 'html', html_data_type: 'text', filter_default_label: 'PDB', filter_reset_button_text: false, select_type_options: { width: '80px' } },
+          { column_number: 1, filter_type: 'multi_select', select_type: 'select2', column_data_type: 'html', html_data_type: 'text', filter_default_label: 'Protein', filter_reset_button_text: false, select_type_options: { width: '120px' } },
+          { column_number: 2, filter_type: 'multi_select', select_type: 'select2', filter_default_label: 'Class', filter_reset_button_text: false, select_type_options: { width: '100px' } },
+          { column_number: 3, filter_type: 'multi_select', select_type: 'select2', filter_default_label: 'Organism', filter_reset_button_text: false, select_type_options: { width: '120px' } },
+          { column_number: 4, filter_type: 'multi_select', select_type: 'select2', column_data_type: 'html', html_data_type: 'text', filter_default_label: 'UniProt', filter_reset_button_text: false, select_type_options: { width: '120px' } },
+          { column_number: 5, filter_type: 'multi_select', select_type: 'select2', filter_default_label: 'Method', filter_reset_button_text: false, select_type_options: { width: '120px' } },
+          { column_number: 6, filter_type: 'range_number', filter_default_label: ['Min','Max'], filter_reset_button_text: false },
+          { column_number: 7, filter_type: 'multi_select', select_type: 'select2', filter_default_label: 'State', filter_reset_button_text: false, select_type_options: { width: '100px' } },
+          { column_number: 8, filter_type: 'range_date', date_format: 'yyyy-mm-dd', filter_default_label: ['From','To'], filter_reset_button_text: false },
+          { column_number: 9, filter_type: 'multi_select', select_type: 'select2', column_data_type: 'html', html_data_type: 'text', filter_default_label: 'Reference', filter_reset_button_text: false, select_type_options: { width: '140px' } }
+        ], { cumulative_filtering: false });
+        $('#residues').data('yadcf-initialized', true);
+      }
 
-        // Prevent table sort when clicking on filter dropdown
-        $('.filter-select').on('click', function(e) {
-            e.stopPropagation();
-        });
+      var initialMethod = "{{ selected_method|default_if_none:''|escapejs }}";
+      var initialState = "{{ selected_state|default_if_none:''|escapejs }}";
+      var filtersToApply = [];
+      if (initialMethod) { filtersToApply.push([5, [initialMethod]]); }
+      if (initialState) { filtersToApply.push([7, [initialState]]); }
+      if (filtersToApply.length) {
+        setTimeout(function () {
+          yadcf.exFilterColumn(table, filtersToApply);
+        }, 0);
+      }
     });
-</script>
+    </script>
+    {% endblock %}
 
 
 

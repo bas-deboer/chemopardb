@@ -112,16 +112,27 @@ class Command(BaseCommand):
 
         with open(self.protein_source_file, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=';')
-            headers = next(reader)
+            headers = [h.strip() for h in next(reader)]
+
+            # Column indices with safe lookup
+            try:
+                idx_family = headers.index('Family')
+                idx_protein = headers.index('Protein')
+                idx_species = headers.index('Species')
+                idx_accession = headers.index('Accession')
+                idx_gtp = headers.index('GtP') if 'GtP' in headers else None
+            except ValueError:
+                raise Exception(f"Unexpected headers in {self.protein_source_file}: {headers}")
 
             for row in tqdm(reader, desc="Processing proteins", unit="protein"):
                 try:
-                    slug = row[0].lower().replace(' ', '_')
-                    family, _ = ProteinFamily.objects.get_or_create(slug=slug, defaults={'name': row[0]})
-                    species_csv, _ = Species.objects.get_or_create(latin_name=row[2])
+                    slug = row[idx_family].lower().replace(' ', '_')
+                    family, _ = ProteinFamily.objects.get_or_create(slug=slug, defaults={'name': row[idx_family]})
+                    species_csv, _ = Species.objects.get_or_create(latin_name=row[idx_species])
 
-                    protein_name = f"{row[1]}_{species_csv.latin_name}"
-                    accession = row[3].strip()
+                    protein_name = f"{row[idx_protein]}_{species_csv.latin_name}"
+                    accession = row[idx_accession].strip()
+                    gtp_id = (row[idx_gtp].strip() if idx_gtp is not None and len(row) > idx_gtp and row[idx_gtp] else None)
 
                     # Only process proteins in the accession filter
                     if self.accession_filter and accession not in self.accession_filter:
@@ -163,7 +174,7 @@ class Command(BaseCommand):
 
                     self.create_protein_record(
                         protein_name, family, sequence_type, accession,
-                        uniprot_data, generic_numbers
+                        uniprot_data, generic_numbers, gtp_id
                     )
 
                 except Exception as e:
@@ -190,7 +201,7 @@ class Command(BaseCommand):
         return ccn_map
 
 
-    def create_protein_record(self, name, family, sequence_type, accession, uniprot_data, generic_numbers):
+    def create_protein_record(self, name, family, sequence_type, accession, uniprot_data, generic_numbers, gtp_id=None):
         try:
             source, _ = ProteinSource.objects.get_or_create(
                 name=uniprot_data['source'], defaults={'name': uniprot_data['source']}
@@ -208,6 +219,7 @@ class Command(BaseCommand):
                 species=species,
                 full_name=uniprot_data.get('full_name', name),
                 uniprot_id=accession,
+                iuphar=gtp_id,
                 sequence=uniprot_data['sequence'],
                 sequence_type=sequence_type,
                 source=source

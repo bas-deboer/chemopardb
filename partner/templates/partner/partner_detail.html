@@ -2,113 +2,249 @@
 {% load static %}
 
 {% block addon_css %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
 <style>
-  .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
-      background-color: #f5f5f5;
+  .partner-detail-page { max-width: 1200px; }
+
+  .partner-summary-header h1 { font-weight: 600; letter-spacing: 0.4px; }
+
+  .metric-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: #eef2f7;
+    color: #2f3b52;
+    font-size: 0.85rem;
+    gap: 0.35rem;
   }
-  .container-fluid {
-      margin-top: 20px;
+
+  .metric-pill .material-symbols-outlined { font-size: 1rem; }
+
+  .definition-list dt { font-weight: 600; color: #1d2f46; }
+  .definition-list dd { margin-bottom: 0.75rem; }
+
+  .empty-state { margin: 0; color: #6c757d; }
+
+  .table-card table { margin-bottom: 0; }
+  .table-card thead th { white-space: nowrap; }
+
+  .external-link { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+  .action-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+
+  .badge-secondary { background: #eef2f7; color: #2f3b52; font-weight: 500; }
+
+  @media (max-width: 767.98px) {
+    .metric-pill { font-size: 0.8rem; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="p-3 mb-2 bg-light rounded-3">
-        <div class="container-fluid">
-          <div class="row">
-            <div class="col">
-              <h2 class="display-6 fw-bold">Partner: {{ partner.name }}</h2>
-              <hr class="my-2">
-            </div>
-          </div>
+<div class="partner-detail-page container-xl py-4">
+  <div class="partner-summary-header text-center text-md-start mb-4">
+    <p class="text-uppercase text-muted small mb-1">Partner</p>
+    <h1 class="detail_title mb-2">{{ partner.name }}</h1>
+    <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+      {% if partner.type %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">category</span>
+        Type: {{ partner.type }}
+      </span>
+      {% endif %}
+      {% if structure_count %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">view_in_ar</span>
+        {{ structure_count }} experimental structure{{ structure_count|pluralize }}
+      </span>
+      {% endif %}
+      {% if predicted_complex_count %}
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">insights</span>
+        {{ predicted_complex_count }} predicted complex{{ predicted_complex_count|pluralize }}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4 align-items-stretch">
+    <div class="col-lg-4 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body">
+          <h5 class="card-title">Summary</h5>
+          <dl class="definition-list">
+            <dt>Name</dt>
+            <dd>{{ partner.name }}</dd>
+
+            <dt>Type</dt>
+            <dd>{{ partner.type|default:"-" }}</dd>
+
+            <dt>GPCRdb</dt>
+            <dd>
+              {% if partner.gpcrdb_url %}
+              <a class="external-link" href="{{ partner.gpcrdb_url }}" target="_blank" rel="noopener">
+                <span>Open GPCRdb</span>
+                <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+              </a>
+              {% else %}-{% endif %}
+            </dd>
+
+            <dt>UniProt ID</dt>
+            <dd>
+              {% if partner.uniprot_id %}
+              <a class="external-link" href="https://www.uniprot.org/uniprot/{{ partner.uniprot_id }}" target="_blank" rel="noopener">
+                <span>{{ partner.uniprot_id }}</span>
+                <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+              </a>
+              {% else %}-{% endif %}
+            </dd>
+
+          </dl>
         </div>
+      </div>
     </div>
 
-    <!--div>
-        <h3>Identifiers</h3>
-        <ul>
-            <li><b>UniProt ID:</b> 
-                {% if identifiers.unp_accession != 'N/A' %}
-                {{ identifiers.unp_accession }} <a href="https://www.uniprot.org/uniprot/{{ identifiers.unp_accession }}" target="_blank" title="Go to UniProt">
-                <span class="material-symbols-outlined">open_in_new</span></a>
-                {% else %}
-                None
-                {% endif %}
-            </li>
-            <li><b>Pfam Accession:</b> 
-                {% if identifiers.pfam_accession != 'N/A' %}
-                {{ identifiers.pfam_accession }} <a href="http://pfam.xfam.org/family/{{ identifiers.pfam_accession }}" target="_blank" title="Go to Pfam">
-                <span class="material-symbols-outlined">open_in_new</span></a>
-                {% else %}
-                None
-                {% endif %}
-            </li>
-            <li><b>Comp ID:</b> 
-                {% if identifiers.comp_id != 'N/A' %}
-                {{ identifiers.comp_id }} <a href="https://www.rcsb.org/ligand/{{ identifiers.comp_id }}" target="_blank" title="Go to PDB">
-                <span class="material-symbols-outlined">open_in_new</span></a>
-                {% else %}
-                None
-                {% endif %}
-            </li>
-            <li><b>ChEMBL ID:</b> 
-                {% if identifiers.chembl_id != 'N/A' %}
-                {{ identifiers.chembl_id }} <a href="https://www.ebi.ac.uk/chembl/compound_report_card/{{ identifiers.chembl_id }}/" target="_blank" title="Go to ChEMBL">
-                <span class="material-symbols-outlined">open_in_new</span></a>
-                {% else %}
-                None
-                {% endif %}
-            </li>
-        </ul>
-    </div-->
-    
+    <div class="col-lg-8 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body">
+          <h5 class="card-title">Overview</h5>
+          {% if partner.description %}
+          <p class="mb-0">{{ partner.description }}</p>
+          {% else %}
+          <p class="text-muted mb-0">No additional description is available for this partner.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <h3>Associated Structures</h3>
-    <div>
-        <table id="structures" class="table table-striped table-hover table-bordered">
-            <thead>
+  <div class="row g-4 mt-1">
+    <div class="col-12">
+      <div class="card site-card shadow-sm table-card">
+        <div class="card-body site-card-body">
+          <h5 class="card-title">Experimental Structures</h5>
+          {% if structures %}
+          <p class="small text-muted">Structures include experimental entries connected to this partner. Click a row to open the structure record.</p>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+              <thead>
                 <tr>
-                    <th>Structure ID</th>
-                    <th>Protein</th>
-                    <th>Organism</th>
-                    <th>Resolution</th>
-                    <th>Publication Date</th>
+                  <th>PDB</th>
+                  <th>Chemokine</th>
+                  <th>Organism</th>
+                  <th>Resolution</th>
+                  <th>State</th>
+                  <th>Publication</th>
                 </tr>
-            </thead>
-            <tbody>
-              {% for structure in structures %}
-              <tr>
-                <td>
-                <a  target="_blank" href="/structure/{{ structure.id }}">{{ structure.pdb_code.index }}</a>
-                </td>
-                <td>
-                    <a target="_blank" href="/protein/{{ structure.protein.gene_name }}">{{ structure.protein.type|safe }}</a>
-                </td> 
-                <td>{{ structure.protein.species }}</td> 
-                <td>{{ structure.resolution }}</td>
-                <td>{{ structure.publication_date|date:"Y-m-d" }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {% for structure in structures %}
+                <tr data-href="{% url 'structure_details' structure.id %}">
+                  <td>
+                    {% if structure.pdb_code %}
+                    <a href="{% url 'structure_details' structure.id %}">{{ structure.pdb_code.index }}</a>
+                    {% else %}-{% endif %}
+                  </td>
+                  <td>
+                    {% if structure.protein %}
+                    {% if structure.protein.gene_name %}
+                    <a href="{% url 'protein:protein' structure.protein.gene_name %}">{{ structure.protein.gene_name }}</a>
+                    {% else %}
+                    {{ structure.protein.name|default:'-' }}
+                    {% endif %}
+                    {% else %}-{% endif %}
+                  </td>
+                  <td>{% if structure.protein %}{{ structure.protein.species|default:'-' }}{% else %}-{% endif %}</td>
+                  <td>{{ structure.resolution|default:'-' }}</td>
+                  <td>{{ structure.state|default:'-' }}</td>
+                  <td>
+                    {% if structure.publication and structure.publication.web_link and structure.publication.web_link.index %}
+                      <a class="external-link" href="http://dx.doi.org/{{ structure.publication.web_link.index }}" target="_blank" rel="noopener">
+                        <span>{{ structure.publication.web_link.index }}</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                      </a>
+                    {% else %}-{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <p class="empty-state">No experimental structures are linked to this partner.</p>
+          {% endif %}
+        </div>
+      </div>
     </div>
+  </div>
 
+  <div class="row g-4 mt-1">
+    <div class="col-12">
+      <div class="card site-card shadow-sm table-card">
+        <div class="card-body site-card-body">
+          <h5 class="card-title">Predicted Complexes</h5>
+          {% if predicted_complexes %}
+          <p class="small text-muted">Predicted chemokine-partner complexes generated from AlphaFold-based workflows. Open a complex to explore interface annotations.</p>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>Chemokine</th>
+                  <th>Method</th>
+                  <th>State</th>
+                  <th>Date</th>
+                  <th>View</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for complex in predicted_complexes %}
+                <tr>
+                  <td>
+                    {% if complex.chemokine_protein %}
+                    {% if complex.chemokine_protein.gene_name %}
+                    <a href="{% url 'protein:protein' complex.chemokine_protein.gene_name %}">{{ complex.chemokine_protein.gene_name }}</a>
+                    {% else %}
+                    {{ complex.chemokine_protein.name|default:'-' }}
+                    {% endif %}
+                    {% else %}-{% endif %}
+                  </td>
+                  <td>{{ complex.method|default:"AlphaFold-Multimer" }}</td>
+                  <td>{{ complex.state|default:'-' }}</td>
+                  <td>{{ complex.date_generated|date:"Y-m-d" }}</td>
+                  <td>
+                    <a href="{% url 'predicted_complex_details' complex.id %}" class="external-link">
+                      <span>Open</span>
+                      <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <p class="empty-state">No predicted complexes are available for this partner.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+{% endblock %}
 
+{% block addon_js %}
 <script>
-    $(document).ready(function() {
-        $('#structures').DataTable({
-            responsive: true,
-            paging: true,
-            scrollX: true,
-            autoWidth: true,
-            dom: 'Bfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'pdf', 'print'
-            ],
-            pageLength: -1 // Default number of rows to display
-        });
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('tr[data-href]').forEach(function (row) {
+      row.addEventListener('click', function (event) {
+        if (event.target.closest('a')) {
+          return;
+        }
+        var url = row.getAttribute('data-href');
+        if (url) { window.location.href = url; }
+      });
     });
+  });
 </script>
 {% endblock %}

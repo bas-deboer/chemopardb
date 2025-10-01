@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from protein.models import Protein, ProteinFamily
 from structure.models import Structure, Entity, EntityType, StructureType, PdbData, ChemokineBindingPartner
 from partner.models import Partner
@@ -21,6 +23,7 @@ class ProteinSerializer(serializers.ModelSerializer):
             'species', 'full_name', 'uniprot', 'iuphar', 'sequence'
         ]
 
+    @extend_schema_field(OpenApiTypes.INT)
     def get_chemokine_ID(self, obj):
         return obj.id
 
@@ -52,22 +55,25 @@ class StructureSerializer(serializers.ModelSerializer):
         fields = ['id', 'structure_type', 'gene_name', 'species', 'resolution',
                   'publication_date', 'pdb_code', 'publication']
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_gene_name(self, obj):
         return obj.protein.gene_name if obj.protein else None
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_species(self, obj):
         return obj.protein.species if obj.protein else None
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_pdb_code(self, obj):
         return obj.pdb_code.index if obj.pdb_code else None
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_publication(self, obj):
         return obj.publication.web_link.index if obj.publication else None
 
 
 
 # Entities
-from rest_framework import serializers
 from structure.models import Entity, EntityType
 
 class EntityTypeSerializer(serializers.ModelSerializer):
@@ -110,7 +116,7 @@ class PartnerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class EntitySerializer(serializers.ModelSerializer):
+class EntityBriefSerializer(serializers.ModelSerializer):
     class Meta:
         model = Entity
         fields = ['id', 'name']

@@ -1,0 +1,37 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block addon_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+  <style>
+    #swagger-ui {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 10px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div id="swagger-ui"></div>
+  </div>
+{% endblock %}
+
+{% block addon_js %}
+  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+  <script>
+    window.addEventListener('load', function() {
+      SwaggerUIBundle({
+        url: "{% url 'schema' %}",
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [SwaggerUIBundle.presets.apis],
+        layout: "BaseLayout",
+      });
+    });
+  </script>
+{% endblock %}
+

@@ -138,14 +138,19 @@ class DrawArrestinPlot(Diagram):
             name = i+"-term"
             if name not in self.segments: continue # continue if no terminus
 
-            rs = self.segments[name] # get residues
+            rs = list(self.segments[name]) # get residues
 
-            ### TEMP FIX for N-term segments to concatenate
-            if name=="N-term":
-                rs = self.segments["N-term"] + self.segments["CX"] + self.segments["N-loop"]
-            ###
+            if name == "N-term":
+                rs = list(self.segments.get("N-term", []))
+                rs += list(self.segments.get("CX", []))
+                rs += list(self.segments.get("N-loop", []))
+            elif name == "C-term":
+                rs = list(self.segments.get("C-term", []))
 
-            if i=='N':
+            if not rs:
+                continue
+
+            if i == 'N':
                 orientation = 1
                 y_max = self.maxY['bottom']-between_residues*4
                 x_max = self.maxX['left']
@@ -158,6 +163,7 @@ class DrawArrestinPlot(Diagram):
                 x_max = self.maxX['left']
                 position = 'bottom'
                 linked_helix = 4
+                rs.reverse()
 
             x1 = self.TBCoords[linked_helix][position][0]
             y1 = self.TBCoords[linked_helix][position][1]

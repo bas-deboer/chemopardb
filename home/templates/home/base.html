@@ -51,6 +51,10 @@
             padding: 0;
             box-sizing: border-box;
         }
+        /* Apply Arial globally */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
 
         .msp-plugin ::-webkit-scrollbar-thumb {
             background-color: #474748 !important;
@@ -157,11 +161,59 @@
             background-color: white !important;
         }
 
-        /* Hover to show dropdown */
-        .navbar-nav .dropdown:hover .dropdown-menu {
-            display: block;
-            margin-top: 0; /* Adjusts positioning if needed */
+        /* Smooth dropdown interactions */
+        @media (min-width: 992px) {
+            .navbar .dropdown-menu {
+                display: block;
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(12px);
+                pointer-events: none;
+                transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
+            }
+
+            .navbar .dropdown.show > .dropdown-menu,
+            .navbar-nav .dropdown:hover > .dropdown-menu {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+                pointer-events: auto;
+                transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 0s;
+                margin-top: 0;
+            }
         }
+
+        /* Dropdown caret animation */
+        .navbar .dropdown-toggle::after {
+            transition: transform 260ms ease, opacity 260ms ease;
+            transform-origin: center;
+        }
+
+        .navbar .dropdown.show > .nav-link.dropdown-toggle::after,
+        .navbar-nav .dropdown:hover > .nav-link.dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+
+        .navbar .nav-link {
+            transition: color 220ms ease;
+        }
+
+        .navbar .nav-link:hover,
+        .navbar .nav-link:focus {
+            color: #4a9cff;
+        }
+
+        .navbar .dropdown-menu .dropdown-item {
+            transition: color 220ms ease, background-color 220ms ease;
+        }
+
+        .navbar .dropdown-menu .dropdown-item:hover,
+        .navbar .dropdown-menu .dropdown-item:focus,
+        .navbar .dropdown-menu .dropdown-item.active {
+            color: #4a9cff;
+            background-color: rgba(74, 156, 255, 0.12);
+        }
+
         /* Add to your style.css or inside <style> in base.html */
         .navbar .custom-input {
             min-width: 200px;
@@ -309,3 +361,5 @@
 {% block addon_js %}{% endblock %}
 
 </html>
+
+

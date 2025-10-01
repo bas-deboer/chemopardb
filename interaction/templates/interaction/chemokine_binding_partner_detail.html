@@ -3,613 +3,564 @@
 {% load snake_plot_tags %}
 
 {% block addon_css %}
-    <link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
-    <link href="{% static 'home/css/color_picker.css' %}" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'home/css/construct_browser.css' %}" type="text/css" />
-    <link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css" />
-    <link href="{% static 'home/css/construct_alignment.css' %}" rel="stylesheet">
-    <link href="{% static 'home/css/modal.css' %}" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="{% static 'home/css/jquery.powertip.css' %}" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<link href="{% static 'home/css/sequenceviewer.css' %}" rel="stylesheet">
+<link href="{% static 'home/css/color_picker.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'home/css/construct_browser.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'home/css/select2.css' %}" type="text/css" />
+<link href="{% static 'home/css/construct_alignment.css' %}" rel="stylesheet">
+<link href="{% static 'home/css/modal.css' %}" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="{% static 'home/css/jquery.powertip.css' %}" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
-    <style>
-        .material-symbols-outlined {
-            font-variation-settings:
-                'FILL' 0,
-                'wght' 400,
-                'GRAD' 0,
-                'opsz' 24;
-        }
+<style>
+  /* ——— Buttons ——— */
+  .btn-ifp { background-color: #E03616 !important; border-color: #E03616 !important; color: #fff !important; }
+  .btn-ifp:hover, .btn-ifp:focus, .btn-ifp:active { color: #fff !important; text-decoration: underline !important; }
 
-        #Viewer {
-            width: 100%;
-            height: auto;
-            position: relative;
-            overflow: hidden;
-        }
+  /* ——— Layout & Typography ——— */
+  .chemokine-partner-page { max-width: 1200px; }
+  .chemokine-summary-header h1 { font-weight: 600; letter-spacing: 0.4px; }
+  .metric-pill { display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 999px; background: #eef2f7; color: #2f3b52; font-size: 0.85rem; gap: 0.35rem; }
+  .metric-pill .material-symbols-outlined { font-size: 1rem; }
 
-        .scrollable-table {
-            width: 100%;
-            max-height: 600px;
-            overflow-y: auto;
-            margin-top: 20px;
-        }
+  /* ——— Definition list ——— */
+  .definition-list { margin-bottom: 0; }
+  .definition-list dt { font-weight: 600; color: #1d2f46; }
+  .definition-list dd { margin-bottom: 0.75rem; }
 
-        #hover-info {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 5px;
-            border-radius: 5px;
-            display: none;
-        }
+  /* ——— Actions ——— */
+  .action-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+  .action-row .btn, .action-row button { display: inline-flex; align-items: center; gap: 0.35rem; }
 
-        @media (max-width: 768px) {
-            .row {
-                flex-direction: column;
-            }
-            .col-md-6 {
-                width: 100%;
-            }
-            .container {
-                width: 100%;
-                padding: 0;
-            }
-            #viewport {
-                width: 100%;
-                height: 300px;
-            }
-            .dropdown-menu,
-            .btn-group {
-                width: 100%;
-            }
-            .table-responsive {
-                overflow-x: auto;
-            }
-        }
-    </style>
+  /* ——— Viewer ——— */
+  #viewport { height: 460px; border: 1px solid #dbe3ef; border-radius: 6px; background: #f9fbff; }
+  .viewer-bar { display: flex; justify-content: space-between; align-items: center; gap: 0; margin-top: 0; font-size: 0.85rem; }
+  .viewer-bar button { border-radius: 4px; border: 1px solid #3a5ca9; color: #305099; background: #edf2fd; padding: 0.3rem 0.75rem; font-weight: 600; }
+
+  /* ——— Tables ——— */
+  .interaction-table-wrapper { max-height: 420px; overflow: auto; border: 1px solid #e1e8f7; border-radius: 6px; }
+  .interaction-table-wrapper table { margin-bottom: 0; }
+  .interaction-table-wrapper thead th { position: sticky; top: 0; background: #f5f7fb; z-index: 1; }
+  .sequence-table-wrapper { overflow-x: auto; }
+  .res-table th, .res-table td { text-align: center; white-space: nowrap; }
+  .segment-header { background: #f5f7fb; font-weight: 600; }
+
+  /* ——— Residue colors ——— */
+  .res-color-A, .res-color-M, .res-color-V, .res-color-L, .res-color-I { background-color: #ffe066; }
+  .res-color-R, .res-color-K { background-color: #74c0fc; color: #0b2b51; }
+  .res-color-D, .res-color-E { background-color: #ff6b6b; color: #ffffff; }
+  .res-color-N, .res-color-Q, .res-color-S, .res-color-T { background-color: #845ef7; color: #ffffff; }
+  .res-color-W { background-color: #51cf66; }
+  .res-color-Y, .res-color-F { background-color: #63e6be; }
+  .res-color-P { background-color: #ffa8a8; color: #5f0f0f; }
+  .res-color-G { background-color: #b197fc; }
+  .res-color-H { background-color: #228be6; color: #ffffff; }
+  .res-color-C { background-color: #ffd43b; }
+
+  .mutation { color: #d6336c; font-weight: 600; }
+  .empty-state { margin: 0; color: #6c757d; }
+  .list-group-item .badge { background: #eef2f7; color: #2f3b52; }
+
+  /* ——— Responsive ——— */
+  @media (max-width: 991.98px) { #viewport { height: 360px; } }
+  @media (max-width: 767.98px) { .metric-pill { font-size: 0.8rem; } }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Page Heading -->
-    <h1 class="detail_title text-center">
-        Interactions for {{ structure.pdb_code.index }} &mdash; Binding Partner: {{ binding_partner.partner_name }}
+<div class="chemokine-partner-page container-xl py-4">
+  <!-- Header -->
+  <header class="chemokine-summary-header text-center text-md-start mb-4">
+    <p class="text-uppercase text-muted small mb-1">Interactions</p>
+    <h1 class="detail_title mb-2">
+      {{ structure.pdb_code.index }} |
+      {% if structure.protein and structure.protein.gene_name %}
+        {{ structure.protein.gene_name }}
+      {% elif structure.protein and structure.protein.name %}
+        {{ structure.protein.name }}
+      {% endif %}
+      &mdash; {{ binding_partner.partner_name }}
     </h1>
-    <br>
-
-    <!-- Structure details and Binding Partner Info -->
-    <div class="row">
-        <!-- Structure details -->
-        <div class="col-md-6">
-            <h3 id="structure_details">Structure details</h3>
-            <hr class="my-2">
-            <div class="row">
-                <div class="col-12">
-                    <ul class="list-unstyled">
-                        <li>
-                            <b>PDB ID:</b> {{ structure.pdb_code.index }}
-                            <a href="https://www.rcsb.org/structure/{{ structure.pdb_code.index }}" target="_blank" title="Go to PDB">
-                                <span class="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        </li>
-                        <li>
-                            <b>Protein:</b>
-                            <a href="/protein/{{ structure.protein.gene_name }}">{{ structure.protein.gene_name }}</a>
-                        </li>
-                        <li><b>Organism:</b> <i>{{ protein.species }}</i></li>
-                        <li>
-                            <b>UniProt ID:</b> {{ structure.protein.uniprot_id }}
-                            <a href="https://www.uniprot.org/uniprot/{{ structure.protein.uniprot_id }}" target="_blank" title="Go to UniProt">
-                                <span class="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        </li>
-                    </ul>
-
-                    <ul class="list-unstyled">
-                        <li><b>Method:</b> <a>{{ structure.structure_type.name }}</a></li>
-                        <li>
-                            <b>Resolution:</b>
-                            {% if structure.resolution %}<a>{{ structure.resolution }} Å</a>{% endif %}
-                        </li>
-                        <li><b>Date:</b> <a>{{ structure.publication_date }}</a></li>
-                        <li>
-                            <b>Reference:</b> {{ structure.publication.web_link.index }}
-                            <a href="https://doi.org/{{ structure.publication.web_link.index }}" target="_blank" title="Go to Publication">
-                                <span class="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        </li>
-                        <li><b>State:</b> <a>{{ structure.state }}</a></li>
-                    </ul>
-
-                    <!-- Binding Partner details -->
-                    <ul class="list-unstyled">
-                        <li><b>Chemokine Chain:</b> {{ binding_partner.chemokine_chain }}</li>
-                        <li><b>Partner Chain:</b> {{ binding_partner.partner_chain }}</li>
-                    </ul>
-
-                    <div class="btn-group">
-                        <a href="./pdb_download/" class="btn btn-sm btn-outline-secondary">Download PDB</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3D view -->
-        <div class="col-md-6">
-            <h3 id="3d_view">3D view</h3>
-            <hr class="my-2">
-            <div class="container">
-                <div class="row">
-                    <div id="viewport" style="
-                            width: 100%;
-                            max-width: 600px;
-                            height: 450px;
-                            border-radius: 12px;
-                            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-                        "></div>
-
-                        <div style="
-                        max-width: 600px;
-                        padding: 5px 10px;
-                        font-size: 12px;
-                        font-family: 'Segoe UI', sans-serif;
-                        color: #555;
-                        border-radius: 0 0 12px 12px;
-                        margin: 0 auto;
-                    ">
-                        <a href="https://github.com/arose/ngl" target="_blank">NGL</a> viewer powered by 
-                        <a href="https://mmtf.rcsb.org" target="_blank">MMTF</a>. 
-                        <button id="fullscreen" class="btn btn-sm btn-outline-secondary">Full Screen</button>
-                    </div>
-                    
-                </div>
-            </div>
-        </div>
+    <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+      <span class="metric-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">scatter_plot</span>
+        Residue contacts: {{ interaction_total }}
+      </span>
     </div>
+  </header>
 
-    <br><br>
+  <!-- Summary + 3D view -->
+  <div class="row g-4 align-items-stretch">
+    <!-- Summary card -->
+    <section class="col-lg-4 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body d-flex flex-column gap-3">
+          <div>
+            <h5 class="card-title">SUMMARY</h5>
+            <dl class="definition-list">
+              <dt>Protein</dt>
+              <dd>
+                {% if structure.protein %}
+                  {% if structure.protein.gene_name %}
+                    {{ structure.protein.gene_name }}
+                    <a href="/protein/{{ structure.protein.gene_name }}" target="_blank" class="uniprot-link">
+                      <span class="link-text">View protein entry</span>
+                      <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                    </a>
+                  {% elif structure.protein.name %}
+                    {{ structure.protein.name }}
+                  {% else %}-{% endif %}
+                {% else %}-{% endif %}
+              </dd>
 
-    <!-- Snake plot -->
-    <div class="row">
-        <div class="col-md-12">
-            <h3 id="snake_plot">Chemokine diagram</h3>
-            <hr class="my-2">
-                {% render_snake_plot structure binding_partner.chemokine_chain nobuttons=True as snake_plot %}
-                {{ snake_plot|safe }}
+              <dt>Organism</dt>
+              <dd><i>{{ protein.species|default:"-" }}</i></dd>
 
-            <br>
+              <dt>UniProt ID</dt>
+              <dd>
+                {% if structure.protein and structure.protein.uniprot_id %}
+                  {{ structure.protein.uniprot_id }}
+                  <a href="https://www.uniprot.org/uniprot/{{ structure.protein.uniprot_id }}" target="_blank" class="uniprot-link" title="Go to UniProt">
+                    <span class="link-text">View on UniProt</span>
+                    <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                  </a>
+                {% else %}-{% endif %}
+              </dd>
 
-            <div class="btn-group">
-                <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="glyphicon glyphicon-download"></span> Download <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu">
-                    <li>
-                        <a class="dropdown-item" href="javascript:saveSvgAsPng(document.getElementById('snakeplot'), 'snake_.png', {scale: 3});">PNG</a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="javascript:saveSvgAsJpg(document.getElementById('snakeplot'), 'snake_.jpg', {scale: 3});">JPG</a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="javascript:saveSvgAsTiff(document.getElementById('snakeplot'), 'snake_.tiff', {scale: 3});">TIFF</a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" id="snake_svg_link" href-lang="image/svg+xml" href="" download="snake_">SVG</a>
-                    </li>
-                </ul>
+              <dt>PDB ID</dt>
+              <dd>
+                {% if structure.pdb_code %}
+                  {{ structure.pdb_code.index }}
+                  <a href="https://www.rcsb.org/structure/{{ structure.pdb_code.index }}" target="_blank" class="uniprot-link" title="Go to PDB">
+                    <span class="link-text">View on PDB</span>
+                    <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                  </a>
+                {% else %}-{% endif %}
+              </dd>
+
+              <dt>Method</dt>
+              <dd>{{ structure.structure_type.name|default:"-" }}</dd>
+
+              <dt>Resolution</dt>
+              <dd>{% if structure.resolution %}{{ structure.resolution }} &#197;{% else %}-{% endif %}</dd>
+
+              <dt>Date</dt>
+              <dd>{{ structure.publication_date|default:"-" }}</dd>
+
+              <dt>Reference</dt>
+              <dd>
+                {% if structure.publication and structure.publication.web_link %}
+                  {{ structure.publication.web_link.index }}
+                  <a href="https://doi.org/{{ structure.publication.web_link.index }}" target="_blank" class="uniprot-link" title="Go to Publication">
+                    <span class="link-text">Open DOI</span>
+                    <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                  </a>
+                {% else %}-{% endif %}
+              </dd>
+
+              <dt>State</dt>
+              <dd>{{ structure.state|default:"-" }}</dd>
+            </dl>
+          </div>
+
+          <div>
+            <h6 class="text-uppercase text-muted small mb-2">Chain information</h6>
+            <dl class="definition-list">
+              <dt>Chemokine chain</dt>
+              <dd>{{ binding_partner.chemokine_chain|default:"-" }}</dd>
+              <dt>Partner chain</dt>
+              <dd>{{ binding_partner.partner_chain|default:"-" }}</dd>
+            </dl>
+          </div>
+
+          <div class="action-row">
+            <div class="dropdown">
+              <button id="download-menu-button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="false" aria-controls="download-menu-panel">
+                <span class="material-symbols-outlined" aria-hidden="true">download</span>
+                Download
+              </button>
+              <div id="download-menu-panel" class="dropdown-menu" role="menu" aria-label="Download options" aria-labelledby="download-menu-button">
+                <a class="dropdown-item d-flex align-items-center gap-2" id="download-pdb" role="menuitem" href="{% url 'interaction:bindingpair_pdb_download' binding_partner.id %}">
+                  <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                  PDB (.pdb)
+                </a>
+              </div>
             </div>
+          </div>
         </div>
-    </div>
+      </div>
+    </section>
 
-    <br>
+    <!-- 3D view card -->
+    <section class="col-lg-8 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body d-flex flex-column gap-3">
+          <h5 class="card-title">3D VIEW</h5>
+          <div id="viewport" aria-label="Molecular viewer"></div>
+          <div class="viewer-bar">
+            <button id="fullscreen" class="btn btn-sm" type="button">Full Screen</button>
+            <span>Powered by <a href="https://github.com/arose/ngl" target="_blank" rel="noreferrer">NGL viewer</a></span>
+          </div>
+          <div class="small text-muted" id="hover-info" hidden></div>
+          <div class="small text-muted" id="clicked"></div>
+        </div>
+      </div>
+    </section>
+  </div>
 
-    <!-- Table of Interactions -->
-    <div class="table-responsive">
-        <h3>Interactions for this Binding Partner</h3>
-        <hr class="my-2">
-        <a href="{% url 'interaction:csv' pdb_id=structure.pdb_code.index chain_id=binding_partner.chemokine_chain binding_partner=binding_partner.id %}">
-            Download list as CSV
-        </a>
-        <div>
-            <table id="example" class="table table-hover" style="width: 100%">
-                <thead>
-                    <tr>
-                        <th>Chemokine Residue</th>
-                        <th>Generic Number</th>
-                        <th>Segment</th>
-                        <th>Partner Residue</th>
-                        <th>Partner Chain</th>
-                        <th>Interaction Type</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for interaction in interactions %}
-                        <tr>
-                            <td>
-                              {{ interaction.chemokine_residue.residue.amino_acid_three_letter|default:"-" }} 
-                              {{ interaction.chemokine_residue.pdbseq_number|default:"-" }}
-                            </td>
-                            <td>{{ interaction.chemokine_residue.residue.ccn_number|default:"-" }}</td>
-                            <td>{{ interaction.chemokine_residue.residue.segment|default:"-" }}</td>
-                            <td>{{ interaction.partner_residue|default:"-" }}</td>
-                            <td>{{ interaction.partner_chain|default:"-" }}</td>
-                            <td>{{ interaction.interaction_type|default:"-" }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="6">No interactions found for this binding partner.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
+  <!-- Interaction table & diagram -->
+  <div class="row g-4 align-items-stretch">
+    <section class="col-12 col-lg-6 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h5 class="card-title mb-0">INTERACTION TABLE</h5>
+            <a class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" href="{% url 'interaction:csv' pdb_id=structure.pdb_code.index chain_id=binding_partner.chemokine_chain binding_partner=binding_partner.id %}">
+              <span class="material-symbols-outlined" aria-hidden="true">table_view</span>
+              Download CSV
+            </a>
+          </div>
+          <div class="interaction-table-wrapper mt-3">
+            <table id="example" class="table table-hover align-middle w-100">
+              <thead>
+                <tr>
+                  <th>Chemokine Residue</th>
+                  <th>Generic Number</th>
+                  <th>Segment</th>
+                  <th>Partner Residue</th>
+                  <th>Partner Chain</th>
+                  <th>Interaction Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for interaction in interactions %}
+                  <tr>
+                    <td>{{ interaction.chemokine_residue.residue.amino_acid_three_letter|default:"-" }} {{ interaction.chemokine_residue.pdbseq_number|default:"-" }}</td>
+                    <td>{{ interaction.chemokine_residue.residue.ccn_number|default:"-" }}</td>
+                    <td>{{ interaction.chemokine_residue.residue.segment|default:"-" }}</td>
+                    <td>{{ interaction.partner_residue|default:"-" }}</td>
+                    <td>{{ interaction.partner_chain|default:"-" }}</td>
+                    <td>{{ interaction.interaction_type|default:"-" }}</td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">No interactions found for this binding partner.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
             </table>
+          </div>
         </div>
-    </div>
+      </div>
+    </section>
 
-    <br>
-
-    <!-- Ligand interaction network (if available) -->
-    {% if ligand_network_html_entries %}
-        <div>
-            <h3>Ligand interaction network</h3>
-            <hr class="my-2">
-            {% for entry in ligand_network_html_entries %}
-                <h4>{{ entry.ligand_name }}</h4>
-                <div class="ligand-network-html">
-                    {{ entry.html_content|safe }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <!-- IFP Pattern Search Section -->
-    <div class="row">
-        <div class="card">
-            <div class="content">
-                <h6>Interaction pattern search</h6>
-
-                <form 
-                  id="ifp-search-form"
-                  enctype="multipart/form-data"
-                  action="{% url 'interaction:ifp_search' %}"
-                  method="POST">
-                    {% csrf_token %}
-
-                    <label>
-                        Minimum Tanimoto similarity:
-                        <input
-                          type="number"
-                          step="0.01"
-                          name="tanimoto"
-                          value="0.25"
-                          min="0.0"
-                          max="1.0"
-                        >
-                    </label>
-                    <small>(0.00 = no similarity, 1.00 = identical)</small>
-                    <br><br>
-
-                    {# Hidden inputs: always use the current page’s binding_partner #}
-                    <input
-                      type="hidden"
-                      name="structure_id"
-                      value="{{ binding_partner.id }}"
-                    >
-                    <input
-                      type="hidden"
-                      name="full_ifp"
-                      value="{% if ifp_record %}{{ ifp_record.ifp_string }}{% endif %}"
-                    >
-                    <input
-                      type="hidden"
-                      name="flag_IFP_search"
-                      value="TRUE"
-                    >
-
-                    <button type="submit" class="btn btn-primary">
-                        IFP search!
-                    </button>
-                </form>
+    <section class="col-12 col-lg-6 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body d-flex flex-column gap-3">
+          <h5 class="card-title">CHEMOKINE DIAGRAM</h5>
+          {% render_snake_plot structure binding_partner.chemokine_chain nobuttons=True as snake_plot %}
+          <div class="text-center">{{ snake_plot|safe }}</div>
+          <div class="dropdown">
+            <button id="diagram-download-button" class="btn btn-outline-primary btn-sm dropdown-toggle d-inline-flex align-items-center gap-1" data-bs-toggle="dropdown" type="button" aria-expanded="false" aria-controls="diagram-download-menu">
+              <span class="material-symbols-outlined" aria-hidden="true">download</span>
+              Download diagram
+            </button>
+            <div id="diagram-download-menu" class="dropdown-menu" role="menu" aria-label="Download options" aria-labelledby="diagram-download-button">
+              <a class="dropdown-item" href="javascript:saveSvgAsPng(document.getElementById('snakeplot'), 'snake_.png', {scale: 3});">PNG</a>
+              <a class="dropdown-item" href="javascript:saveSvgAsJpg(document.getElementById('snakeplot'), 'snake_.jpg', {scale: 3});">JPG</a>
+              <a class="dropdown-item" href="javascript:saveSvgAsTiff(document.getElementById('snakeplot'), 'snake_.tiff', {scale: 3});">TIFF</a>
+              <a class="dropdown-item" id="snake_svg_link" href-lang="image/svg+xml" href="" download="snake_">SVG</a>
             </div>
+          </div>
         </div>
+      </div>
+    </section>
+  </div>
+
+  {% if ligand_network_html_entries %}
+    <div class="row g-4 mt-1">
+      <section class="col-12">
+        <div class="card site-card shadow-sm">
+          <div class="card-body site-card-body">
+            <h5 class="card-title">LIGAND INTERACTION NETWORK</h5>
+            <hr class="my-3">
+            {% for entry in ligand_network_html_entries %}
+              <div class="mb-4">
+                <h6 class="text-uppercase text-muted small mb-2">{{ entry.ligand_name }}</h6>
+                <div class="ligand-network-html">{{ entry.html_content|safe }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
     </div>
+  {% endif %}
 
-    <br>
+  <!-- IFP search (full-width card content) -->
+  <div class="row mt-1">
+    <section class="col-12 col-lg-6 d-flex">
+      <div class="card site-card shadow-sm w-100">
+        <div class="card-body site-card-body">
+          <h5 class="card-title">INTERACTION PATTERN SEARCH</h5>
+          <form id="ifp-search-form" enctype="multipart/form-data" action="{% url 'interaction:ifp_search' %}" method="POST" class="mt-3">
+            {% csrf_token %}
+            <div class="row g-3 align-items-end">
+              <div class="col-12">
+                <label class="form-label" for="ifp-tanimoto">Minimum Tanimoto similarity</label>
+                <input id="ifp-tanimoto" type="number" step="0.01" name="tanimoto" value="0.25" min="0.0" max="1.0" class="form-control">
+                <small class="text-muted">0.00 = no similarity, 1.00 = identical</small>
+              </div>
+            </div>
+            <input type="hidden" name="structure_id" value="{{ binding_partner.id }}">
+            <input type="hidden" name="full_ifp" value="{% if ifp_record %}{{ ifp_record.ifp_string }}{% endif %}">
+            <input type="hidden" name="flag_IFP_search" value="TRUE">
+            <button type="submit" class="btn btn-ifp mt-3">IFP search!</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div>
 
-    <script type="text/javascript" src="https://cdn.rawgit.com/arose/ngl/v2.0.0-dev.39/dist/ngl.js"></script>
-    <script>
-        var stage_full;
-        var file;
+  <!-- NGL viewer -->
+  <script src="https://cdn.rawgit.com/arose/ngl/v2.0.0-dev.39/dist/ngl.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      let stage_full;
+      let file;
 
-        document.addEventListener("DOMContentLoaded", function() {
-            // Initialize NGL Stage
-            stage_full = new NGL.Stage("viewport", {
-                backgroundColor: "white",
-                fogNear: 50,
-                fogFar: 100,
-                lightIntensity: 0.9
-            });
+      // Initialize NGL Stage
+      stage_full = new NGL.Stage("viewport", {
+        backgroundColor: "white",
+        fogNear: 50,
+        fogFar: 100,
+        lightIntensity: 0.9
+      });
 
-            stage_full.setParameters({
-            });
+      // Keep viewer responsive within the card
+      window.addEventListener('resize', function () {
+        try { stage_full.handleResize(); } catch (e) {}
+      });
 
-            var stringBlob = new Blob(["{{ binding_partner.pdb_data.pdb|escapejs }}"], { type: 'text/plain' });
-            file = new File([stringBlob], "binding_partner.pdb");
+      // Prevent page scroll when zooming/panning over the viewer
+      const container = (stage_full.viewer && stage_full.viewer.container) || document.getElementById('viewport');
+      if (container) {
+        const preventScroll = function (e) { e.preventDefault(); };
+        container.addEventListener('wheel', preventScroll, { passive: false });
+        container.addEventListener('mousewheel', preventScroll, { passive: false });
+      }
 
-            var residues_lookup = {{ residues_lookup|safe }};
+      const stringBlob = new Blob(["{{ binding_partner.pdb_data.pdb|escapejs }}"], { type: 'text/plain' });
+      file = new File([stringBlob], "binding_partner.pdb");
 
-            function getPickingMessage(d, prefix) {
-                var msg;
-                if (d.atom) {
-                    msg = "atom: " + d.atom.qualifiedName() + " (" + d.atom.structure.name + ")";
-                    var re = /](\d+):/i;
-                    var found = d.atom.qualifiedName().match(re);
-                    if (found) {
-                        pos = found[1];
-                        if (residues_lookup[pos]) msg = residues_lookup[pos];
-                    }
-                } else if (d.bond) {
-                    msg = "bond: " + d.bond.atom1.qualifiedName() + " - " + d.bond.atom2.qualifiedName() +
-                          " (" + d.bond.structure.name + ")";
-                    var re = /](\d+):/i;
-                    var found = d.bond.atom1.qualifiedName().match(re);
-                    if (found) {
-                        pos = found[1];
-                        if (residues_lookup[pos]) msg = residues_lookup[pos];
-                    }
-                } else if (d.volume) {
-                    msg = "volume: " + d.volume.value.toPrecision(3) + " (" + d.volume.volume.name + ")";
-                } else {
-                    msg = "nothing";
-                }
-                return prefix + " " + msg;
-            }
+      const residues_lookup = {{ residues_lookup|safe }};
 
-            stage_full.loadFile(file, { ext: "pdb", defaultRepresentation: false }).then(function(o) {
-                // Color the primary chemokine chain grey
-                o.addRepresentation("cartoon", {
-                    sele: ":{{ binding_partner.chemokine_chain }}",
-                    color: 0xD3D3D3,
-                });
+      function getPickingMessage(d, prefix) {
+        let msg = 'nothing';
+        if (d.atom) {
+          msg = "atom: " + d.atom.qualifiedName() + " (" + d.atom.structure.name + ")";
+          const re = /](\d+):/i;
+          const found = d.atom.qualifiedName().match(re);
+          if (found) {
+            const pos = found[1];
+            if (residues_lookup[pos]) msg = residues_lookup[pos];
+          }
+        } else if (d.bond) {
+          msg = "bond: " + d.bond.atom1.qualifiedName() + " - " + d.bond.atom2.qualifiedName() + " (" + d.bond.structure.name + ")";
+          const re = /](\d+):/i;
+          const found = d.bond.atom1.qualifiedName().match(re);
+          if (found) {
+            const pos = found[1];
+            if (residues_lookup[pos]) msg = residues_lookup[pos];
+          }
+        } else if (d.volume) {
+          msg = "volume: " + d.volume.value.toPrecision(3) + " (" + d.volume.volume.name + ")";
+        }
+        return prefix + " " + msg;
+      }
 
-                const partnerChains = "{{ binding_partner.partner_chain }}".split(',').map(c => c.trim());
-
-                partnerChains.forEach(chain => {
-                    o.addRepresentation("cartoon", {
-                        sele: ":" + chain,
-                        color: "#228B22"
-                    });
-                });
-                var lightGreyCarbons = NGL.ColormakerRegistry.addScheme(function (params) {
-                    this.atomColor = function (atom) {
-                        if (atom.element === 'C') return 0xD3D3D3; // Light grey
-                        return NGL.ColormakerRegistry.getScheme({ scheme: 'element' }).atomColor(atom);
-                    };
-                });
-                
-                var forestGreenCarbons = NGL.ColormakerRegistry.addScheme(function (params) {
-                    this.atomColor = function (atom) {
-                        if (atom.element === 'C') return 0x228B22; // Forest green
-                        return NGL.ColormakerRegistry.getScheme({ scheme: 'element' }).atomColor(atom);
-                    };
-                });
-
-                // Add sticks representation for the interacting residues only
-                {% if display_res %}
-                    var residueSelection = "{{ display_res|join:' or ' }}";
-                    var selectionString = "(" + residueSelection + ") and sidechainAttached and not hydrogen";
-
-                    o.addRepresentation("licorice", {
-                        sele: selectionString,
-                        color: lightGreyCarbons
-                    });
-
-
-                    // For partner chains
-                    {% for partner_chain, residues in interacting_residues_by_chain.items %}
-                        var partnerResidueSelection = "{{ residues|join:' or ' }}";
-                        var partnerSelectionString = "(" + partnerResidueSelection + ") and sidechainAttached and not hydrogen";
-                        o.addRepresentation("licorice", {
-                            sele: partnerSelectionString,
-                            color: forestGreenCarbons,
-                        });
-                        o.addRepresentation("surface", {
-                            sele: partnerSelectionString,
-                            color: "white",
-                            opacity: 0.4,
-                            surfaceType: "vws", // van der Waals surface
-                            side: "front"
-                          });
-                        
-                    {% endfor %}
-
-                    o.addRepresentation("label", {
-                        sele: selectionString + " and .CB",
-                        color: "#113",
-                        scale: 10.0
-                    });
-
-                    // Center the view on the specified residues
-                    o.autoView();
-                {% endif %}
-
-            });
-
-            // Adding fullscreen toggle on button click
-            document.getElementById("fullscreen").addEventListener("click", function() {
-                stage_full.toggleFullscreen();
-            });
-
-            stage_full.signals.clicked.add(function(d) {
-                $('#clicked').html(getPickingMessage(d, "Clicked"));
-            });
-            stage_full.signals.hovered.add(function(d) {
-                var hoverInfo = document.getElementById("hover-info");
-                var msg = getPickingMessage(d, "Hovered");
-                if (msg !== "Hovered nothing") {
-                    hoverInfo.style.display = "block";
-                    hoverInfo.textContent = msg;
-                } else {
-                    hoverInfo.style.display = "none";
-                }
-            });
-
-            $('#viewport_full').find("canvas").after("<div class='overlay'><span id='clicked'></span> | <span id='hovered'></span></div>");
+      stage_full.loadFile(file, { ext: "pdb", defaultRepresentation: false }).then(function (o) {
+        // Color the primary chemokine chain grey
+        o.addRepresentation("cartoon", {
+          sele: ":{{ binding_partner.chemokine_chain }}",
+          color: 0xD3D3D3
         });
 
-        $(document).ready(function() {
-            if (!$.fn.dataTable.isDataTable('#example')) {
-                var table = $('#example').DataTable({
-                    scrollX: true,
-                    scrollY: 700,
-                    bScrollCollapse: true,
-                    paging: false,
-                    autoWidth: true,
-                    dom: 'lfrtip',
-                    initComplete: function() {
-                        var api = this.api();
-                        var tr = $('<tr>').appendTo($(api.table().header()));
-                        api.columns().indexes().flatten().each(function(i) {
-                            var column = api.column(i);
-                            var select = $('<select><option value=""></option></select>')
-                                .appendTo($('<th>').appendTo(tr))
-                                .on('change', function() {
-                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                    column.search(val ? '^' + val + '$' : '', true, false).draw();
-                                });
-                            column.data().unique().sort().each(function(d) {
-                                select.append('<option value="' + d + '">' + d + '</option>');
-                            });
-                        });
-                    }
-                });
-
-                $('#example tbody').on('click', 'tr', function() {
-                    var data = table.row(this).data();
-                    var residueNumber = data[0].split(' ')[1]; // Assuming the residue number is in the first column
-                    centerViewOnResidue(residueNumber);
-                });
-
-                stage_full.signals.clicked.add(function(pickingProxy) {
-                    if (!pickingProxy || pickingProxy.atom === undefined) return;
-                
-                    const atom = pickingProxy.atom;
-                    const resno = atom.resno;
-                    const chain = atom.chainname;
-                
-                    const selection = `${resno} and :${chain}`;
-                
-                    let toggled = false;
-                
-                    // Loop through existing reps and toggle visibility if already exists
-                    stage_full.compList[0].eachRepresentation(function(rep) {
-                        if (rep.repr.selection.string === selection) {
-                            rep.setVisibility(!rep.visible);
-                            toggled = true;
-                        }
-                    });
-                
-                    // If not already added, add it now
-                    if (!toggled) {
-                        stage_full.compList[0].addRepresentation("licorice", {
-                            sele: selection,
-                        });
-                    }
-                });
-                
-
-            }
-
-            // Initialize tooltips
-            $('[data-bs-toggle="tooltip"]').tooltip();
+        const partnerChains = "{{ binding_partner.partner_chain }}".split(',').map(c => c.trim());
+        partnerChains.forEach(function (chain) {
+          o.addRepresentation("cartoon", { sele: ":" + chain, color: "#228B22" });
         });
-    </script>
+
+        const lightGreyCarbons = NGL.ColormakerRegistry.addScheme(function () {
+          this.atomColor = function (atom) {
+            if (atom.element === 'C') return 0xD3D3D3; // Light grey
+            return NGL.ColormakerRegistry.getScheme({ scheme: 'element' }).atomColor(atom);
+          };
+        });
+
+        const forestGreenCarbons = NGL.ColormakerRegistry.addScheme(function () {
+          this.atomColor = function (atom) {
+            if (atom.element === 'C') return 0x228B22; // Forest green
+            return NGL.ColormakerRegistry.getScheme({ scheme: 'element' }).atomColor(atom);
+          };
+        });
+
+        // Add sticks representation for the interacting residues only
+        {% if display_res %}
+          const residueSelection = "{{ display_res|join:' or ' }}";
+          const selectionString = "(" + residueSelection + ") and sidechainAttached and not hydrogen";
+
+          o.addRepresentation("licorice", { sele: selectionString, color: lightGreyCarbons });
+
+          // For partner chains
+          {% for partner_chain, residues in interacting_residues_by_chain.items %}
+            const partnerResidueSelection_{{ forloop.counter }} = "{{ residues|join:' or ' }}";
+            const partnerSelectionString_{{ forloop.counter }} = "(" + partnerResidueSelection_{{ forloop.counter }} + ") and sidechainAttached and not hydrogen";
+            o.addRepresentation("licorice", { sele: partnerSelectionString_{{ forloop.counter }}, color: forestGreenCarbons });
+            o.addRepresentation("surface", { sele: partnerSelectionString_{{ forloop.counter }}, color: "white", opacity: 0.4, surfaceType: "vws", side: "front" });
+          {% endfor %}
+
+          o.addRepresentation("label", { sele: selectionString + " and .CB", color: "#113", scale: 10.0 });
+          o.autoView();
+        {% endif %}
+      });
+
+      // Fullscreen toggle
+      document.getElementById("fullscreen").addEventListener("click", function () { stage_full.toggleFullscreen(); });
+
+      // Picking events
+      stage_full.signals.clicked.add(function (d) { document.getElementById('clicked').innerHTML = getPickingMessage(d, "Clicked"); });
+      stage_full.signals.hovered.add(function (d) {
+        const hoverInfo = document.getElementById("hover-info");
+        const msg = getPickingMessage(d, "Hovered");
+        if (msg !== "Hovered nothing") {
+          hoverInfo.hidden = false; hoverInfo.textContent = msg;
+        } else {
+          hoverInfo.hidden = true; hoverInfo.textContent = '';
+        }
+      });
+
+      // DataTable setup
+      $(function () {
+        if (!$.fn.dataTable.isDataTable('#example')) {
+          const table = $('#example').DataTable({
+            scrollX: true,
+            scrollY: 700,
+            bScrollCollapse: true,
+            paging: false,
+            autoWidth: true,
+            dom: 'lfrtip',
+            initComplete: function () {
+              const api = this.api();
+              const tr = $('<tr>').appendTo($(api.table().header()));
+              api.columns().indexes().flatten().each(function (i) {
+                const column = api.column(i);
+                const select = $('<select><option value=""></option></select>')
+                  .appendTo($('<th>').appendTo(tr))
+                  .on('change', function () {
+                    const val = $.fn.dataTable.util.escapeRegex($(this).val());
+                    column.search(val ? '^' + val + '$' : '', true, false).draw();
+                  });
+                column.data().unique().sort().each(function (d) {
+                  select.append('<option value="' + d + '">' + d + '</option>');
+                });
+              });
+            }
+          });
+
+          $('#example tbody').on('click', 'tr', function () {
+            const data = table.row(this).data();
+            const residueNumber = (data && data[0]) ? String(data[0]).split(' ')[1] : null;
+            if (residueNumber) {
+              // Centering function could be implemented if needed
+            }
+          });
+
+          stage_full.signals.clicked.add(function (pickingProxy) {
+            if (!pickingProxy || pickingProxy.atom === undefined) return;
+            const atom = pickingProxy.atom;
+            const resno = atom.resno;
+            const chain = atom.chainname;
+            const selection = `${resno} and :${chain}`;
+            let toggled = false;
+            stage_full.compList[0].eachRepresentation(function (rep) {
+              if (rep.repr.selection.string === selection) { rep.setVisibility(!rep.visible); toggled = true; }
+            });
+            if (!toggled) { stage_full.compList[0].addRepresentation("licorice", { sele: selection }); }
+          });
+        }
+        $('[data-bs-toggle="tooltip"]').tooltip();
+      });
+    });
+  </script>
 </div>
 {% endblock %}
 
 {% block addon_js %}
-    <script src="{% static 'home/js/table_functions.js' %}"></script>
-    <script src="{% static 'home/js/sequenceviewer.js' %}"></script>
-    <script src="{% static 'home/js/saveSvgAsPng.js' %}"></script>
-    <script src="{% static 'home/js/diagrams.js' %}"></script>
-    <script src="{% static 'home/js/color_picker.js' %}"></script>
-    <script src="{% static 'home/js/select2.js' %}"></script>
-    <script src="{% static 'home/js/jquery.powertip.js' %}"></script>
-    
-    <script>
-        var interactionsData = {{ interactions_for_partner|default:"[]"|safe }};
-        console.log("Loaded Interactions Data (Selected Binding Partner):", interactionsData);
-    </script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log("Preparing to apply interactions to Snake Plot...");
+<script src="{% static 'home/js/table_functions.js' %}"></script>
+<script src="{% static 'home/js/sequenceviewer.js' %}"></script>
+<script src="{% static 'home/js/saveSvgAsPng.js' %}"></script>
+<script src="{% static 'home/js/diagrams.js' %}"></script>
+<script src="{% static 'home/js/color_picker.js' %}"></script>
+<script src="{% static 'home/js/select2.js' %}"></script>
+<script src="{% static 'home/js/jquery.powertip.js' %}"></script>
 
-            function resetColors(plotid) {
-                const elements = $(`#${plotid}`).find("circle, rect, text");
-                elements.each(function () {
-                    $(this).css("fill", "");
-                    const originalTitle = $(this).attr('original_title') || '';
-                    $(this).attr('title', originalTitle);
-                    $(this).attr('data-bs-original-title', originalTitle);
-                    $(this).tooltip('dispose');
-                });
-                elements.tooltip();
-            }
+<script>
+  const interactionsData = {{ interactions_for_partner|default:"[]"|safe }};
+  console.log("Loaded Interactions Data (Selected Binding Partner):", interactionsData);
+</script>
 
-            function updateSnakePlot(plotid, interactions) {
-                resetColors(plotid);
-                interactions.forEach(interaction => {
-                    let ccn = interaction.ccn_number;
-                    if (!ccn) {
-                        console.warn('No ccn_number:', interaction);
-                        return;
-                    }
-                    // Convert to SVG id, e.g., "cxb1.16" => "c_b1_16"
-                    let id = ccn.replace(/[x.]/g, '_');
-                    let text_id = id + "t";
-                
-                    // Construct the tooltip text:
-                    let typesArr = interaction.interaction_types || [];
-                    let n = typesArr.length;
-                    let typesText = typesArr.join(', ');
-                    let chemokineResidue = interaction.chemokine_residue || '';
-                    // Multi-line tooltip
-                    let tooltipText = `${chemokineResidue} ${ccn} \n${n} interaction${n !== 1 ? 's' : ''}\nType: ${typesText}`;
-                
-                    const circleElem = $(`#${plotid}`).find(`circle#${id}`);
-                    const rectElem = $(`#${plotid}`).find(`rect#${id}`);
-                    if (circleElem.length) {
-                        circleElem.css("fill", "#E60A0A");
-                        circleElem.attr('title', tooltipText);
-                        circleElem.attr('data-bs-original-title', tooltipText);
-                    } else if (rectElem.length) {
-                        rectElem.css("fill", "#E60A0A");
-                        rectElem.attr('title', tooltipText);
-                        rectElem.attr('data-bs-original-title', tooltipText);
-                    } else {
-                        console.warn(`Element with CCN id ${id} not found in SVG.`);
-                    }
-                
-                    const textElem = $(`#${plotid}`).find(`text#${text_id}`);
-                    if (textElem.length) {
-                        textElem.css("fill", "#FDFF7B");
-                        textElem.attr('title', tooltipText);
-                        textElem.attr('data-bs-original-title', tooltipText);
-                    }
-                });
-                $(`#${plotid}`).find("circle, rect, text").tooltip();
-            }
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    function resetColors(plotid) {
+      const elements = $(`#${plotid}`).find("circle, rect, text");
+      elements.each(function () {
+        $(this).css("fill", "");
+        const originalTitle = $(this).attr('original_title') || '';
+        $(this).attr('title', originalTitle);
+        $(this).attr('data-bs-original-title', originalTitle);
+        $(this).tooltip('dispose');
+      });
+      elements.tooltip();
+    }
 
+    function updateSnakePlot(plotid, interactions) {
+      resetColors(plotid);
+      interactions.forEach(function (interaction) {
+        const ccn = interaction.ccn_number;
+        if (!ccn) { console.warn('No ccn_number:', interaction); return; }
+        const id = ccn.replace(/[x.]/g, '_');
+        const text_id = id + "t";
 
-            if (interactionsData && interactionsData.length > 0) {
-                console.log("Coloring Snake Plot with interactions data:", interactionsData);
-                updateSnakePlot('snakeplot', interactionsData);
-            } else {
-                console.warn("No interactions data available to apply.");
-            }
+        const typesArr = interaction.interaction_types || [];
+        const n = typesArr.length;
+        const typesText = typesArr.join(', ');
+        const chemokineResidue = interaction.chemokine_residue || '';
+        const tooltipText = `${chemokineResidue} ${ccn} \n${n} interaction${n !== 1 ? 's' : ''}\nType: ${typesText}`;
 
-        });
-    </script>
+        const circleElem = $(`#${plotid}`).find(`circle#${id}`);
+        const rectElem = $(`#${plotid}`).find(`rect#${id}`);
+        if (circleElem.length) {
+          circleElem.css("fill", "#E60A0A").attr({ 'title': tooltipText, 'data-bs-original-title': tooltipText });
+        } else if (rectElem.length) {
+          rectElem.css("fill", "#E60A0A").attr({ 'title': tooltipText, 'data-bs-original-title': tooltipText });
+        } else {
+          console.warn(`Element with CCN id ${id} not found in SVG.`);
+        }
+
+        const textElem = $(`#${plotid}`).find(`text#${text_id}`);
+        if (textElem.length) {
+          textElem.css("fill", "#FDFF7B").attr({ 'title': tooltipText, 'data-bs-original-title': tooltipText });
+        }
+      });
+      $(`#${plotid}`).find("circle, rect, text").tooltip();
+    }
+
+    if (interactionsData && interactionsData.length > 0) {
+      console.log("Coloring Snake Plot with interactions data:", interactionsData);
+      updateSnakePlot('snakeplot', interactionsData);
+    } else {
+      console.warn("No interactions data available to apply.");
+    }
+  });
+</script>
 {% endblock %}

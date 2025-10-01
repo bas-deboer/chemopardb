@@ -32,29 +32,61 @@
   .closebtn:hover {
     color: black;
   }
+
+  .feature-grid {
+    background-color: #f6f7fb;
+    border-radius: 20px;
+    padding: 45px 40px;
+    box-shadow: 0 20px 45px rgba(15, 15, 34, 0.08);
+  }
+
   .feature-box {
-    padding: 20px;
+    padding: 30px;
     background-color: #ffffff;
-    border: 1px solid #d1d1d1;
-    border-radius: 5px;
-    text-align: center;
-    margin-top: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e2ea;
+    border-radius: 16px;
+    text-align: left;
+    height: 100%;
+    box-shadow: 0 16px 30px rgba(39, 40, 56, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
+
+  .feature-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 35px rgba(39, 40, 56, 0.12);
+  }
+
+  .feature-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(39, 40, 56, 0.12);
+    color: #272838;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.9rem;
+  }
+
   .feature-box h3 {
+    margin-top: 20px;
     margin-bottom: 10px;
+    font-size: 1.25rem;
+    color: #272838;
   }
+
   .feature-box p {
     margin-bottom: 0;
+    color: #4a4c5c;
   }
-  .feature-box i {
-    font-size: 2rem;
-    margin-bottom: 10px;
-    color: #007bff;
-  }
+
   .text-justify {
     text-align: justify;
   }
+
   .btn-custom {
     background-color: #272838;
     color: #9E9EA5;
@@ -72,104 +104,407 @@
     background-color: #272838;
     color: #FFFFFF;
   }
-  
-  
-  
+
+  .hero-section {
+    position: relative;
+    background: linear-gradient(135deg, #272838 0%, #3f3d56 100%);
+    color: #ffffff;
+    border-radius: 24px;
+    padding: 44px 36px;
+    overflow: hidden;
+  }
+
+  .hero-section::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 55%);
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-title {
+    font-size: 2.45rem;
+    line-height: 1.12;
+  }
+
+  .hero-subtitle {
+    color: rgba(255, 255, 255, 0.82);
+    max-width: 540px;
+  }
+
+  .hero-highlights {
+    margin: 0;
+    padding: 0;
+  }
+
+  .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    color: #f3f3ff;
+    font-weight: 500;
+    font-size: 0.95rem;
+    backdrop-filter: blur(3px);
+  }
+
+  .hero-pill::before {
+    content: "\2022";
+    font-size: 1.4rem;
+    margin-right: 8px;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #f5f5ff;
+    color: #272838;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 12px 28px;
+    text-decoration: none;
+    box-shadow: 0 14px 32px rgba(15, 15, 34, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+
+  .hero-cta:hover {
+    background-color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px rgba(15, 15, 34, 0.25);
+  }
+
+  .hero-figure {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-figure::after {
+    content: "";
+    position: absolute;
+    inset: 12% -18% -30% -18%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 75%);
+    z-index: -1;
+  }
+
+  .hero-image {
+    max-height: 300px;
+    object-fit: contain;
+  }
+
+  .stats-section {
+    background-color: #ffffff;
+    border: 1px solid #e2e2ea;
+    border-radius: 16px;
+    padding: 28px 32px;
+    box-shadow: 0 12px 28px rgba(15, 15, 34, 0.08);
+  }
+
+  .stat-card {
+    text-align: center;
+    padding: 12px 8px;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #272838;
+    margin-bottom: 0.35rem;
+  }
+
+  .stat-label {
+    color: #6c6f84;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .stat-delta {
+    color: #2f9e44;
+    font-size: 0.85rem;
+    margin-bottom: 0;
+  }
+
+  .stats-dashboard {
+    margin-top: 3rem;
+    background: #ffffff;
+    border: 1px solid #e2e2ea;
+    border-radius: 20px;
+    padding: 32px 36px;
+    box-shadow: 0 18px 42px rgba(20, 20, 40, 0.08);
+  }
+
+  .stats-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 24px;
+  }
+
+  .stats-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #272838;
+  }
+
+  .stats-header .last-update {
+    font-size: 0.9rem;
+    color: #6c6f84;
+  }
+
+  .stats-header .last-update span {
+    font-weight: 600;
+    color: #272838;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+  }
+
+  .stats-dashboard .stat-card {
+    background: linear-gradient(135deg, rgba(74, 156, 255, 0.12), rgba(74, 156, 255, 0.05));
+    border: 1px solid rgba(74, 156, 255, 0.16);
+    border-radius: 16px;
+    padding: 18px 16px;
+    text-align: left;
+  }
+
+  .stats-dashboard .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2a56;
+  }
+
+  .stats-dashboard .stat-label {
+    margin-top: 6px;
+    color: #4a4c5c;
+    font-size: 0.9rem;
+  }
+
+  .charts-section {
+    margin-top: 32px;
+  }
+
+  .stats-dashboard .chart-container {
+    background: #f8f9fe;
+    border-radius: 18px;
+    border: 1px solid rgba(39, 40, 56, 0.08);
+    padding: 20px 24px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  .stats-dashboard .chart-container h4 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #2c2f48;
+    margin-bottom: 16px;
+  }
+
+  .section-heading {
+    max-width: 720px;
+    margin: 0 auto 2rem auto;
+  }
+
+  .section-kicker {
+    display: inline-block;
+    font-size: 0.75rem;
+    letter-spacing: 0.28em;
+    font-weight: 600;
+    color: #63647c;
+    text-transform: uppercase;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #272838;
+    margin-bottom: 1rem;
+  }
+
+  .section-lead {
+    color: #4a4c5c;
+    margin-bottom: 0;
+  }
+
+  .news-section {
+    background-color: #ffffff;
+    border: 1px solid #e2e2ea;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 16px 30px rgba(20, 20, 40, 0.08);
+  }
+
+  .news-section .section-heading {
+    margin-bottom: 2rem;
+    color: #272838;
+  }
+
+  .news-item {
+    display: grid;
+    gap: 6px;
+  }
+
+  .news-item + .news-item {
+    border-top: 1px solid #e5e5e5;
+    margin-top: 24px;
+    padding-top: 24px;
+  }
+
+  .news-item-title {
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: #272838;
+  }
+
+  .news-item-meta {
+    color: #6c6f84;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .news-item p {
+    margin-bottom: 0;
+    color: #4a4c5c;
+  }
+
+  @media (max-width: 991.98px) {
+    .hero-section {
+      padding: 32px 24px;
+    }
+
+    .hero-title {
+      font-size: 2.15rem;
+    }
+
+    .feature-grid {
+      padding: 32px 24px;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .alert {
+      margin-left: 1rem;
+      margin-right: 1rem;
+    }
+
+    .hero-section {
+      padding: 24px 18px;
+    }
+
+    .hero-cta {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .stats-section {
+      padding: 24px 20px;
+    }
+
+    .stat-value {
+      font-size: 1.7rem;
+    }
+
+    .stats-dashboard {
+      padding: 24px 20px;
+    }
+
+    .stats-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .stats-dashboard .stat-card {
+      padding: 16px;
+    }
+
+    .stats-dashboard .stat-value {
+      font-size: 1.6rem;
+    }
+
+    .feature-grid {
+      padding: 28px 18px;
+    }
+
+    .news-section {
+      padding: 28px 22px;
+    }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-    <div class="container py-4">
-  
-        <div class="p-5 mb-4 bg-light rounded-3">
-            <div class="container-fluid py-5">
-              <div class="row">
-                <!-- Text Column -->
-                <div class="col-md-7">
-                  <h1 class="display-5 fw-bold">Welcome to ChemoPar-db</h1>
-                  <p>The <b>Chemo</b>kine <b>Par</b>tner <b>d</b>ata<b>b</b>ase
-                  <hr class="my-2">
-                  <p class="fs-4">ChemoPar-db is a user-friendly structural chemogenomics database that compiles chemokine structures from the Protein Data Bank and analyses molecular interactions using interaction fingerprints.</p>
-                    <div class="input-group">
-                        <input id="searchdatabase" class="form-control mr-sm-2 custom-input" type="text" placeholder="Search the database" aria-label="Search">
-                    </div>
-                </div>  
-                <!-- Image Column -->
-                <div class="col-md-5">
-                  <figure>
-                    <img src="{% static 'home/images/chemopar_example.png' %}" alt="img" style="max-width: 100%; height: auto;"></img>
-                  </figure>
-                </div>
-              </div>
-            </div>    
-          </div>
+  <div class="container py-5">
+    <section class="hero-section">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-7 hero-content">
+          <h1 class="hero-title fw-bold">Welcome to ChemoPar-db</h1>
+          <p class="hero-subtitle lead mb-4">ChemoPar-db (Chemokine Partner database) assembles curated chemokine structures, interaction fingerprints, and analytics so you can move from question to insight quickly.</p>
+          <a class="hero-cta mt-3" href="{% url 'structure_browser' %}">Browse structure library</a>
+        </div>
+        <div class="col-lg-5 hero-figure text-center">
+          <figure class="m-0">
+            <img src="{% static 'home/images/chemopar_example.png' %}" alt="Example ChemoPar-db complex" class="img-fluid rounded shadow-lg hero-image">
+          </figure>
+        </div>
+      </div>
+    </section>
 
+<div class="row align-items-stretch">
+  <div class="col-12 col-md-6 d-flex">
+    <section class="stats-section mt-4 h-100 w-100" aria-labelledby="homepage-data-overview">
+      <div class="section-heading text-center mb-4">
+        <h3 id="homepage-data-overview" class="section-title mb-0">Data</h3>
+      </div>
+      <div class="row g-3 g-md-4">
+        {% for stat in homepage_stats %}
+        <div class="col-6 col-md-3">
+          <div class="stat-card h-100">
+            <p class="stat-label">{{ stat.label }}</p>
+            <p class="stat-value">{{ stat.value }}</p>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+          <p class="text-muted mb-0">Error loading statistics.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <div class="col-12 col-md-6 d-flex">
+    <section id="latest-news" class="news-section mt-4 h-100 w-100">
+      <div class="section-heading">
+        <h3 class="section-title mb-2">Latest release</h3>
+      </div>
+      <div class="news-item">
+        <h5 class="news-item-title mb-1">October 2025</h5>
+        <ul>
+          <li>New structures</li>
+          <li>Predicted chemokine structures</li>
+          <li>Custom diagram tool</li>
+          <li>Redesign of UI</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</div>
 
 </div>
-    <!-- Initialize jQuery UI Autocomplete -->
-    <script>
-        $(document).ready(function() {
-            $("#searchdatabase").autocomplete({
-                source: function(request, response) {
-                    $.ajax({
-                        url: "{% url 'protein-autocomplete' %}",
-                        dataType: "json",
-                        data: {
-                            term: request.term
-                        },
-                        success: function(proteinData) {
-                            $.ajax({
-                                url: "{% url 'structure-autocomplete' %}",
-                                dataType: "json",
-                                data: {
-                                    term: request.term
-                                },
-                                success: function(structureData) {
-                                    // Combine and process results
-                                    let combinedData = [];
-    
-                                    if (proteinData.length > 0) {
-                                        combinedData.push({ label: "Chemokines", type: "header" });
-                                        combinedData = combinedData.concat(proteinData);
-                                    } else {
-                                        combinedData.push({ label: "No chemokines found", type: "no-results" });
-                                    }
-    
-                                    if (structureData.length > 0) {
-                                        combinedData.push({ label: "Structures", type: "header" });
-                                        combinedData = combinedData.concat(structureData);
-                                    } else {
-                                        combinedData.push({ label: "No structures found", type: "no-results" });
-                                    }
-    
-                                    response(combinedData);
-                                }
-                            });
-                        }
-                    });
-                },
-                minLength: 2,
-                select: function(event, ui) {
-                    if (ui.item.url) {
-                        window.location.href = ui.item.url;
-                    }
-                }
-            }).autocomplete("instance")._renderItem = function(ul, item) {
-                if (item.type === "header") {
-                    return $("<li>")
-                        .addClass("ui-autocomplete-category")
-                        .append("<div>" + item.label + "</div>")
-                        .appendTo(ul);
-                } else if (item.type === "no-results") {
-                    return $("<li>")
-                        .append("<div style='color: gray;'>" + item.label + "</div>")
-                        .appendTo(ul);
-                } else {
-                    return $("<li>")
-                        .append("<div>" + item.label + "</div>")
-                        .appendTo(ul);
-                }
-            };
-        });
-    </script>
+
+            
 {% endblock %}

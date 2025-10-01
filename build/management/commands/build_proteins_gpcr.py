@@ -4,6 +4,7 @@ import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from protein.models import GPCRProtein
+from partner.models import Partner
 
 # Path to the CSV file in the data directory
 gpcr_protein_source_file = os.path.join(settings.DATA_DIR, 'protein_data', 'gpcr_protein_data.csv')
@@ -12,8 +13,8 @@ gpcr_protein_source_file = os.path.join(settings.DATA_DIR, 'protein_data', 'gpcr
 default_gpcr_data = {
     "gpcr_class": "Class A",
     "family": "Chemokine",
-    "endogenous_ligand": "Unknown",
-    "g_protein_coupling": "G_i/o",
+    "endogenous_ligand": "",
+    "g_protein_coupling": "",
     "signaling_pathways": {},
 }
 
@@ -46,9 +47,10 @@ def fetch_residues_from_gpcrdb(gene_name):
 
 
 class Command(BaseCommand):
-    help = "Populates GPCR proteins in the database with data from GPCRdb using a CSV file."
+    help = "Load chemokine GPCRs from CSV, fetch GPCRdb residue generic numbers, store GPCR details, and create Partner entries."
 
     def handle(self, *args, **options):
+        # Refresh GPCRProtein table to reflect current CSV + GPCRdb data
         GPCRProtein.objects.all().delete()
         
         # Verify the file exists before reading
@@ -86,11 +88,30 @@ class Command(BaseCommand):
                         name=common_name,
                         defaults=gpcr_protein_data,
                     )
-                    
+
                     if created:
                         self.stdout.write(self.style.SUCCESS(f"Created {common_name} ({gene_name})"))
                     else:
                         self.stdout.write(self.style.SUCCESS(f"Updated {common_name} ({gene_name})"))
+
+                    # Also create/update a Partner entry so GPCRs are available as partners in the app
+                    try:
+                        partner_defaults = {
+                            "type": "GPCR",
+                            "description": f"UniProt: {uniprot_id}; Gene: {gene_name}; Family: {default_gpcr_data.get('family')}",
+                            "gpcrdb_url": f"https://gpcrdb.org/protein/{gene_name}/",
+                            "uniprot_id": uniprot_id,
+                        }
+                        partner, p_created = Partner.objects.update_or_create(
+                            name=common_name,
+                            defaults=partner_defaults,
+                        )
+                        if p_created:
+                            self.stdout.write(self.style.SUCCESS(f"Partner created for {common_name}"))
+                        else:
+                            self.stdout.write(self.style.SUCCESS(f"Partner updated for {common_name}"))
+                    except Exception as e:
+                        self.stdout.write(self.style.WARNING(f"Failed to upsert Partner for {common_name}: {e}"))
         
         except csv.Error as e:
             self.stdout.write(self.style.ERROR(f"CSV reading error: {e}"))

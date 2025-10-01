@@ -60,9 +60,7 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col">
-          <h2 class="display-6 fw-bold">Browse Predicted Chemokine-GPCR Complexes</h2>
-          <hr class="my-2">
-          <p>Explore computed models for chemokine-GPCR complexes.</p>
+          <h2 class="display-6 fw-bold">Browse predicted chemokine-GPCR complexes</h2>
         </div>
       </div>
     </div>
@@ -96,17 +94,20 @@
         {% for complex in predicted_complexes %}
         <tr data-href="{% url 'predicted_complex_details' complex.id %}">
           <td>
-            <a target="_blank" href="{% url 'protein_details' complex.chemokine_protein.id %}">
+            <a target="_blank" href="{% url 'protein:protein' complex.chemokine_protein.gene_name|default:complex.chemokine_protein.name %}">
               {{ complex.chemokine_protein.gene_name|default:complex.chemokine_protein.name }}
             </a>
           </td>
           <td>
-            <a target="_blank" href="{% url 'protein_details' complex.gpcr_protein.id %}">
-              {{ complex.gpcr_protein.gene_name|default:complex.gpcr_protein.name }}
-            </a>
+            {% if complex.gpcr_partner %}
+              <a target="_blank" href="{% url 'partner_detail' complex.gpcr_partner.id %}">
+                {{ complex.gpcr_partner.name|default:"-" }}
+              </a>
+            {% else %}-{% endif %}
+          </td>
           </td>
           <td>{{ complex.chemokine_protein.species|default:"-" }}</td>
-          <td>{{ complex.gpcr_protein.species|default:"-" }}</td>
+          <td>{{ complex.gpcr_partner.description|default:"-" }}</td>
           <td>{{ complex.method|default:"AlphaFold-Multimer" }}</td>
           <td>
             {% if complex.state %}

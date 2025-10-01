@@ -10,6 +10,11 @@ class ChemokineDiagramForm(forms.Form):
     """Form allowing users to paste a sequence that will be segmented interactively."""
 
     sequence = forms.CharField(
-        widget=forms.Textarea(attrs={"rows": 5, "placeholder": "Enter protein sequence"}),
+        widget=forms.Textarea(attrs={
+            "rows": 6,
+            "placeholder": "Paste a chemokine sequence",
+            "class": "form-control font-monospace",
+        }),
         label="Sequence",
+        help_text="Whitespace and numbers are ignored automatically.",
     )

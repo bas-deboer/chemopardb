@@ -310,3 +310,22 @@ ul.nav-tabs li a {
 a.external_link:link, a.external_link:visited, a.external_link:hover, a.external_link:active {
   color: #036;
 }
+
+/* Compact navbar spacing on mobile */
+@media (max-width: 991.98px) {
+  .navbar-nav .nav-item {
+    margin-bottom: 0;
+  }
+  .navbar-nav .nav-link {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+  }
+  .navbar-nav .dropdown-menu {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+  .navbar-nav .dropdown-menu .dropdown-item {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+  }
+}

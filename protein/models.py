@@ -11,7 +11,7 @@ class Protein(models.Model):
     species = models.CharField(max_length=200)
     full_name = models.CharField(max_length=200)
     uniprot_id = models.CharField(max_length=100, db_index=True, null=True)
-    iuphar = models.CharField(max_length=50)
+    iuphar = models.CharField(max_length=50, null=True, blank=True)
     sequence = models.CharField(max_length=1000, null=True)
     sequence_type = models.ForeignKey('ProteinSequenceType', on_delete=models.CASCADE, null=True)
     source = models.ForeignKey('ProteinSource', on_delete=models.CASCADE, null=True)

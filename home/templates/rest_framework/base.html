@@ -1,0 +1,22 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{#
+  Bridges DRF browsable API templates into the site layout.
+  DRF templates (e.g., rest_framework/api.html) extend this file and
+  override the 'content' block below. Our site navbar/footer come from
+  home/base.html.
+#}
+
+{% block addon_css %}
+  {{ block.super }}
+  {# Optionally include DRF styles if you want their defaults
+  <link rel="stylesheet" href="{% static 'rest_framework/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'rest_framework/css/default.css' %}"> #}
+{% endblock %}
+
+{% block content %}
+  {# DRF child templates will override this block with the browsable API UI #}
+  {{ block.super }}
+{% endblock %}
+
